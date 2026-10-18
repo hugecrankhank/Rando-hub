@@ -517,11 +517,19 @@
     return d > 0 && d <= 600 ? d : f.secs;
   }
 
+  // a short history shown in the menu (Crowd effects → Recent), to see what
+  // happened to each effect when something doesn't fire
+  var hist = [];
+  function note(t) {
+    var d = new Date(); hist.push(('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2) + ' ' + t);
+    if (hist.length > 14) hist.shift();
+  }
   function trigger(id, user, label) {
     var fx = EFFECTS[id];
-    if (!fx) { console.warn('[crowd] unknown effect', id); return false; }
-    if (queue.length >= MAX_QUEUE) return false;
+    if (!fx) { console.warn('[crowd] unknown effect', id); note('unknown effect ' + id); return false; }
+    if (queue.length >= MAX_QUEUE) { note('queue full, dropped ' + id); return false; }
     queue.push({ id: id, user: user || '', label: label || '' });
+    note('queued ' + id + (user ? ' (' + user + ')' : '') + ', ' + queue.length + ' waiting');
     render();
     return true;
   }
@@ -556,6 +564,9 @@
   }
 
   function onFrame(core) {
+    try { onFrameInner(core); } catch (e) { console.warn('[crowd]', e); note('error: ' + (e && e.message || e)); }
+  }
+  function onFrameInner(core) {
     var ram = core.wram();
     holdSwitches(core, ram);
     try { if (detour) detourFrame(core, ram); else sendRun(ram); } catch (e) { console.warn('[crowd] detour', e); }
@@ -584,6 +595,7 @@
     if (detour) return;                      // queued effects wait until Link is back
     var job = queue.shift();
     if (!job) return;
+    note('running ' + job.id);
     var f = EFFECTS[job.id];
     if (f.romCheck && !romHas(core, f.romCheck)) {
       feed(f.name + ' needs a randomizer ROM (not this one)', 'info'); render(); return;
@@ -595,7 +607,7 @@
     }
     else if (f.detour) {
       var dres = startDetour(job, f.detour, core, ram);
-      if (typeof dres === 'string') { feed(f.name + ': ' + dres, 'info'); render(); return; }
+      if (typeof dres === 'string') { note('detour refused: ' + dres); feed(f.name + ': ' + dres, 'info'); render(); return; }
     }
     else if (f.app) { try { f.app(job); } catch (e) { console.warn('[crowd]', job.id, e); } }
     else {
@@ -736,6 +748,7 @@
     // 1. drop in through the entrance
     ram[0x10E] = b.entrance; ram[0x10F] = 0;
     ram[0x10] = 0x11; ram[0x11] = 0; ram[0xB0] = 0;
+    note('detour start: ' + b.name);
     detourHud('BOSS DETOUR', b.name + (detour.by ? ' · sent by ' + detour.by : ''), 1);
     send({ type: 'detour', phase: 'start', boss: b.name, user: detour.by, secs: detourSecs(job.id) });
     return true;
@@ -765,7 +778,7 @@
           ram[0xA2] = ram[0xA0]; ram[0xA3] = ram[0xA1];
           ram[0xA0] = d.boss.room; ram[0xA1] = 0;
           ram[0x11] = 0x15; ram[0xB0] = 0;
-          d.state = 'warping';
+          d.state = 'warping'; note('warp to room ' + d.boss.room.toString(16));
         } else { d.state = 'fight'; d.frames = 0; }
       }
       return;
@@ -793,11 +806,12 @@
   }
   function endDetour(core, result, title) {
     var d = detour; if (!d || d.state === 'ending') return;
+    note('detour end (' + result + ') from ' + d.state);
     d.state = 'ending';
     // load the save state between frames, not in the middle of one
     setTimeout(function () {
       try { if (!core.loadState(d.snap)) throw new Error('state did not load'); } catch (e) { console.warn('[crowd] detour return', e); feed('Boss detour: couldn\'t return automatically. Load your last save state.', 'info'); }
-      detour = null; runSent = '';
+      detour = null; runSent = ''; note('back to the run');
       detourHud(title, d.boss.name + ' · back to the run', -1);
       feed('Boss detour (' + d.boss.name + '): ' + ({ won: 'won!', survived: 'survived', ko: 'knocked out', escaped: 'escaped' }[result] || 'cancelled'), result === 'ko' || result === 'lost' ? 'bad' : 'good');
       send({ type: 'detour', phase: 'end', result: result, boss: d.boss.name, user: d.by });
@@ -1024,7 +1038,8 @@
     var tests = Object.keys(EFFECTS).filter(function (id) { return id.charAt(0) !== '_'; }).map(function (id) {
       return '<button type="button" data-ext="cc-test" data-id="' + id + '">' + esc(EFFECTS[id].name) + '</button>';
     }).join('');
-    return '<h4>Crowd effects</h4>' +
+    var recent = hist.length ? '<p class="hint" style="font:11px/1.35 ui-monospace,monospace;white-space:pre-wrap;margin-top:6px">' + esc(hist.slice().reverse().join('\n')) + '</p>' : '';
+    return '<h4>Crowd effects</h4>' + recent +
       '<div class="row"><span>TikTok effects on</span><input type="checkbox" data-ext="cc-enabled"' + (cfg.enabled ? ' checked' : '') + '></div>' +
       '<div class="row"><span>Bridge address</span><input type="text" data-ext="cc-url" value="' + esc(cfg.url) + '" style="width:55%;max-width:240px"></div>' +
       '<div class="row"><span>Gift alerts over the hearts</span><input type="checkbox" data-ext="cc-alerts"' + (cfg.alerts ? ' checked' : '') + '></div>' +
@@ -1044,7 +1059,7 @@
   function menuClick(b, rr) {
     rerender = rr;
     var a = b.dataset.ext;
-    if (a === 'cc-test') trigger(b.dataset.id, 'test');
+    if (a === 'cc-test') { note('test button: ' + b.dataset.id); trigger(b.dataset.id, 'test'); }
     else if (a === 'cc-clear') { endAll(); queue.length = 0; paused = {}; cancelReroll(); }
     else if (a === 'cc-cancel-reroll') cancelReroll();
     else if (a === 'cc-end-detour') cancelDetour();

@@ -5,6 +5,12 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.6 (2026-10-18)
+
+- The game's … menu → Crowd effects now lists the last few things that happened to crowd
+  effects (test pressed, queued, running, boss detour start / warp / end, any error), to
+  track down effects that don't fire.
+
 ## 1.3.5 (2026-10-18)
 
 - If crowd effects (or a test) are waiting more than a few seconds, the game says why on

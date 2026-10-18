@@ -560,18 +560,15 @@ list (plus `localhost`), and keep seeds for a day so a race asks the seed site o
 
 1. `python3 tools/set-version.py 1.1.0` (updates the header and version tag).
 2. Add a `## 1.1.0` section at the top of [CHANGELOG.md](CHANGELOG.md).
-3. Commit and push to `main` (the website updates), then tag it:
-   `git tag v1.1.0 && git push origin v1.1.0`.
+3. Commit and push to `main`.
 
-The `Release` workflow (`.github/workflows/release.yml`) then builds
-`Rando-Hub-v1.1.0.zip` with `tools/make-release.py` and publishes it on the
-Releases page with that version's changelog as the notes. Old releases stay
-there, so every version remains downloadable and playable. To build the zip
+That's it. The website updates, and the `Release` workflow
+(`.github/workflows/release.yml`) sees a version with no release yet, builds
+`Rando-Hub-v1.1.0.zip` with `tools/make-release.py`, creates the tag `v1.1.0` and
+publishes it on the Releases page with that version's changelog as the notes.
+Pushes that don't change the version don't make a release. Old releases stay
+up, so every version remains downloadable and playable. To build the zip
 yourself: `python3 tools/make-release.py` (output in `dist/`).
-
-On GitHub's site the same thing works without a terminal: **Releases → Draft a
-new release → Choose a tag → type `v1.1.0` → Create new tag → Publish**. The
-workflow attaches the zip a few minutes later.
 
 ---
 

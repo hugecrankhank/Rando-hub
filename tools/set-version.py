@@ -4,8 +4,8 @@
     python3 tools/set-version.py 1.1.0
 
 Updates index.html (the version meta tag and the header's "v1.1.0") and the
-crowd bridge's package.json. Then add a section to CHANGELOG.md, commit, and
-tag the commit v1.1.0 to publish a release (see README → Releasing).
+crowd bridge's package.json. Then add a section to CHANGELOG.md, commit and
+push to main: the Release workflow publishes v1.1.0 (see README → Releasing).
 """
 import re, sys, os, json
 
@@ -29,4 +29,4 @@ s = open(p, encoding='utf-8').read()
 s = re.sub(r'"version": "[^"]*"', f'"version": "{v}"', s, count=1)
 open(p, 'w', encoding='utf-8').write(s)
 
-print(f'Version set to {v}. Next: add "## {v}" to CHANGELOG.md, commit, then: git tag v{v} && git push origin main v{v}')
+print(f'Version set to {v}. Next: add "## {v}" to CHANGELOG.md, commit and push to main; the Release workflow publishes v{v}.')

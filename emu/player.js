@@ -58,10 +58,10 @@
   // ── styles ──────────────────────────────────────────────────────────────
   var CSS = [
     '.s9x { position: absolute; inset: 0; background: #000; overflow: hidden; user-select: none; -webkit-user-select: none; }',
-    '.s9x canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; transform: var(--s9x-tf, none); transition: transform .35s ease; }',
+    '.s9x canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; transform: var(--s9x-tf, scale(1)); transition: transform .35s ease; }',
     /* screen effects (crowd control): the picture only, never the controls or menus */
     '.s9x canvas.s9x-wobble { animation: s9x-wobble 1.6s ease-in-out infinite; transition: none; }',
-    '@keyframes s9x-wobble { 0%, 100% { transform: var(--s9x-tf, none) rotate(-3deg) skewX(2deg); } 50% { transform: var(--s9x-tf, none) rotate(3deg) skewX(-2deg) scale(1.03); } }',
+    '@keyframes s9x-wobble { 0%, 100% { transform: var(--s9x-tf, scale(1)) rotate(-3deg) skewX(2deg); } 50% { transform: var(--s9x-tf, scale(1)) rotate(3deg) skewX(-2deg) scale(1.03); } }',
     '.s9x-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8b95a3; font: 14px system-ui, sans-serif; pointer-events: none; }',
     '.s9x-toast { position: absolute; left: 50%; top: 44px; transform: translate(-50%, -6px); opacity: 0; z-index: 30;',
     '  background: rgba(22,27,34,.92); color: #e6e9ee; border: 1px solid #2a313c; padding: 5px 11px; border-radius: 8px;',
@@ -403,7 +403,7 @@
     if (screenFx.mirror) t.push('scaleX(-1)');
     if (screenFx.flip) t.push('rotate(180deg)');
     if (screenFx.tiny) t.push('scale(.5)');
-    canvas.style.setProperty('--s9x-tf', t.length ? t.join(' ') : 'none');
+    canvas.style.setProperty('--s9x-tf', t.length ? t.join(' ') : 'scale(1)');   // never 'none': 'none rotate(..)' is invalid and kills the wobble
     canvas.classList.toggle('s9x-wobble', !!screenFx.wobble);
   }
   function applyFilter() {

@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.3 (2026-10-18)
+
+- Fixed the **drunk wobble** crowd effect: it showed as applied but the picture didn't move
+  unless another screen effect (mirror, upside down, tiny) was on at the same time.
+
 ## 1.2.2 (2026-10-18)
 
 **Crowd Control+**

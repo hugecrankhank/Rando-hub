@@ -616,19 +616,86 @@
   // Entrance ids from the entrance randomizer's tables; rooms are vanilla.
   var BOSSES = {
     ganon:      { name: 'Ganon',      entrance: 0x7B },               // the Pyramid hole drops into his room
-    aga1:       { name: 'Agahnim',    entrance: 0x24, room: 0x20 },
+    aga1:       { name: 'Agahnim',    entrance: 0x24, room: 0x20, at: [0x078, 0x1C0] },
     aga2:       { name: 'Agahnim 2',  entrance: 0x37, room: 0x0D },
-    armos:      { name: 'Eastern Palace boss', entrance: 0x08, room: 0xC8 },
-    lanmolas:   { name: 'Desert Palace boss',  entrance: 0x09, room: 0x33 },
+    armos:      { name: 'Eastern Palace boss', entrance: 0x08, room: 0xC8, at: [0x178, 0x1C0] },
+    lanmolas:   { name: 'Desert Palace boss',  entrance: 0x09, room: 0x33, at: [0x028, 0x1C0] },
     moldorm:    { name: 'Tower of Hera boss',  entrance: 0x33, room: 0x07 },
     helmasaur:  { name: 'Palace of Darkness boss', entrance: 0x26, room: 0x5A },
     arrghus:    { name: 'Swamp Palace boss',   entrance: 0x25, room: 0x06 },
-    mothula:    { name: 'Skull Woods boss',    entrance: 0x2B, room: 0x29 },
-    blind:      { name: "Thieves' Town boss",  entrance: 0x34, room: 0xAC },
+    mothula:    { name: 'Skull Woods boss',    entrance: 0x2B, room: 0x29, at: [0x178, 0x1C0] },
+    blind:      { name: "Thieves' Town boss",  entrance: 0x34, room: 0xAC, at: [0x178, 0x1C0] },
     kholdstare: { name: 'Ice Palace boss',     entrance: 0x2D, room: 0xDE },
     vitreous:   { name: 'Misery Mire boss',    entrance: 0x27, room: 0x90 },
-    trinexx:    { name: 'Turtle Rock boss',    entrance: 0x35, room: 0xA4 },
+    trinexx:    { name: 'Turtle Rock boss',    entrance: 0x35, room: 0xA4, at: [0x078, 0x1C0] },
   };
+  // After the warp Link still has the lobby's spot in the room and the lobby's
+  // camera quarter, which can be inside a wall or the wrong part of the boss
+  // room. placeLink() puts him on open floor in the arena and sets the camera
+  // like a fresh room entry (bounds and scroll lines as lttphack's
+  // ConfigureCameraToCoordinates; full-size quarters as Dungeon_AdjustForRoomLayout).
+  // at: [x, y] in the room = where the boss door lets him in (lttphack presets);
+  // otherwise the quarter with the most floor (and real walls) is the arena.
+  var LQF = [0xF, 0xF, 0xF, 0xF, 0xB, 0xB, 7, 7, 0xF, 0xB, 0xF, 7, 0xB, 0xF, 7, 0xF, 0xE, 0xD, 0xE, 0xD, 0xF, 0xF, 0xE, 0xD, 0xE, 0xD, 0xF, 0xF, 0xA, 9, 6, 5];
+  var FLOOR = { 0x00: 1, 0x09: 1, 0x0E: 1, 0x0F: 1 };   // floor, shallow water, ice
+  function placeLink(ram, at) {
+    var R = ram[0xA0] | ram[0xA1] << 8; if (R > 0x127) return false;
+    var Bx = (R & 0xF) << 9, By = (R >> 4) << 9;
+    var attr = function (tx, ty) { return tx < 0 || ty < 0 || tx > 63 || ty > 63 ? 1 : ram[0x12000 + ty * 64 + tx]; };
+    var clear = function (tx, ty) { for (var dy = -1; dy <= 2; dy++) for (var dx = -1; dx <= 2; dx++) if (!FLOOR[attr(tx + dx, ty + dy)]) return false; return true; };
+    // nearest clear spot to (sx, sy) tiles inside quarter (qx, qy)
+    var nearest = function (sx, sy, qx, qy, maxR) {
+      var x0 = qx * 32 + 3, x1 = qx * 32 + 28, y0 = qy * 32 + 4, y1 = qy * 32 + 27;
+      for (var r = 0; r <= maxR; r++) {
+        var hit = null, hd = 1e9;
+        for (var dy = -r; dy <= r; dy++) for (var dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          var tx = sx + dx, ty = sy + dy;
+          if (tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1 && dx * dx + dy * dy < hd && clear(tx, ty)) { hit = [tx, ty]; hd = dx * dx + dy * dy; }
+        }
+        if (hit) return hit;
+      }
+      return null;
+    };
+    var spot = null;
+    if (at) spot = nearest(at[0] >> 3, at[1] >> 3, at[0] >> 8, at[1] >> 8, 10);
+    if (!spot) {
+      var best = -1, bq = null;
+      for (var q = 0; q < 4; q++) {
+        var qx = q & 1, qy = q >> 1, fl = 0, wl = 0;
+        for (var ty = qy * 32; ty < qy * 32 + 32; ty++) for (var tx = qx * 32; tx < qx * 32 + 32; tx++) { var a = attr(tx, ty); if (FLOOR[a]) fl++; else if (a >= 1 && a <= 3) wl++; }
+        if (wl > 60 && fl > best) { best = fl; bq = [qx, qy]; }
+      }
+      if (bq) spot = nearest(bq[0] * 32 + 15, bq[1] * 32 + 24, bq[0], bq[1], 24);   // start low and central, away from the boss
+    }
+    if (!spot) return false;
+    var w16 = function (a, v) { ram[a] = v & 0xFF; ram[a + 1] = (v >> 8) & 0xFF; };
+    var X = Bx + spot[0] * 8, Y = By + spot[1] * 8;
+    var qx2 = (X & 0x100) ? 1 : 0, qy2 = (Y & 0x100) ? 2 : 0;
+    w16(0x22, X); w16(0x20, Y);
+    ram[0xEE] = 0; ram[0x476] = 0; ram[0x6C] = 0; ram[0x2F] = 0;      // upper floor, not in a doorway, facing up
+    ram[0xA9] = qx2; ram[0xAA] = qy2;
+    var yA0 = Y & 0xFF00, yB0 = Y & 0xFE00, xA0 = X & 0xFF00, xB0 = X & 0xFE00;
+    w16(0x600, yA0); w16(0x602, yB0); w16(0x604, yA0 | 0x10); w16(0x606, yB0 | 0x110);
+    w16(0x608, xA0); w16(0x60A, xB0); w16(0x60C, xA0); w16(0x60E, xB0 + 0x100);
+    var comp = (ram[0x40E] & 0x1C) | qy2 | qx2; ram[0xA8] = comp;
+    var fsx = (LQF[comp] & (qx2 ? 2 : 1)) ? 0 : 2, fsy = (LQF[comp] & (qy2 ? 8 : 4)) ? 0 : 2;
+    ram[0xA6] = fsx; ram[0xA7] = fsy;
+    var clamp = function (v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; };
+    var cx = fsx ? clamp(X - 0x78, xB0, xB0 + 0x100) : xA0;
+    var cy = fsy ? clamp(Y - 0x70, yB0, yB0 + 0x110) : clamp(Y - 0x70, yA0, yA0 + 0x10);
+    [0xE2, 0xE0, 0x11E, 0x120].forEach(function (a) { w16(a, cx); });
+    [0xE8, 0xE6, 0x122, 0x124].forEach(function (a) { w16(a, cy); });
+    var yh = (cy - 0x186) & 0x1FF, xh = (cx - 0x17F) & 0x1FF;
+    w16(0x61A, yh); w16(0x618, yh - 2); w16(0x61E, xh); w16(0x61C, xh - 2);
+    // and as this room's entry point, so falling in a pit puts him back here
+    w16(0xC180, cx); w16(0xC182, cy); w16(0xC184, Y); w16(0xC186, X);
+    w16(0xC188, yA0); w16(0xC18A, yA0 | 0x10); w16(0xC18C, xA0); w16(0xC18E, xA0);
+    w16(0xC198, yh - 2); w16(0xC19A, xh - 2);
+    ram[0xC19C] = fsx; ram[0xC19D] = fsy; ram[0xC19E] = qx2; ram[0xC19F] = qy2;
+    ram[0xC1A6] = 0; ram[0xC1A7] = 0; ram[0xC1A8] = 0;
+    return true;
+  }
   var WIN_MODULES = { 0x13: 1, 0x15: 1, 0x16: 1, 0x18: 1, 0x19: 1, 0x1A: 1 };   // prize, Aga warp, crystal, Ganon emerges, triforce, credits
   var detour = null;          // { id, boss, by, state, snap, frames, total, hpMax, wait }
   var detourEl = null;
@@ -665,7 +732,13 @@
       }
       return;
     }
-    if (d.state === 'warping') { if (mode === 0x07 && sub === 0) { d.state = 'fight'; d.frames = 0; } return; }
+    if (d.state === 'warping') {
+      if (mode === 0x07 && sub === 0) {
+        try { if (!placeLink(ram, d.boss.at)) console.warn('[crowd] detour: no clear floor found, Link stays where the warp put him'); } catch (e) { console.warn('[crowd] detour place', e); }
+        d.state = 'fight'; d.frames = 0;
+      }
+      return;
+    }
     if (d.state !== 'fight') return;
     // how did it go?
     if (mode === 0x12 || ram[A.HP] === 0) return endDetour(core, 'ko', 'Link went down!');
@@ -912,6 +985,7 @@
     trigger: trigger, list: list, cancelReroll: cancelReroll, EFFECTS: EFFECTS, ADDR: A, inPlay: inPlay,
     BOSSES: BOSSES, endDetour: cancelDetour, get detour() { return detour && { boss: detour.boss.name, state: detour.state, frames: detour.frames, total: detour.total }; },
     // for testing a single boss from the console: CrowdEffects.detourTo('moldorm')
+    placeLink: function () { var c = core(); return !!(c && placeLink(c.wram(), detour && detour.boss.at)); },
     detourTo: function (key) { EFFECTS._detour_test = { name: 'Boss detour: ' + ((BOSSES[key] || {}).name || key), detour: key }; return trigger('_detour_test', 'test'); },
     _onFrame: onFrame, _onInput: onInput, _showClock: showClock,
     get queue() { return queue.slice(); }, get active() { return Object.assign({}, active); },

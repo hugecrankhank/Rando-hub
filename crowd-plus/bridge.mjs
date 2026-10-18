@@ -35,6 +35,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
+import { exec } from 'node:child_process';
 import { createStudio } from './studio.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -856,6 +857,11 @@ server.listen(cfg.port, '127.0.0.1', () => {
   log(`scrolling gift list for OBS: http://localhost:${cfg.port}/ticker`);
   log(`subathon timer: http://localhost:${cfg.port}/timer   (controls: http://localhost:${cfg.port}/timer/control)`);
   if (timer.active) log(`⏱ timer restored: ${fmtTime(timer.remaining)} left${timer.ended ? ' (finished)' : ', paused. Press Start on the control page'}`);
+  if (!args.includes('--no-open')) {
+    const url = `http://localhost:${cfg.port}/studio`;
+    const cmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
+    try { exec(cmd, () => {}); } catch {}
+  }
   if (TEST) startTest();
   else if (cfg.source === 'tikfinity') startTikFinity();
   else if (cfg.source === 'direct') startTikTok();

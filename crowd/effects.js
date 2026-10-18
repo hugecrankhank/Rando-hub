@@ -222,6 +222,11 @@
         return !!m.roulette();
       } },
 
+    // ── boss detours: a trip to a boss fight that always comes back (see below) ──
+    boss_ganon:  { name: 'Boss detour: Ganon', good: false, detour: 'ganon' },
+    boss_aga:    { name: 'Boss detour: Agahnim', good: false, detour: 'aga1' },
+    boss_random: { name: 'Boss detour: random boss', good: false, detour: 'random' },
+
     one_hit:     { name: 'One-heart mode', good: false, secs: 30,
       frame: function (r) { if (r[A.HP] > 8) r[A.HP] = 8; r[A.HP_FILL] = 0; } },
     no_magic:    { name: 'Magic locked', good: false, secs: 30,
@@ -551,7 +556,7 @@
   function onFrame(core) {
     var ram = core.wram();
     holdSwitches(core, ram);
-    try { sendRun(ram); } catch (e) {}
+    try { if (detour) detourFrame(core, ram); else sendRun(ram); } catch (e) { console.warn('[crowd] detour', e); }
     if (!inPlay(ram)) return;
     // timed effects
     var outside = ram[A.MODE] === 0x09;   // the ROM only spawns cuccos on the overworld
@@ -569,6 +574,7 @@
       if (--active[id] <= 0) { delete active[id]; delete paused[id]; if (fx.end) { try { fx.end(); } catch (e) {} } feed(fx.name + ' ended', 'end'); render(); }
     }
     if (gap > 0) { gap--; return; }
+    if (detour) return;                      // queued effects wait until Link is back
     var job = queue.shift();
     if (!job) return;
     var f = EFFECTS[job.id];
@@ -580,6 +586,10 @@
       if (!active[job.id] && f.start) { try { f.start(); } catch (e) { console.warn('[crowd]', job.id, e); } }
       active[job.id] = (active[job.id] || 0) + Math.round(secs * (core.fps || 60.1));
     }
+    else if (f.detour) {
+      var dres = startDetour(job, f.detour, core, ram);
+      if (typeof dres === 'string') { feed(f.name + ': ' + dres, 'info'); render(); return; }
+    }
     else if (f.app) { try { f.app(job); } catch (e) { console.warn('[crowd]', job.id, e); } }
     else {
       var res = f.apply(ram);
@@ -590,6 +600,121 @@
       f.good ? 'good' : 'bad');
     send({ type: 'applied', effect: job.id, user: job.user });
     render();
+  }
+
+  // ── boss detour ────────────────────────────────────────────────────────
+  // A save state is taken, Link is sent to a boss, and when the fight ends
+  // (time's up, Link falls, or he wins) the save state is loaded again: the
+  // run is exactly as it was. Nothing from the detour sticks, so it can't
+  // break a seed, end the game early or count as a death.
+  //
+  // Getting there uses the game's own code (zelda3: Module11 falling
+  // entrance, and the warp-tile transition Module07_15):
+  //   1. $010E = entrance, module $11: Link drops in through that entrance
+  //   2. for bosses deeper in a dungeon, a warp ($A0 = boss room, submodule
+  //      $15) from that dungeon's lobby straight to the boss room
+  // Entrance ids from the entrance randomizer's tables; rooms are vanilla.
+  var BOSSES = {
+    ganon:      { name: 'Ganon',      entrance: 0x7B },               // the Pyramid hole drops into his room
+    aga1:       { name: 'Agahnim',    entrance: 0x24, room: 0x20 },
+    aga2:       { name: 'Agahnim 2',  entrance: 0x37, room: 0x0D },
+    armos:      { name: 'Eastern Palace boss', entrance: 0x08, room: 0xC8 },
+    lanmolas:   { name: 'Desert Palace boss',  entrance: 0x09, room: 0x33 },
+    moldorm:    { name: 'Tower of Hera boss',  entrance: 0x33, room: 0x07 },
+    helmasaur:  { name: 'Palace of Darkness boss', entrance: 0x26, room: 0x5A },
+    arrghus:    { name: 'Swamp Palace boss',   entrance: 0x25, room: 0x06 },
+    mothula:    { name: 'Skull Woods boss',    entrance: 0x2B, room: 0x29 },
+    blind:      { name: "Thieves' Town boss",  entrance: 0x34, room: 0xAC },
+    kholdstare: { name: 'Ice Palace boss',     entrance: 0x2D, room: 0xDE },
+    vitreous:   { name: 'Misery Mire boss',    entrance: 0x27, room: 0x90 },
+    trinexx:    { name: 'Turtle Rock boss',    entrance: 0x35, room: 0xA4 },
+  };
+  var WIN_MODULES = { 0x13: 1, 0x15: 1, 0x16: 1, 0x18: 1, 0x19: 1, 0x1A: 1 };   // prize, Aga warp, crystal, Ganon emerges, triforce, credits
+  var detour = null;          // { id, boss, by, state, snap, frames, total, hpMax, wait }
+  var detourEl = null;
+  function detourSecs(id) { var d = +(durations[id] || durations.boss_detour); return d >= 10 && d <= 600 ? d : 60; }
+  function startDetour(job, which, core, ram) {
+    if (detour) return 'Already on a boss detour';
+    var ids = Object.keys(BOSSES);
+    var key = which === 'random' ? ids[Math.floor(Math.random() * ids.length)] : which;
+    var b = BOSSES[key]; if (!b) return 'Unknown boss';
+    var snap; try { snap = core.saveState(); } catch (e) { snap = null; }
+    if (!snap || !snap.length) return 'Could not save the game first, so no detour';
+    detour = { key: key, boss: b, by: job.user || '', state: 'entering', snap: snap.slice ? snap.slice() : snap, frames: 0,
+      total: Math.round(detourSecs(job.id) * (core.fps || 60.1)), hpMax: ram[A.HP_MAX], wait: 0 };
+    // 1. drop in through the entrance
+    ram[0x10E] = b.entrance; ram[0x10F] = 0;
+    ram[0x10] = 0x11; ram[0x11] = 0; ram[0xB0] = 0;
+    detourHud('BOSS DETOUR', b.name + (detour.by ? ' · sent by ' + detour.by : ''), 1);
+    send({ type: 'detour', phase: 'start', boss: b.name, user: detour.by, secs: detourSecs(job.id) });
+    return true;
+  }
+  function detourFrame(core, ram) {
+    if (!detour) return;
+    var d = detour, mode = ram[0x10], sub = ram[0x11];
+    if (++d.wait > 60 * 30 && d.state !== 'fight') return endDetour(core, 'lost', 'Couldn\'t reach the boss');
+    if (d.state === 'entering') {
+      if (mode === 0x07 && sub === 0 && ram[A.FROZEN] === 0) {
+        if (d.boss.room != null && ram[0xA0] !== d.boss.room) {
+          // 2. warp from the lobby to the boss room
+          ram[0xA2] = ram[0xA0]; ram[0xA3] = ram[0xA1];
+          ram[0xA0] = d.boss.room; ram[0xA1] = 0;
+          ram[0x11] = 0x15; ram[0xB0] = 0;
+          d.state = 'warping';
+        } else { d.state = 'fight'; d.frames = 0; }
+      }
+      return;
+    }
+    if (d.state === 'warping') { if (mode === 0x07 && sub === 0) { d.state = 'fight'; d.frames = 0; } return; }
+    if (d.state !== 'fight') return;
+    // how did it go?
+    if (mode === 0x12 || ram[A.HP] === 0) return endDetour(core, 'ko', 'Link went down!');
+    if (WIN_MODULES[mode] || ram[A.HP_MAX] > d.hpMax) return endDetour(core, 'won', 'BOSS DEFEATED!');
+    if (mode === 0x09 || mode === 0x0B) return endDetour(core, 'escaped', 'LINK ESCAPED!');
+    if (mode === 0x07 && sub === 0) d.frames++;
+    var left = Math.max(0, d.total - d.frames);
+    if (d.frames % 15 === 0) detourHud('BOSS DETOUR ' + Math.ceil(left / 60) + 's', d.boss.name + (d.by ? ' · sent by ' + d.by : ''), left / d.total);
+    if (left <= 0) endDetour(core, 'survived', 'SURVIVED!');
+  }
+  function endDetour(core, result, title) {
+    var d = detour; if (!d || d.state === 'ending') return;
+    d.state = 'ending';
+    // load the save state between frames, not in the middle of one
+    setTimeout(function () {
+      try { if (!core.loadState(d.snap)) throw new Error('state did not load'); } catch (e) { console.warn('[crowd] detour return', e); feed('Boss detour: couldn\'t return automatically. Load your last save state.', 'info'); }
+      detour = null; runSent = '';
+      detourHud(title, d.boss.name + ' · back to the run', -1);
+      feed('Boss detour (' + d.boss.name + '): ' + ({ won: 'won!', survived: 'survived', ko: 'knocked out', escaped: 'escaped' }[result] || 'cancelled'), result === 'ko' || result === 'lost' ? 'bad' : 'good');
+      send({ type: 'detour', phase: 'end', result: result, boss: d.boss.name, user: d.by });
+      render();
+    }, 0);
+  }
+  function cancelDetour() { var c = core(); if (detour && c) endDetour(c, 'lost', 'DETOUR CANCELLED'); }
+  var DETOUR_CSS =
+    '.cc-detour { position: absolute; z-index: 27; pointer-events: none; transform: translateX(-50%); text-align: center;' +
+    ' padding: 5px 12px 6px; border-radius: 8px; background: rgba(18,12,34,.92); border: 2px solid #e63946; color: #fff;' +
+    ' box-shadow: 0 4px 14px rgba(0,0,0,.5); transition: opacity .5s; min-width: 150px; }' +
+    '.cc-detour .t { font: 9px/1.3 "Rando Pixel", ui-monospace, monospace; color: #ff8a92; letter-spacing: .04em; }' +
+    '.cc-detour .s { font: 700 12px/1.25 system-ui, sans-serif; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }' +
+    '.cc-detour .b { margin-top: 4px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }' +
+    '.cc-detour .b i { display: block; height: 100%; background: #e63946; transition: width .3s linear; }' +
+    '.cc-detour.done { border-color: #ffd166; } .cc-detour.done .t { color: #ffd166; font-size: 11px; } .cc-detour.done .b { display: none; }';
+  var detourHideT = null;
+  function detourHud(title, sub, frac) {
+    if (typeof document === 'undefined') return;
+    var host = document.querySelector('.s9x'); if (!host) return;
+    if (!document.getElementById('cc-detour-css')) { var st = document.createElement('style'); st.id = 'cc-detour-css'; st.textContent = DETOUR_CSS; document.head.appendChild(st); }
+    if (!detourEl || !detourEl.isConnected) { detourEl = document.createElement('div'); detourEl.className = 'cc-detour'; detourEl.innerHTML = '<div class="t"></div><div class="s"></div><div class="b"><i></i></div>'; host.appendChild(detourEl); }
+    // top right of the game picture, over the hearts' row edge but off the play area
+    var P = root.Snes9xPlayer, r = P && P.fx && P.fx.pictureRect && P.fx.pictureRect();
+    if (r && r.w) { detourEl.style.left = Math.round(r.x + r.w * 0.5) + 'px'; detourEl.style.top = Math.round(r.y + r.h * 0.16) + 'px'; }
+    clearTimeout(detourHideT);
+    detourEl.style.opacity = '1';
+    detourEl.classList.toggle('done', frac < 0);
+    detourEl.querySelector('.t').textContent = title;
+    detourEl.querySelector('.s').textContent = sub || '';
+    if (frac >= 0) detourEl.querySelector('.b i').style.width = Math.max(0, Math.min(1, frac)) * 100 + '%';
+    if (frac < 0) detourHideT = setTimeout(function () { if (detourEl) { detourEl.style.opacity = '0'; } }, 3500);
   }
 
   function endAll() {
@@ -687,6 +812,8 @@
         for (var i = 0; i < n; i++) trigger(m.effect, m.user, m.label);
       } else if (m.type === 'timer') {
         showClock(m);
+      } else if (m.type === 'detour-end') {
+        cancelDetour();
       } else if (m.type === 'durations') {
         durations = m.secs && typeof m.secs === 'object' ? m.secs : {};
         render();
@@ -715,7 +842,7 @@
   function menuHtml(rr) {
     if (rr) rerender = rr;
     var timed = Object.keys(active).map(function (id) { return EFFECTS[id].name + ' ' + Math.ceil(active[id] / 60) + 's' + (paused[id] ? ' (paused indoors)' : ''); });
-    var tests = Object.keys(EFFECTS).map(function (id) {
+    var tests = Object.keys(EFFECTS).filter(function (id) { return id.charAt(0) !== '_'; }).map(function (id) {
       return '<button type="button" data-ext="cc-test" data-id="' + id + '">' + esc(EFFECTS[id].name) + '</button>';
     }).join('');
     return '<h4>Crowd effects</h4>' +
@@ -726,6 +853,7 @@
       '<div class="row"><span>Show subathon clock on game</span><input type="checkbox" data-ext="cc-show-timer"' + (cfg.showTimer ? ' checked' : '') + '></div>' +
       '<div class="row"><span>Show seed-reroll banner on game</span><input type="checkbox" data-ext="cc-reroll-overlay"' + (cfg.rerollOverlay ? ' checked' : '') + '></div>' +
       (rerollT ? '<div class="acts"><button type="button" class="primary" data-ext="cc-cancel-reroll">Cancel new seed (' + rerollLeft + 's)</button></div>' : '') +
+      (detour ? '<div class="acts"><button type="button" class="primary" data-ext="cc-end-detour">End boss detour now</button></div>' : '') +
       '<p class="hint">Status: ' + esc(status) + (bridgeInfo ? ' · ' + esc(bridgeInfo) : '') +
         ' · ' + queue.length + ' queued' + (timed.length ? ' · active: ' + esc(timed.join(', ')) : '') + '</p>' +
       '<p class="hint">Test an effect (it runs when you return to the game):</p>' +
@@ -738,6 +866,7 @@
     if (a === 'cc-test') trigger(b.dataset.id, 'test');
     else if (a === 'cc-clear') { endAll(); queue.length = 0; paused = {}; cancelReroll(); }
     else if (a === 'cc-cancel-reroll') cancelReroll();
+    else if (a === 'cc-end-detour') cancelDetour();
     rr();
   }
   function menuInput(el) {
@@ -763,8 +892,8 @@
   }
 
   function list() {
-    return Object.keys(EFFECTS).map(function (id) {
-      return { id: id, name: EFFECTS[id].name, secs: secsOf(id), good: !!EFFECTS[id].good };
+    return Object.keys(EFFECTS).filter(function (id) { return id.charAt(0) !== '_'; }).map(function (id) {
+      return { id: id, name: EFFECTS[id].name, secs: EFFECTS[id].detour ? detourSecs(id) : secsOf(id), good: !!EFFECTS[id].good };
     });
   }
 
@@ -781,6 +910,9 @@
 
   var api = {
     trigger: trigger, list: list, cancelReroll: cancelReroll, EFFECTS: EFFECTS, ADDR: A, inPlay: inPlay,
+    BOSSES: BOSSES, endDetour: cancelDetour, get detour() { return detour && { boss: detour.boss.name, state: detour.state, frames: detour.frames, total: detour.total }; },
+    // for testing a single boss from the console: CrowdEffects.detourTo('moldorm')
+    detourTo: function (key) { EFFECTS._detour_test = { name: 'Boss detour: ' + ((BOSSES[key] || {}).name || key), detour: key }; return trigger('_detour_test', 'test'); },
     _onFrame: onFrame, _onInput: onInput, _showClock: showClock,
     get queue() { return queue.slice(); }, get active() { return Object.assign({}, active); },
     get status() { return status; },

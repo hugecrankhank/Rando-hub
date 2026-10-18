@@ -149,12 +149,13 @@ function onGameMessage(text) {
     studio.pushState();
     const named = [...new Set(Object.values(cfg.gifts).concat(cfg.follow, cfg.share, cfg.likes?.effect).filter(Boolean))];
     for (const id of named) {
-      if (knownEffects.has(id) || id === 'mystery_box') continue;
+      if (knownEffects.has(id) || id === 'mystery_box' || id === 'detour_rescue') continue;
       const fix = resolveEffect(id);
       log(fix ? `mapping.json: "${id}" isn't an effect name, using "${fix}" (fix the spelling to silence this)`
               : `mapping.json: "${id}" isn't an effect the game has. Type "list" in --test mode to see them all.`);
     }
-  } else if (m.type === 'run' || m.type === 'death' || m.type === 'music') {
+  } else if (m.type === 'run' || m.type === 'death' || m.type === 'music' || m.type === 'detour') {
+    if (m.type === 'detour') log(m.phase === 'start' ? `⚔ boss detour: ${m.boss}${m.user ? ' (sent by ' + m.user + ')' : ''}` : `⚔ boss detour over: ${m.result}`);
     if (m.type === 'death') log(`☠ Link died (death #${m.deaths})`);
     if (m.type === 'music') log(`♪ music: ${m.pack || "the game's own"}`);
     studio.onGame(m);
@@ -176,7 +177,7 @@ function editDistance(a, b) {
   return d[a.length][b.length];
 }
 function resolveEffect(id) {
-  if (id === 'mystery_box' || !knownEffects || knownEffects.has(id)) return id;
+  if (id === 'mystery_box' || id === 'detour_rescue' || !knownEffects || knownEffects.has(id)) return id;
   const want = String(id).trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (knownEffects.has(want)) return want;
   let best = null, bestD = 3, tie = false;
@@ -191,6 +192,7 @@ function fire(effect, user, label, count = 1) {
   if (!effect) return null;
   // Studio-only effects (not in the game): the mystery box spins on stream,
   // then runs a random effect itself.
+  if (effect === 'detour_rescue') { broadcast({ type: 'detour-end' }); log(`  → rescue from the boss detour ${user ? 'by ' + user : ''}`); studio.onGame({ type: 'rescue', user }); return effect; }
   if (effect === 'mystery_box') { for (let i = 0; i < Math.min(count, cfg.maxPerGift ?? 5); i++) studio.mystery(user, label); log(`  → mystery box x${count} ${user ? 'from ' + user : ''}`); return effect; }
   const resolved = resolveEffect(effect);
   if (!resolved) { log(`  ! unknown effect "${effect}" (check mapping.json)`); return null; }
@@ -273,9 +275,11 @@ const effectNames = {
   mirror: 'Mirror mode', upside_down: 'Upside down', wobble: 'Drunk wobble', tiny: 'Tiny screen', crt: 'Retro CRT',
   speed_up: 'Speed up (1.5x)', slow_mo: 'Slow motion', freeze: 'Freeze!', fairy: 'Fairy in a bottle', bee_bottle: 'Bee in a bottle',
   pink_link: 'Pink Link', music_roulette: 'Music roulette', mystery_box: 'Mystery box (random effect)',
+  boss_ganon: 'Boss detour: Ganon', boss_aga: 'Boss detour: Agahnim', boss_random: 'Boss detour: random boss', detour_rescue: 'Rescue Link from a boss detour',
 };
 const defaultSecs = { ice: 20, cucco_storm: 30, invert: 20, no_sword: 20, no_item: 20, swap_by: 20, one_hit: 30, no_magic: 30,
-  mirror: 20, upside_down: 15, wobble: 20, tiny: 20, crt: 30, speed_up: 20, slow_mo: 15, freeze: 3, pink_link: 60 };
+  mirror: 20, upside_down: 15, wobble: 20, tiny: 20, crt: 30, speed_up: 20, slow_mo: 15, freeze: 3, pink_link: 60,
+  boss_ganon: 60, boss_aga: 60, boss_random: 60 };
 
 function tickerData() {
   const t = cfg.ticker || {};
@@ -837,7 +841,8 @@ const studio = createStudio({
     else if (kind === 'chat') onChat(user, String(a.text || 'hello!'), { test: true });
   },
   effectList: () => {
-    const ids = (knownEffects ? [...knownEffects] : Object.keys(effectNames).filter((x) => x !== 'mystery_box')).concat('mystery_box');
+    const virtual = ['mystery_box', 'detour_rescue'];
+    const ids = (knownEffects ? [...knownEffects] : Object.keys(effectNames).filter((x) => !virtual.includes(x))).concat(virtual);
     return ids.map((id) => ({ id, name: effectNames[id] || id, secs: id in defaultSecs ? (+(cfg.durations || {})[id] > 0 ? +cfg.durations[id] : defaultSecs[id]) : 0 }));
   },
   timerView,

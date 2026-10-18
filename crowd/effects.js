@@ -801,7 +801,8 @@
   // Testing: send Link to one boss in particular (Studio's "Test this boss",
   // or CrowdEffects.detourTo('blind') in the console). Gifts still pick at random.
   function testBoss(key, user) {
-    if (!BOSSES[key]) return false;
+    if (!BOSSES[key]) { feed('Unknown boss: ' + key, 'info'); return false; }
+    if (detour) { feed('Already on a boss detour (' + detour.boss.name + ')', 'info'); return false; }
     EFFECTS._detour_test = { name: 'Boss detour: ' + BOSSES[key].name, good: false, detour: key };
     return trigger('_detour_test', user || 'test', 'test');
   }
@@ -1028,6 +1029,7 @@
       (rerollT ? '<div class="acts"><button type="button" class="primary" data-ext="cc-cancel-reroll">Cancel new seed (' + rerollLeft + 's)</button></div>' : '') +
       (detour ? '<div class="acts"><button type="button" class="primary" data-ext="cc-end-detour">End boss detour now</button></div>' : '') +
       '<p class="hint">Status: ' + esc(status) + (bridgeInfo ? ' · ' + esc(bridgeInfo) : '') +
+        (queue.length ? ' · ' + queue.length + ' waiting' : '') + (detour ? ' · boss detour: ' + esc(detour.boss.name) + ' (' + detour.state + ')' : '') +
         ' · ' + queue.length + ' queued' + (timed.length ? ' · active: ' + esc(timed.join(', ')) : '') + '</p>' +
       '<p class="hint">Test an effect (it runs when you return to the game):</p>' +
       '<div class="acts">' + tests + '</div>' +

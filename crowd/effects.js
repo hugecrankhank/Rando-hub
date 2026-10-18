@@ -507,6 +507,7 @@
   var gap = 0;                 // frames until the next queued effect may run
   var GAP_FRAMES = 45;         // ~0.75 s between effects, so each one is seen
   var MAX_QUEUE = 60;
+  var waitT = 0;
 
   // mapping.json can change how long timed effects last ("durations").
   var durations = {};
@@ -558,6 +559,11 @@
     var ram = core.wram();
     holdSwitches(core, ram);
     try { if (detour) detourFrame(core, ram); else sendRun(ram); } catch (e) { console.warn('[crowd] detour', e); }
+    // say why effects are waiting, once, if they wait more than ~4 s
+    if (queue.length && (detour || !inPlay(ram))) {
+      if (++waitT === 240) feed(queue.length + ' waiting: ' + (detour ? 'boss detour still running (' + detour.state + ')' :
+        'Link isn\'t in normal play (mode ' + ram[A.MODE] + '/' + ram[A.SUBMODE] + ', frozen ' + ram[A.FROZEN] + ', hearts ' + ram[A.HP] + '/' + ram[A.HP_MAX] + ')'), 'info');
+    } else waitT = 0;
     if (!inPlay(ram)) return;
     // timed effects
     var outside = ram[A.MODE] === 0x09;   // the ROM only spawns cuccos on the overworld

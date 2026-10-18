@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.1 (2026-10-18)
+
+- Crowd Control+ now opens the control panel in your browser by itself when it starts,
+  as the instructions say (it only printed the address before).
+
 ## 1.2.0 (2026-10-17)
 
 **Rando Hub**

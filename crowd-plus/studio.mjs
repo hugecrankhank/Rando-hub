@@ -312,6 +312,7 @@ export function createStudio(ctx) {
         ctx.saveCfg(patch); log('gift setup saved from the panel'); return;
       }
       case 'test-effect': ctx.fire(String(a.effect || ''), a.user || 'test', 'test'); return;
+      case 'test-boss': if (ctx.testBoss) ctx.testBoss(String(a.boss || ''), a.user || 'test'); return;
       case 'simulate': {
         const u = a.user || 'TestViewer';
         if (a.kind === 'gift') ctx.simulateGift(u, a.gift || 'Rose', Math.max(1, +a.count || 1), Math.max(0, +a.coins || 0), !!a.runEffect);

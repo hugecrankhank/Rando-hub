@@ -325,7 +325,8 @@
     <div class="row"><span class="muted" style="min-width:170px">If he beats the boss</span><select data-s="detour.winEffect" data-effects data-none></select> and <input type="number" min="0" data-s="detour.winTimerSeconds" style="width:80px"> seconds on the subathon clock</div>
     <div class="row"><span class="muted" style="min-width:170px">If he survives the timer</span><select data-s="detour.surviveEffect" data-effects data-none></select> and <input type="number" min="0" data-s="detour.surviveTimerSeconds" style="width:80px"> seconds on the clock</div>
     <div class="row"><button class="small" data-test-detour="boss_ganon">Test Ganon</button><button class="small" data-test-detour="boss_aga">Test Agahnim</button><button class="small" data-test-detour="boss_random">Test random boss</button><button class="small" data-test-detour="detour_rescue">Rescue</button></div>
-    <p class="hint">Tests run in the game, so it must be connected and Link in normal play.</p>
+    <div class="row"><span class="muted" style="min-width:170px">Test one boss</span><select id="dt-boss"><option value="ganon">Ganon</option><option value="aga1">Agahnim</option><option value="aga2">Agahnim 2</option><option value="armos">Eastern Palace (Armos)</option><option value="lanmolas">Desert Palace (Lanmolas)</option><option value="moldorm">Tower of Hera (Moldorm)</option><option value="helmasaur">Palace of Darkness (Helmasaur)</option><option value="arrghus">Swamp Palace (Arrghus)</option><option value="mothula">Skull Woods (Mothula)</option><option value="blind">Thieves&#39; Town (Blind)</option><option value="kholdstare">Ice Palace (Kholdstare)</option><option value="vitreous">Misery Mire (Vitreous)</option><option value="trinexx">Turtle Rock (Trinexx)</option></select><button class="small" id="dt-boss-go">Send Link there</button></div>
+    <p class="hint">Tests run in the game, so it must be connected and Link in normal play. "Test one boss" is only for checking each fight; gifts set to the random boss still pick at random.</p>
   </div>
 
   <h2>PREDICTIONS</h2>
@@ -780,6 +781,7 @@ function paintMysteryPool() {
     draft.mystery.pool = [...set]; markS();
   });
 }
+$('dt-boss-go').onclick = () => call('test-boss', { boss: $('dt-boss').value, user: $('t-user').value || 'TestViewer' }, 'Sent to the game');
 document.querySelectorAll('[data-test-detour]').forEach((b) => b.onclick = () => call('test-effect', { effect: b.dataset.testDetour, user: $('t-user').value || 'TestViewer' }, 'Sent to the game'));
 $('mb-test').onclick = () => call('mystery', { user: $('t-user').value || 'Streamer' });
 $('pd-start').onclick = () => call('predict-start', { question: $('pd-q').value, labels: [$('pd-a').value, $('pd-b').value], seconds: draft.predict.seconds }, 'Prediction started');

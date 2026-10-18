@@ -554,6 +554,8 @@ BOSS DETOUR
       boss and for surviving until time's up
     - "Rescue Link from a boss detour" as a gift's effect ends it early
     - On the game: ⚙ menu -> "End boss detour now" if you need out
+    - Testing: "Test one boss" picks a boss and sends Link there. Gifts
+      set to the random boss still pick at random.
   Other effects wait until he's back. Early in a seed Ganon is usually
   a survival challenge. Not for races (it's a save state).
 

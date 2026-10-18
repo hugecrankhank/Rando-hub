@@ -5,6 +5,23 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.1.0 (2026-10-17)
+
+**Rando Hub**
+- "NOW PLAYING" card on the game for 3 seconds whenever the MSU-1 pack changes
+  (♪ menu, 🎲 roll or a crowd gift), with or without crowd control.
+- New crowd effects: mirror mode, upside down, drunk wobble, tiny screen, retro CRT,
+  speed up (1.5x), slow motion, freeze, fairy or bee in a bottle, pink Link and music
+  roulette (a random song from the MSU-1 pack).
+- With crowd effects on, the game sends run stats (deaths, checks, where Link is,
+  music, seed) to the bridge.
+
+**Crowd Control+**
+- Live games: chat votes, team battle (Light vs Dark World), mystery box slot
+  machine, combo meter and predictions, each with an overlay and panel controls.
+- Run & stream: run stats overlay, death tax, clip markers (automatic, Mark now and
+  viewers' `!clip`), hall of fame (all-time gifters) and welcome-back pop-ups.
+
 ## 1.0.2 (2026-10-17)
 
 - New second download: **Crowd Control+** (`Crowd-Control-Plus-v1.0.2.zip`), the

@@ -149,11 +149,15 @@ function onGameMessage(text) {
     studio.pushState();
     const named = [...new Set(Object.values(cfg.gifts).concat(cfg.follow, cfg.share, cfg.likes?.effect).filter(Boolean))];
     for (const id of named) {
-      if (knownEffects.has(id)) continue;
+      if (knownEffects.has(id) || id === 'mystery_box') continue;
       const fix = resolveEffect(id);
       log(fix ? `mapping.json: "${id}" isn't an effect name, using "${fix}" (fix the spelling to silence this)`
               : `mapping.json: "${id}" isn't an effect the game has. Type "list" in --test mode to see them all.`);
     }
+  } else if (m.type === 'run' || m.type === 'death' || m.type === 'music') {
+    if (m.type === 'death') log(`☠ Link died (death #${m.deaths})`);
+    if (m.type === 'music') log(`♪ music: ${m.pack || "the game's own"}`);
+    studio.onGame(m);
   } else if (m.type === 'applied') {
     log(`  ✓ applied ${m.effect}${m.user ? ' for ' + m.user : ''}`);
   }
@@ -172,7 +176,7 @@ function editDistance(a, b) {
   return d[a.length][b.length];
 }
 function resolveEffect(id) {
-  if (!knownEffects || knownEffects.has(id)) return id;
+  if (id === 'mystery_box' || !knownEffects || knownEffects.has(id)) return id;
   const want = String(id).trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (knownEffects.has(want)) return want;
   let best = null, bestD = 3, tie = false;
@@ -185,6 +189,9 @@ function resolveEffect(id) {
 
 function fire(effect, user, label, count = 1) {
   if (!effect) return null;
+  // Studio-only effects (not in the game): the mystery box spins on stream,
+  // then runs a random effect itself.
+  if (effect === 'mystery_box') { for (let i = 0; i < Math.min(count, cfg.maxPerGift ?? 5); i++) studio.mystery(user, label); log(`  → mystery box x${count} ${user ? 'from ' + user : ''}`); return effect; }
   const resolved = resolveEffect(effect);
   if (!resolved) { log(`  ! unknown effect "${effect}" (check mapping.json)`); return null; }
   effect = resolved;
@@ -263,8 +270,12 @@ const effectNames = {
   no_sword: 'No sword', no_item: 'No Y item', swap_by: 'B and Y swapped', one_hit: 'One-heart mode',
   no_magic: 'Magic locked', sprite_roll: 'Random sprite', sprite_fav: 'Random favourite sprite',
   msu_roll: 'Random MSU pack', seed_roll: 'New seed (same settings)', seed_preset: 'Random preset seed', seed_chaos: 'CHAOS seed',
+  mirror: 'Mirror mode', upside_down: 'Upside down', wobble: 'Drunk wobble', tiny: 'Tiny screen', crt: 'Retro CRT',
+  speed_up: 'Speed up (1.5x)', slow_mo: 'Slow motion', freeze: 'Freeze!', fairy: 'Fairy in a bottle', bee_bottle: 'Bee in a bottle',
+  pink_link: 'Pink Link', music_roulette: 'Music roulette', mystery_box: 'Mystery box (random effect)',
 };
-const defaultSecs = { ice: 20, cucco_storm: 30, invert: 20, no_sword: 20, no_item: 20, swap_by: 20, one_hit: 30, no_magic: 30 };
+const defaultSecs = { ice: 20, cucco_storm: 30, invert: 20, no_sword: 20, no_item: 20, swap_by: 20, one_hit: 30, no_magic: 30,
+  mirror: 20, upside_down: 15, wobble: 20, tiny: 20, crt: 30, speed_up: 20, slow_mo: 15, freeze: 3, pink_link: 60 };
 
 function tickerData() {
   const t = cfg.ticker || {};
@@ -826,7 +837,7 @@ const studio = createStudio({
     else if (kind === 'chat') onChat(user, String(a.text || 'hello!'), { test: true });
   },
   effectList: () => {
-    const ids = knownEffects ? [...knownEffects] : Object.keys(effectNames);
+    const ids = (knownEffects ? [...knownEffects] : Object.keys(effectNames).filter((x) => x !== 'mystery_box')).concat('mystery_box');
     return ids.map((id) => ({ id, name: effectNames[id] || id, secs: id in defaultSecs ? (+(cfg.durations || {})[id] > 0 ? +cfg.durations[id] : defaultSecs[id]) : 0 }));
   },
   timerView,

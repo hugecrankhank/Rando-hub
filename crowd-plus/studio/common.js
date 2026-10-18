@@ -5,7 +5,7 @@
   const CC = window.CC = {
     q,
     state: null,
-    handlers: { state: [], event: [], tick: [], clear: [] },
+    handlers: { state: [], event: [], tick: [], clear: [], live: [] },
     on(kind, fn) { this.handlers[kind].push(fn); return this; },
     esc(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
     fmt(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); },
@@ -36,7 +36,17 @@
         if (d.stats) Object.assign(CC.state.stats, d.stats);
         if (d.goals) CC.state.settings.goals = d.goals;
       }
-      if (d.kind === 'tick' && CC.state) { CC.state.status = d.status; CC.state.timer = Object.assign(CC.state.timer || {}, d.timer); }
+      if (d.kind === 'live' && CC.state && CC.state.live) {
+        const L = CC.state.live;
+        if ('poll' in d) L.poll = d.poll;
+        if ('battle' in d) L.battle = d.battle;
+        if ('predict' in d) L.predict = d.predict;
+        if (d.run) L.run = d.run;
+        if (d.combo) L.combo = Object.assign(L.combo || {}, d.combo);
+        if (d.clip) L.clips = (L.clips || []).concat(d.clip).slice(-200);
+        if (d.what === 'music') L.run = Object.assign(L.run || {}, { music: d.pack });
+      }
+            if (d.kind === 'tick' && CC.state) { CC.state.status = d.status; CC.state.timer = Object.assign(CC.state.timer || {}, d.timer); }
       for (const fn of CC.handlers[d.kind] || []) { try { fn(d, CC.state); } catch (e) { console.error(e); } }
     };
   }

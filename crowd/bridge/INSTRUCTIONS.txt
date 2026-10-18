@@ -349,6 +349,20 @@ All effect names (use these on the right side):
     This folder's mapping.json sets one_hit, no_magic and cucco_storm
     to 20s (see "durations" below).
 
+  NEW: SCREEN, SPEED AND LINK
+    mirror         Picture flipped left-right ...... 20s
+    upside_down    Picture upside down ............. 15s
+    wobble         Drunk wobble .................... 20s
+    tiny           Half-size picture ............... 20s
+    crt            Retro CRT filter ................ 30s
+    speed_up       1.5x speed ...................... 20s
+    slow_mo        Half speed ...................... 15s
+    freeze         Link can't move ................. 3s
+    pink_link      Pink Link ....................... 60s
+    fairy          Fairy in the first empty bottle
+    bee_bottle     Bee in the first empty bottle
+    music_roulette A random song from your MSU-1 pack
+
   APP ACTIONS
     sprite_roll    Random Link sprite
     sprite_fav     Random sprite from your starred favourites

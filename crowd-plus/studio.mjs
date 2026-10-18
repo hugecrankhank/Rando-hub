@@ -15,6 +15,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { createLive, LIVE_DEFAULTS } from './studio-live.mjs';
 
 const MAX_LOG = 200;
 
@@ -59,6 +60,7 @@ export function createStudio(ctx) {
       ],
     },
     theme: { accent: '#e63946', panel: 'rgba(17,12,34,.9)', pixelFont: true },
+    ...LIVE_DEFAULTS,
   };
   const merge = (base, over) => {
     if (Array.isArray(base)) return Array.isArray(over) ? over : base;
@@ -100,6 +102,15 @@ export function createStudio(ctx) {
     return Object.entries(stats.gifters).map(([user, g]) => ({ user, ...g }))
       .sort((a, b) => b.coins - a.coins || b.gifts - a.gifts).slice(0, n);
   }
+  const live = createLive({
+    HERE, log, push: (m) => push(m), settings: () => settings, saveSettings: () => { saveSettings(); pushState(); },
+    fire: (effect, user, label) => ctx.fire(effect, user, label),
+    effectName: (id) => (ctx.effectList().find((x) => x.id === id) || {}).name || id,
+    effectIds: () => ctx.effectList().map((x) => x.id),
+    timerApi: (op, secs) => ctx.timerApi(op, secs), timerView: () => ctx.timerView(false),
+    streamSince: () => stats.since, record: (ev) => record(ev),
+  });
+
   function snapshot() {
     const cfg = ctx.getCfg();
     return {
@@ -112,6 +123,7 @@ export function createStudio(ctx) {
       },
       effects: ctx.effectList(), catalog: giftCatalog(), profiles: listProfiles(),
       recent: events.slice(-40),
+      live: live.snapshot(),
     };
   }
   let stateT = null;
@@ -206,6 +218,7 @@ export function createStudio(ctx) {
         }
       }
     }
+    try { live.onEvent(e); } catch (err) { log('live: ' + err.message); }
     events.push(e); if (events.length > MAX_LOG) events.shift();
     push({ kind: 'event', ev: e, stats: { coins: stats.coins, gifts: stats.gifts, likes: stats.likes, follows: stats.follows, shares: stats.shares, chats: stats.chats, top: topGifters(Math.max(10, settings.leaderboard.size)) }, goals: settings.goals });
     return e;
@@ -241,7 +254,7 @@ export function createStudio(ctx) {
     res.writeHead(200, { 'content-type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-cache' });
     fs.createReadStream(file).pipe(res);
   }
-  const OVERLAYS = ['alerts', 'goal', 'leaderboard', 'feed', 'commands'];
+  const OVERLAYS = ['alerts', 'goal', 'leaderboard', 'feed', 'commands', 'vote', 'battle', 'mystery', 'combo', 'run', 'predict', 'halloffame', 'welcome'];
 
   function handle(req, res, url) {
     const p = url.pathname;
@@ -338,9 +351,13 @@ export function createStudio(ctx) {
       }
       case 'profile-delete': { const n = safeName(a.name); try { fs.unlinkSync(path.join(PROFILES, n + '.json')); } catch {} return; }
       case 'timer': return { timer: ctx.timerApi(a.op, a.seconds) };
-      default: throw new Error('unknown action');
+      default: {
+        const r = live.run(a);
+        if (r === false) throw new Error('unknown action');
+        return typeof r === 'object' ? { ok: true, ...r } : undefined;
+      }
     }
   }
 
-  return { record, handle, pushState, get settings() { return settings; } };
+  return { record, handle, pushState, onGame: (m) => live.onGame(m), mystery: (u, l) => live.mystery(u, l), get settings() { return settings; } };
 }

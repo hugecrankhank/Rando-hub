@@ -5,8 +5,20 @@ Crowd Control+ is the regular Rando Hub Crowd Control with a control
 panel and stream overlays added. Every gift effect, big-donation seed
 roll and the subathon clock work exactly as before.
 
-NEW
----
+NEW IN 1.1.0
+------------
+- Live games: chat votes, team battle (Light vs Dark World), mystery box
+  slot machine, combo meter, predictions (!yes / !no)
+- Run stats overlay: deaths, checks, where Link is, music, seed
+- Death tax: each death adds subathon time and/or moves a goal
+- Clip markers (automatic, Mark now, and viewers' !clip), with download
+- Hall of fame (all-time gifters) and "welcome back" pop-ups for regulars
+- New effects: mirror, upside down, wobble, tiny screen, retro CRT,
+  speed up, slow motion, freeze, fairy / bee in a bottle, pink Link,
+  music roulette (needs Rando Hub 1.1.0 or newer)
+
+NEW IN 1.0
+----------
 1. Control panel (http://localhost:21214/studio, opens by itself)
      - Gift setup with menus and gift pictures, no more editing files
      - Test buttons for every gift, effect and alert

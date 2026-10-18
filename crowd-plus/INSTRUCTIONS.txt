@@ -23,6 +23,10 @@ Crowd Control+ is everything the regular Crowd Control does, plus:
                     - Top gifters leaderboard
                     - Recent events feed
                     - Chat command replies (!rules, !effects, !timer ...)
+                    - Chat votes, team battles, the mystery box, the
+                      combo meter and predictions
+                    - Run stats (deaths, checks, where Link is, music,
+                      seed), hall of fame and "welcome back" pop-ups
                     - The scrolling gift list and the subathon clock
   READ CHAT ALOUD Text-to-speech for viewers' chat messages, with filters.
 
@@ -61,6 +65,9 @@ WHAT'S IN THIS FOLDER
 
 These files are created while it runs, and hold your stream's data:
   stats.json          Totals and the top-gifters board.
+  hall-of-fame.json   All-time gifters.
+  viewers.json        Who's been to how many streams (welcome back).
+  clips.json          Clip markers.
   seen-gifts.json     Every gift seen on stream and its coin value.
   timer-state.json    The subathon clock.
 
@@ -176,6 +183,14 @@ ALERTS
   stay, sound and volume, and whether follows and shares get alerts too.
   Sizes: small, big and huge, each starting at a coin value, with its
   own headline. Test buttons show each size on your alert overlay.
+
+LIVE GAMES
+  Chat votes, team battle, mystery box, combo meter and predictions.
+  See PART 12.
+
+RUN & STREAM
+  Run stats from the game, death tax, clip markers, hall of fame and
+  welcome back. See PART 13.
 
 GOALS
   Bars that fill up during the stream: coins, likes, follows, shares or
@@ -431,6 +446,20 @@ All effect names (use these on the right side):
     This folder's mapping.json sets one_hit, no_magic and cucco_storm
     to 20s (see "durations" below).
 
+  NEW: SCREEN, SPEED AND LINK
+    mirror         Picture flipped left-right ...... 20s
+    upside_down    Picture upside down ............. 15s
+    wobble         Drunk wobble .................... 20s
+    tiny           Half-size picture ............... 20s
+    crt            Retro CRT filter ................ 30s
+    speed_up       1.5x speed ...................... 20s
+    slow_mo        Half speed ...................... 15s
+    freeze         Link can't move ................. 3s
+    pink_link      Pink Link ....................... 60s
+    fairy          Fairy in the first empty bottle
+    bee_bottle     Bee in the first empty bottle
+    music_roulette A random song from your MSU-1 pack
+
   APP ACTIONS
     sprite_roll    Random Link sprite
     sprite_fav     Random sprite from your starred favourites
@@ -465,8 +494,80 @@ Other settings in mapping.json:
 
 
 =========================================================================
+PART 12 - LIVE GAMES (Live games tab)
+=========================================================================
+
+Add each one's overlay from the Overlays tab first.
+
+CHAT VOTE
+  Write a question and 2-4 choices, pick an effect for each (or none for
+  a plain poll), press Start vote. Chat types 1, 2, 3 or 4. When time's
+  up the winner's effect runs. Quick buttons: "Random curses", "Curse or
+  blessing", "Which dungeon next?". Ties are settled by chance.
+
+TEAM BATTLE
+  Light World vs Dark World (rename them). Viewers type !light or !dark
+  to join. Their gifts fill their team's bar; gifters who didn't join
+  help the team that's behind. First to the coin target, or ahead when
+  the time limit runs out, wins, and that team's effect runs (by
+  default: a full heal for Light, a CHAOS seed for Dark).
+
+MYSTERY BOX
+  Set "Mystery box" as any gift's effect (Gifts & effects tab), as a
+  big-donation level, or as the combo bonus. A slot machine spins on
+  stream and lands on a random effect from the ones you tick.
+
+COMBO METER
+  Gifts that arrive within a few seconds of each other build a combo.
+  Every 10 in a row (you choose) fires a bonus effect.
+
+PREDICTIONS
+  "Will he beat this dungeon without dying?" Chat types !yes or !no
+  before it locks. When it's over, press "It happened" or "It didn't";
+  the people who called it get a shout-out on stream. Just for fun.
+
+Votes and predictions only count chat messages that are exactly the
+number or word (1, !vote 2, !yes ...), so normal chat isn't affected.
 
 
+=========================================================================
+PART 13 - RUN STATS, DEATH TAX, CLIPS, HALL OF FAME (Run & stream tab)
+=========================================================================
+
+RUN STATS
+  While the game's Crowd effects is on, Rando Hub sends deaths, checks,
+  where Link is, the MSU-1 pack and the seed. Add the "Run stats"
+  overlay (one row, or ?layout=column for a box).
+
+DEATH TAX
+  Every death can add time to the subathon clock (default 5 minutes)
+  and/or move a goal, with a "DEATH TAX" alert.
+
+CLIP MARKERS
+  Big moments are time-stamped automatically: big gifts, seed rolls,
+  deaths, vote and battle winners, combo bonuses, predictions. Viewers
+  can type !clip, and "Mark now" adds your own. The time shown is
+  stream time since the last "Reset stream stats" (Dashboard), so reset
+  at the start of each stream and the times match your recording.
+  "Download list" saves them as a text file.
+
+HALL OF FAME
+  All-time top gifters across every stream (hall-of-fame.json). Reset
+  stream stats doesn't clear it; it has its own reset button.
+
+WELCOME BACK
+  When a regular (seen in 3+ streams; you choose) shows up for the
+  first time in a stream, a small "Welcome back" pop-up says hi. A new
+  stream starts when you press Reset stream stats.
+
+MUSIC
+  Whenever the MSU-1 pack changes (your music menu, the dice button, or
+  a gift), Rando Hub itself shows "NOW PLAYING <pack>" on the game for 3
+  seconds. It's part of the game picture, so it's on stream whenever the
+  game is, with or without Crowd Control+.
+
+
+=========================================================================
 TROUBLESHOOTING
 =========================================================================
 

@@ -761,6 +761,8 @@ Rando Hub wouldn't be what it is without these people. Thank you!
 - AVIANART seeds: [avianart.games](https://avianart.games).
 - Link sprites: the [alttpr.com sprite library](https://alttpr.com/en/sprites) and its artists.
 - TikTok connection: [TikFinity](https://tikfinity.zerody.one).
+- Logo lettering: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38,
+  SIL Open Font License (`fonts/PressStart2P-OFL.txt`).
 
 No ROMs are included; use your own legally obtained copy. Rando Hub is a fan project
 and is not affiliated with or endorsed by Nintendo.

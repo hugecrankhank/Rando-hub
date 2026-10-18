@@ -5,6 +5,12 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.0.1 (2026-10-17)
+
+- New Rando Hub logo: a red-and-white randomizer die with "RANDO HUB" in pixel
+  lettering, as the app icon and in the header.
+- Header name now uses the Press Start 2P pixel font (bundled, works offline).
+
 ## 1.0.0 (2026-10-17)
 
 First public release of **Rando Hub** (previously tested as ALTTPR Snes9x Beta).

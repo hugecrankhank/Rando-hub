@@ -1,0 +1,60 @@
+name: Release
+
+# Push a tag like v1.0.0 (or run this by hand with a tag) to build
+# Rando-Hub-v1.0.0.zip and publish it as a GitHub Release. The zip is a
+# frozen, complete copy of that version: the app, crowd control, relays and
+# INSTRUCTIONS.txt.
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.0). It must already exist.'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      # Same steps as the website deploy, so the zip matches the site
+      - name: Refresh the sprite list
+        run: |
+          if curl -fsS --max-time 60 https://alttpr.com/sprites -o sprites.new.json &&
+             python3 -c "import json,sys; d=json.load(open('sprites.new.json')); sys.exit(0 if isinstance(d, list) and len(d) > 50 else 1)"; then
+            mv sprites.new.json sprites.json
+          else
+            echo "Keeping the sprite list from the repository"; rm -f sprites.new.json
+          fi
+      - name: Refresh Hutch's tracker
+        run: python3 tools/update-hutch.py || { echo "Keeping the tracker copies from the repository"; git checkout -- tracker offline-files.json; git clean -fdq tracker-beta; }
+      - name: Pack Kara's generator
+        run: python3 tools/kara-bundle.py
+      - name: Download Pyodide
+        run: sh tools/fetch-pyodide.sh
+      - name: Build the zip
+        run: python3 tools/make-release.py "$TAG"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          V="${TAG#v}"
+          awk -v v="$V" '$0 ~ "^## "v"( |$)" {on=1; next} /^## / && on {exit} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "Rando Hub $TAG" > notes.md
+          printf '\n---\n**Download:** `Rando-Hub-%s.zip` below. Unzip it and open INSTRUCTIONS.txt.\n**Play online:** https://hugecrankhank.github.io/Rando-hub/\n' "$TAG" >> notes.md
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.zip --clobber
+          else
+            gh release create "$TAG" dist/*.zip --title "Rando Hub $TAG" --notes-file notes.md
+          fi

@@ -597,7 +597,7 @@
       if (typeof res === 'string') { feed(f.name + ': ' + res, 'info'); render(); return; }
     }
     gap = GAP_FRAMES;
-    giftCard(job.user, job.label, f.name + (secs ? ' · ' + secs + 's' : ''), f.good);
+    if (!f.detour) giftCard(job.user, job.label, f.name + (secs ? ' · ' + secs + 's' : ''), f.good);
     if (!cfg.alerts) feed((job.user ? job.user + ': ' : '') + (job.label ? job.label + ' → ' : '') + f.name + (secs ? ' (' + secs + 's)' : ''),
       f.good ? 'good' : 'bad');   // the gift card already says it
     send({ type: 'applied', effect: job.id, user: job.user });
@@ -739,7 +739,15 @@
     var d = detour, mode = ram[0x10], sub = ram[0x11];
     if (++d.wait > 60 * 30 && d.state !== 'fight') return endDetour(core, 'lost', 'Couldn\'t reach the boss');
     if (d.state === 'entering') {
-      if (mode === 0x07 && sub === 0 && ram[A.FROZEN] === 0) {
+      // In some lobbies (Swamp) Link stays "frozen" a long time after landing, so
+      // don't wait for that: a room that's been steady for a third of a second will do.
+      d.steady = (mode === 0x07 && sub === 0) ? (d.steady || 0) + 1 : 0;
+      if (d.boss.room != null && !d.fellBack && d.wait > 60 * 10 && d.steady === 0) {
+        // still not in a dungeon room after 10 s: drop in through the Eastern Palace lobby instead
+        d.fellBack = true; ram[0x10E] = 0x08; ram[0x10F] = 0; ram[0x10] = 0x11; ram[0x11] = 0; ram[0xB0] = 0;
+        return;
+      }
+      if (d.steady >= 20) {
         if (d.boss.room != null && ram[0xA0] !== d.boss.room) {
           // 2. warp from the lobby to the boss room
           // the boss is always there: clear "boss beaten" for that room, and for
@@ -771,7 +779,8 @@
     if (mode === 0x12 || ram[A.HP] === 0) return endDetour(core, 'ko', 'Link went down!');
     if (WIN_MODULES[mode] || ram[A.HP_MAX] > d.hpMax) return endDetour(core, 'won', 'BOSS DEFEATED!');
     if (mode === 0x09 || mode === 0x0B) return endDetour(core, 'escaped', 'LINK ESCAPED!');
-    if (mode === 0x07 && sub === 0) d.frames++;
+    if (mode === 0x07 || mode === 0x09 || mode === 0x0B) d.frames++;   // menus don't count
+    if (d.wait > d.total + 60 * 45) return endDetour(core, 'survived', 'SURVIVED!');   // never stuck on a detour
     var left = Math.max(0, d.total - d.frames);
     if (d.frames % 15 === 0) detourHud('BOSS DETOUR ' + Math.ceil(left / 60) + 's', d.boss.name + (d.by ? ' · sent by ' + d.by : ''), left / d.total);
     if (left <= 0) endDetour(core, 'survived', 'SURVIVED!');
@@ -814,7 +823,7 @@
     if (!detourEl || !detourEl.isConnected) { detourEl = document.createElement('div'); detourEl.className = 'cc-detour'; detourEl.innerHTML = '<div class="t"></div><div class="s"></div><div class="b"><i></i></div>'; host.appendChild(detourEl); }
     // top right of the game picture, over the hearts' row edge but off the play area
     var P = root.Snes9xPlayer, r = P && P.fx && P.fx.pictureRect && P.fx.pictureRect();
-    if (r && r.w) { detourEl.style.left = Math.round(r.x + r.w * 0.5) + 'px'; detourEl.style.top = Math.round(r.y + r.h * 0.16) + 'px'; }
+    if (r && r.w) { detourEl.style.left = Math.round(r.x + r.w * 0.5) + 'px'; detourEl.style.top = Math.round(r.y + r.h * 0.012) + 'px'; }
     clearTimeout(detourHideT);
     detourEl.style.opacity = '1';
     detourEl.classList.toggle('done', frac < 0);

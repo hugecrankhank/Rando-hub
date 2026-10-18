@@ -46,7 +46,8 @@
       ram[A.FROZEN] === 0 && ram[A.HP_MAX] >= 8 && ram[A.HP] > 0;
   }
   function rupees(ram) { return ram[A.RUPEES] | (ram[A.RUPEES + 1] << 8); }
-  function setRupees(ram, v) { v = Math.max(0, Math.min(999, v)); ram[A.RUPEES] = v & 0xFF; ram[A.RUPEES + 1] = v >> 8; }
+  // randomizer ROMs count to 9999 (the HUD has four digits); never cut a bigger wallet down
+  function setRupees(ram, v) { v = Math.max(0, Math.min(9999, v)); ram[A.RUPEES] = v & 0xFF; ram[A.RUPEES + 1] = v >> 8; }
   function fill(ram, addr, amount, cap) { ram[addr] = Math.min(cap, ram[addr] + amount); }
   function fx() { var p = root.Snes9xPlayer; return p && p.fx; }
   function core() { var p = root.Snes9xPlayer; return p && p.core; }

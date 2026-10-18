@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.1 (2026-10-18)
+
+- Boss detour: fixed only a narrow strip of the room showing (seen at Agahnim 2). The
+  screen mask from the entrance's spotlight effect is now turned off when Link arrives.
+
 ## 1.3.0 (2026-10-18)
 
 - **Gift alerts on the game:** each gift, follow or share that sets off an effect shows a

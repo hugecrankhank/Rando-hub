@@ -5,6 +5,15 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.2 (2026-10-18)
+
+**Crowd Control+**
+- Overlays: new `?screen=green` (or `?screen=magenta`) option, a solid colour behind the
+  overlay for apps that can't show a see-through page (add a Chroma Key filter). The
+  Overlays tab and INSTRUCTIONS.txt explain the "white box" fix.
+- EFFECTS-OVERVIEW.md now lists every effect (screen flip, wobble, boss detours …);
+  release zips always copy in the current list.
+
 ## 1.2.1 (2026-10-18)
 
 - Crowd Control+ now opens the control panel in your browser by itself when it starts,

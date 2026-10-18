@@ -442,7 +442,14 @@ function chips(st) {
   $('chip-game').className = 'chip ' + (s.games ? 'ok' : 'bad');
   $('chip-game').lastElementChild.textContent = s.games ? 'Game connected' + (s.games > 1 ? ' (' + s.games + ')' : '') : 'Game not connected';
 }
-CC.on('tick', (d) => { chips(CC.state); const n = d.overlays || 0; $('chip-ov').className = 'chip ' + (n ? 'ok' : ''); $('chip-ov').lastElementChild.textContent = n + ' overlay' + (n === 1 ? '' : 's') + ' on stream'; paintClock(); });
+CC.on('tick', (d) => {
+  // more than one Studio tab: buttons can get stuck waiting (browsers allow ~6 connections to one address)
+  let w = document.getElementById('tabs-warn');
+  if ((d.studioTabs || 0) > 1) {
+    if (!w) { w = document.createElement('div'); w.id = 'tabs-warn'; w.style.cssText = 'background:#7a1d24;color:#fff;padding:8px 14px;font:600 13px system-ui;text-align:center'; document.body.prepend(w); }
+    w.textContent = 'The control panel is open in ' + d.studioTabs + ' tabs. Close the extra ones: too many open pages can make buttons wait minutes before they work.';
+  } else if (w) w.remove();
+  chips(CC.state); const n = d.overlays || 0; $('chip-ov').className = 'chip ' + (n ? 'ok' : ''); $('chip-ov').lastElementChild.textContent = n + ' overlay' + (n === 1 ? '' : 's') + ' on stream'; paintClock(); });
 
 // ── dashboard ──
 const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', chat: '💬', death: '☠', music: '♪', detour: '⚔', 'detour-end': '⚔', 'detour-rescue': '🛟' };

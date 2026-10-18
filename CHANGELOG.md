@@ -5,6 +5,16 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.4 (2026-10-18)
+
+**Crowd Control+**
+- Fixed test buttons and the subathon timer doing nothing for minutes, then everything
+  firing at once. The Overlays tab's previews each held a connection open, and browsers
+  allow only about 6 to one address, so the buttons had to wait. The previews now share
+  the control panel's connection (buttons answer instantly with every preview open).
+- Starting Crowd Control+ no longer opens a second control panel tab when one is already
+  open, and the panel shows a red bar if it's open in more than one tab.
+
 ## 1.3.3 (2026-10-18)
 
 - Crowd Control+ keeps running if something goes wrong while handling a game message

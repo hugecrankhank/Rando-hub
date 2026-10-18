@@ -25,7 +25,7 @@
   'use strict';
 
   var SETTINGS_KEY = 's9x-crowd-settings';
-  var cfg = { enabled: false, url: 'ws://localhost:21214', feed: true, allowReroll: false, rerollOverlay: true, showTimer: true };
+  var cfg = { enabled: false, url: 'ws://localhost:21214', feed: true, alerts: true, allowReroll: false, rerollOverlay: true, showTimer: true };
   try { Object.assign(cfg, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (e) {}
   function saveCfg() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(cfg)); } catch (e) {} }
 
@@ -597,8 +597,9 @@
       if (typeof res === 'string') { feed(f.name + ': ' + res, 'info'); render(); return; }
     }
     gap = GAP_FRAMES;
-    feed((job.user ? job.user + ': ' : '') + (job.label ? job.label + ' → ' : '') + f.name + (secs ? ' (' + secs + 's)' : ''),
-      f.good ? 'good' : 'bad');
+    giftCard(job.user, job.label, f.name + (secs ? ' · ' + secs + 's' : ''), f.good);
+    if (!cfg.alerts) feed((job.user ? job.user + ': ' : '') + (job.label ? job.label + ' → ' : '') + f.name + (secs ? ' (' + secs + 's)' : ''),
+      f.good ? 'good' : 'bad');   // the gift card already says it
     send({ type: 'applied', effect: job.id, user: job.user });
     render();
   }
@@ -879,6 +880,60 @@
     ' transition: opacity .4s; text-shadow: 0 1px 1px #000; }' +
     '.cc-feed .good { border-left-color: #3fb950; } .cc-feed .bad { border-left-color: #e5534b; } .cc-feed .end { opacity: .7; }' +
     '.cc-feed .info { border-left-color: #e3b341; }';
+  // Gift alert on the game itself, over the hearts (top right of the HUD), like
+  // the MSU "NOW PLAYING" card: shows on stream with the game, no overlay needed.
+  var GIFT_CSS =
+    '@font-face { font-family: "Rando Pixel"; src: url(fonts/PressStart2P-Regular.ttf) format("truetype"); font-display: swap; }' +
+    '.cc-gift { position: absolute; left: 79%; top: 8px; transform: translate(-50%, -8px); z-index: 26; pointer-events: none;' +
+    ' display: flex; align-items: center; gap: 8px; max-width: 40%; padding: 5px 12px 5px 9px; border-radius: 8px;' +
+    ' background: rgba(18,12,34,.92); border: 2px solid #e63946; box-shadow: 0 4px 14px rgba(0,0,0,.5); color: #fff;' +
+    ' opacity: 0; transition: opacity .3s ease, transform .3s ease; }' +
+    '.cc-gift.show { opacity: 1; transform: translate(-50%, 0); }' +
+    '.cc-gift.good { border-color: #3fb950; }' +
+    '.cc-gift .ic { font-size: 18px; line-height: 1; animation: cc-gift-bop .45s ease-in-out infinite alternate; }' +
+    '@keyframes cc-gift-bop { to { transform: translateY(-3px) scale(1.1); } }' +
+    '.cc-gift > span:last-child { min-width: 0; }' +
+    '.cc-gift .lab { display: block; font: 7px/1.2 "Rando Pixel", ui-monospace, monospace; color: #ff8a92; letter-spacing: .04em; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
+    '.cc-gift.good .lab { color: #7ee787; }' +
+    '.cc-gift .nm { display: block; font: 700 13px/1.2 system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; }' +
+    '.cc-gift .fx { display: block; font: 600 11px/1.2 system-ui, sans-serif; color: #ffd166; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }';
+  var giftQ = [], giftEl = null, giftBusy = false;
+  function giftCard(user, label, what, good) {
+    if (!cfg.alerts || typeof document === 'undefined') return;
+    giftQ.push({ user: user, label: label, what: what, good: good });
+    if (giftQ.length > 6) giftQ.splice(0, giftQ.length - 6);
+    if (!giftBusy) giftNext();
+  }
+  function giftNext() {
+    var g = giftQ.shift(); if (!g) { giftBusy = false; return; }
+    var host = document.querySelector('.s9x'); if (!host) { giftBusy = false; giftQ = []; return; }
+    giftBusy = true;
+    if (!document.getElementById('cc-gift-css')) { var st = document.createElement('style'); st.id = 'cc-gift-css'; st.textContent = GIFT_CSS; document.head.appendChild(st); }
+    if (!giftEl || !giftEl.isConnected) {
+      giftEl = document.createElement('div'); giftEl.className = 'cc-gift';
+      giftEl.innerHTML = '<span class="ic">🎁</span><span><span class="lab"></span><span class="nm"></span><span class="fx"></span></span>';
+      host.appendChild(giftEl);
+    }
+    var P = window.Snes9xPlayer, r = P && P.fx && P.fx.pictureRect && P.fx.pictureRect();
+    if (r && r.w > 0) {   // over the hearts: right part of the HUD, near the top of the picture
+      giftEl.style.left = Math.round(r.x + r.w * 0.79) + 'px';
+      giftEl.style.top = Math.round(r.y + r.h * 0.035) + 'px';
+      giftEl.style.maxWidth = Math.round(r.w * 0.4) + 'px';
+    }
+    var lab = String(g.label || '');
+    var kind = /^followed$/i.test(lab) ? 'NEW FOLLOWER' : /^shared$/i.test(lab) ? 'STREAM SHARED' : /^likes?\b/i.test(lab) ? 'LIKES' : lab && lab !== 'test' ? 'GIFT · ' + lab : 'CROWD EFFECT';
+    giftEl.querySelector('.ic').textContent = /follow/i.test(kind) ? '⭐' : /share/i.test(kind) ? '📣' : /like/i.test(kind) ? '❤️' : '🎁';
+    giftEl.querySelector('.lab').textContent = kind.toUpperCase();
+    giftEl.querySelector('.nm').textContent = g.user || 'Someone';
+    giftEl.querySelector('.fx').textContent = '→ ' + g.what;
+    giftEl.classList.toggle('good', !!g.good);
+    giftEl.classList.remove('show'); void giftEl.offsetWidth; giftEl.classList.add('show');
+    setTimeout(function () {
+      if (giftEl) giftEl.classList.remove('show');
+      setTimeout(giftNext, 350);
+    }, giftQ.length ? 2200 : 3000);
+  }
+
   function feed(text, kind) {
     if (!cfg.feed || typeof document === 'undefined') return;
     if (!feedEl || !feedEl.isConnected) {
@@ -953,6 +1008,7 @@
     return '<h4>Crowd effects</h4>' +
       '<div class="row"><span>TikTok effects on</span><input type="checkbox" data-ext="cc-enabled"' + (cfg.enabled ? ' checked' : '') + '></div>' +
       '<div class="row"><span>Bridge address</span><input type="text" data-ext="cc-url" value="' + esc(cfg.url) + '" style="width:55%;max-width:240px"></div>' +
+      '<div class="row"><span>Gift alerts over the hearts</span><input type="checkbox" data-ext="cc-alerts"' + (cfg.alerts ? ' checked' : '') + '></div>' +
       '<div class="row"><span>Show feed on game</span><input type="checkbox" data-ext="cc-feed"' + (cfg.feed ? ' checked' : '') + '></div>' +
       '<div class="row"><span>Allow seed reroll (ends this game)</span><input type="checkbox" data-ext="cc-reroll"' + (cfg.allowReroll ? ' checked' : '') + '></div>' +
       '<div class="row"><span>Show subathon clock on game</span><input type="checkbox" data-ext="cc-show-timer"' + (cfg.showTimer ? ' checked' : '') + '></div>' +
@@ -978,6 +1034,7 @@
     var a = el.dataset.ext;
     if (a === 'cc-enabled') { cfg.enabled = el.checked; saveCfg(); connect(); }
     else if (a === 'cc-feed') { cfg.feed = el.checked; saveCfg(); }
+    else if (a === 'cc-alerts') { cfg.alerts = el.checked; saveCfg(); }
     else if (a === 'cc-show-timer') { cfg.showTimer = el.checked; saveCfg(); if (!el.checked && clockEl) { clockEl.remove(); clockEl = null; } }
     else if (a === 'cc-reroll-overlay') { cfg.rerollOverlay = el.checked; saveCfg(); if (!el.checked && bannerEl) { bannerEl.remove(); bannerEl = null; } }
     else if (a === 'cc-reroll') { cfg.allowReroll = el.checked; saveCfg(); if (!el.checked) cancelReroll(); rerender && rerender(); }
@@ -1018,6 +1075,7 @@
     BOSSES: BOSSES, endDetour: cancelDetour, get detour() { return detour && { boss: detour.boss.name, state: detour.state, frames: detour.frames, total: detour.total }; },
     // for testing a single boss from the console: CrowdEffects.detourTo('moldorm')
     placeLink: function () { var c = core(); return !!(c && placeLink(c.wram(), detour && detour.boss.at)); },
+    giftCard: giftCard,
     detourTo: function (key) { return testBoss(key, 'test'); },
     _onFrame: onFrame, _onInput: onInput, _showClock: showClock,
     get queue() { return queue.slice(); }, get active() { return Object.assign({}, active); },

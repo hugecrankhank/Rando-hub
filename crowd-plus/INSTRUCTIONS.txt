@@ -242,6 +242,9 @@ WHITE BOX BEHIND AN OVERLAY?
       paints white behind see-through pages. It's clear in OBS.
   If your app still can't show it clear, add ?screen=green to the end of
   the address and put a Chroma Key filter (green) on that source.
+  Or skip the alerts overlay: gift alerts also show on the game itself,
+  over the hearts (game's ... menu -> Crowd effects -> "Gift alerts over
+  the hearts", on by default), so they're on stream with the game.
 
 The overlays only work while Crowd Control+ is running. If an overlay
 says "Waiting for the Crowd Control+ bridge", start it, then right-click

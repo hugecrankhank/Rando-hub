@@ -5,6 +5,14 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.0 (2026-10-18)
+
+- **Gift alerts on the game:** each gift, follow or share that sets off an effect shows a
+  card over the hearts (top right of the HUD) for 3 seconds: who sent it, the gift, and
+  what it does. Like the MSU "NOW PLAYING" card, it's part of the game picture, so it's
+  on stream without adding an overlay. On by default; ... menu → Crowd effects → "Gift
+  alerts over the hearts". Several at once take turns.
+
 ## 1.2.6 (2026-10-18)
 
 - Fixed rupee crowd effects (+50 / -50, and the boss detour's "survived" reward) cutting a

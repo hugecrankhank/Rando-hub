@@ -5,6 +5,17 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.5 (2026-10-18)
+
+- **Boss detour:**
+  - The boss is always there: a boss already beaten in your run is brought back for the
+    detour, and Blind's fight starts without bringing the maiden. Before, Thieves' Town
+    could be an empty room.
+  - Link lands in the part of the room where the boss actually is (found from the boss
+    itself, so it also works with boss shuffle), on open floor away from the boss.
+- **Crowd Control+:** "Test one boss" on the Live games tab sends Link to any boss you
+  pick, for checking each fight. Gifts set to the random boss still pick at random.
+
 ## 1.2.4 (2026-10-18)
 
 - **Boss detour:** Link now lands on open floor inside the boss arena with the camera

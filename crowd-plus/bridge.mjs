@@ -835,6 +835,10 @@ const studio = createStudio({
   getCfg: () => cfg,
   saveCfg,
   fire: (effect, user, label) => fire(effect, user, label),
+  testBoss: (boss, user) => {
+    if (!clients.size) { log('  (no game connected, boss test dropped)'); return; }
+    broadcast({ type: 'detour-test', boss: String(boss), user }); log(`  → boss detour test: ${boss}`);
+  },
   simulateGift: (user, name, count, coins, runEffect) => onGift(user, name, 0, count, coins / Math.max(1, count), { test: true, runEffect }),
   simulate: (kind, user, a) => {
     if (kind === 'like') onLike(user, Math.max(1, +a.count || 50), { test: true });

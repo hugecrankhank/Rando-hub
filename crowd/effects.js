@@ -638,6 +638,16 @@
   // otherwise the quarter with the most floor (and real walls) is the arena.
   var LQF = [0xF, 0xF, 0xF, 0xF, 0xB, 0xB, 7, 7, 0xF, 0xB, 0xF, 7, 0xB, 0xF, 7, 0xF, 0xE, 0xD, 0xE, 0xD, 0xF, 0xF, 0xE, 0xD, 0xE, 0xD, 0xF, 0xF, 0xA, 9, 6, 5];
   var FLOOR = { 0x00: 1, 0x09: 1, 0x0E: 1, 0x0F: 1 };   // floor, shallow water, ice
+  // boss sprites (zelda3 sprite ids): Moldorm, Armos, Lanmolas, Agahnim, Mothula, Arrghus,
+  // Helmasaur, Kholdstare, Vitreous, Trinexx, Blind, Ganon. The quarter the boss is
+  // in is the arena, whatever boss shuffle put there.
+  var BOSS_SPRITES = { 0x09: 1, 0x53: 1, 0x54: 1, 0x7A: 1, 0x88: 1, 0x8C: 1, 0x92: 1, 0xA2: 1, 0xA3: 1, 0xBD: 1, 0xCB: 1, 0xCC: 1, 0xCD: 1, 0xCE: 1, 0xD6: 1, 0xD7: 1 };
+  function bossSpot(ram) {
+    for (var k = 0; k < 16; k++) {
+      if (ram[0xDD0 + k] && BOSS_SPRITES[ram[0xE20 + k]]) return [ram[0xD10 + k] | ram[0xD30 + k] << 8, ram[0xD00 + k] | ram[0xD20 + k] << 8];
+    }
+    return null;
+  }
   function placeLink(ram, at) {
     var R = ram[0xA0] | ram[0xA1] << 8; if (R > 0x127) return false;
     var Bx = (R & 0xF) << 9, By = (R >> 4) << 9;
@@ -657,8 +667,14 @@
       }
       return null;
     };
-    var spot = null;
-    if (at) spot = nearest(at[0] >> 3, at[1] >> 3, at[0] >> 8, at[1] >> 8, 10);
+    var spot = null, boss = bossSpot(ram);
+    if (boss) {
+      var bx = (boss[0] - Bx) & 0x1FF, by = (boss[1] - By) & 0x1FF, bqx = bx >> 8, bqy = by >> 8;
+      if (at && (at[0] >> 8) === bqx && (at[1] >> 8) === bqy) spot = nearest(at[0] >> 3, at[1] >> 3, bqx, bqy, 10);
+      // otherwise the side of the boss's quarter away from the boss
+      if (!spot) spot = nearest(bqx * 32 + 15, bqy * 32 + ((by & 0xFF) < 0x80 ? 24 : 8), bqx, bqy, 24);
+    }
+    if (!spot && at) spot = nearest(at[0] >> 3, at[1] >> 3, at[0] >> 8, at[1] >> 8, 10);
     if (!spot) {
       var best = -1, bq = null;
       for (var q = 0; q < 4; q++) {
@@ -724,6 +740,12 @@
       if (mode === 0x07 && sub === 0 && ram[A.FROZEN] === 0) {
         if (d.boss.room != null && ram[0xA0] !== d.boss.room) {
           // 2. warp from the lobby to the boss room
+          // the boss is always there: clear "boss beaten" for that room, and for
+          // Blind the "maiden revealed" flag his fight needs (no maiden following).
+          // The save state puts both back afterwards.
+          var rb = 0xF000 + d.boss.room * 2 + 1;
+          ram[rb] &= 0x7F;
+          if (d.boss.room === 0xAC) { ram[rb] |= 0x20; if (ram[0xF3CC] === 6) ram[0xF3CC] = 0; }
           ram[0xA2] = ram[0xA0]; ram[0xA3] = ram[0xA1];
           ram[0xA0] = d.boss.room; ram[0xA1] = 0;
           ram[0x11] = 0x15; ram[0xB0] = 0;
@@ -761,6 +783,13 @@
       send({ type: 'detour', phase: 'end', result: result, boss: d.boss.name, user: d.by });
       render();
     }, 0);
+  }
+  // Testing: send Link to one boss in particular (Studio's "Test this boss",
+  // or CrowdEffects.detourTo('blind') in the console). Gifts still pick at random.
+  function testBoss(key, user) {
+    if (!BOSSES[key]) return false;
+    EFFECTS._detour_test = { name: 'Boss detour: ' + BOSSES[key].name, good: false, detour: key };
+    return trigger('_detour_test', user || 'test', 'test');
   }
   function cancelDetour() { var c = core(); if (detour && c) endDetour(c, 'lost', 'DETOUR CANCELLED'); }
   var DETOUR_CSS =
@@ -885,6 +914,8 @@
         for (var i = 0; i < n; i++) trigger(m.effect, m.user, m.label);
       } else if (m.type === 'timer') {
         showClock(m);
+      } else if (m.type === 'detour-test') {
+        testBoss(m.boss, m.user);
       } else if (m.type === 'detour-end') {
         cancelDetour();
       } else if (m.type === 'durations') {
@@ -986,7 +1017,7 @@
     BOSSES: BOSSES, endDetour: cancelDetour, get detour() { return detour && { boss: detour.boss.name, state: detour.state, frames: detour.frames, total: detour.total }; },
     // for testing a single boss from the console: CrowdEffects.detourTo('moldorm')
     placeLink: function () { var c = core(); return !!(c && placeLink(c.wram(), detour && detour.boss.at)); },
-    detourTo: function (key) { EFFECTS._detour_test = { name: 'Boss detour: ' + ((BOSSES[key] || {}).name || key), detour: key }; return trigger('_detour_test', 'test'); },
+    detourTo: function (key) { return testBoss(key, 'test'); },
     _onFrame: onFrame, _onInput: onInput, _showClock: showClock,
     get queue() { return queue.slice(); }, get active() { return Object.assign({}, active); },
     get status() { return status; },

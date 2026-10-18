@@ -635,7 +635,7 @@
   //      $15) from that dungeon's lobby straight to the boss room
   // Entrance ids from the entrance randomizer's tables; rooms are vanilla.
   var BOSSES = {
-    ganon:      { name: 'Ganon',      entrance: 0x7B },               // the Pyramid hole drops into his room
+    ganon:      { name: 'Ganon',      entrance: 0x37, room: 0x00 },   // via Ganon's Tower's lobby, like the others (the Pyramid drop could leave Link in a dark, unfinished room)
     aga1:       { name: 'Agahnim',    entrance: 0x24, room: 0x20, at: [0x078, 0x1C0] },
     aga2:       { name: 'Agahnim 2',  entrance: 0x37, room: 0x0D },
     armos:      { name: 'Eastern Palace boss', entrance: 0x08, room: 0xC8, at: [0x178, 0x1C0] },

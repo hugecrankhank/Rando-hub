@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.5 (2026-10-18)
+
+- If crowd effects (or a test) are waiting more than a few seconds, the game says why on
+  screen: a boss detour still running, or Link not in normal play (with the details).
+
 ## 1.3.4 (2026-10-18)
 
 **Crowd Control+**

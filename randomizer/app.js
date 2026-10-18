@@ -1235,19 +1235,29 @@ function msuToast(name) {
     const st = document.createElement('style'); st.id = 'msu-toast-css';
     st.textContent =
       '@font-face { font-family: "Rando Pixel"; src: url(fonts/PressStart2P-Regular.ttf) format("truetype"); font-display: swap; }' +
-      '.msu-toast { position: absolute; left: 50%; bottom: 14%; transform: translate(-50%, 10px); z-index: 26; pointer-events: none;' +
-      ' display: flex; align-items: center; gap: 10px; max-width: 86%; padding: 9px 16px 9px 12px; border-radius: 10px;' +
+      // Sits over the HUD's rupee / bomb / arrow counters (top of the picture),
+      // never over Link. Placed by msuToast() from the picture's position.
+      '.msu-toast { position: absolute; left: 43%; top: 8px; transform: translate(-50%, -8px); z-index: 26; pointer-events: none;' +
+      ' display: flex; align-items: center; gap: 8px; max-width: 40%; padding: 5px 12px 5px 9px; border-radius: 8px;' +
       ' background: rgba(18,12,34,.9); border: 2px solid #e63946; box-shadow: 0 4px 14px rgba(0,0,0,.5); color: #fff;' +
       ' opacity: 0; transition: opacity .35s ease, transform .35s ease; }' +
       '.msu-toast.show { opacity: 1; transform: translate(-50%, 0); }' +
-      '.msu-toast .note { font-size: 22px; line-height: 1; color: #f5c542; animation: msu-bop .5s ease-in-out infinite alternate; }' +
+      '.msu-toast .note { font-size: 18px; line-height: 1; color: #f5c542; animation: msu-bop .5s ease-in-out infinite alternate; }' +
       '@keyframes msu-bop { to { transform: translateY(-3px) rotate(-8deg); } }' +
-      '.msu-toast .lab { display: block; font: 8px/1.2 "Rando Pixel", ui-monospace, monospace; color: #ff8a92; letter-spacing: .04em; margin-bottom: 4px; }' +
-      '.msu-toast .nm { display: block; font: 700 15px/1.2 system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; }';
+      '.msu-toast .lab { display: block; font: 7px/1.2 "Rando Pixel", ui-monospace, monospace; color: #ff8a92; letter-spacing: .04em; margin-bottom: 3px; }' +
+      '.msu-toast > span:last-child { min-width: 0; }' +
+      '.msu-toast .nm { display: block; font: 700 13px/1.2 system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; }';
     document.head.appendChild(st);
   }
   let el = host.querySelector('.msu-toast');
   if (!el) { el = document.createElement('div'); el.className = 'msu-toast'; el.innerHTML = '<span class="note">♪</span><span><span class="lab"></span><span class="nm"></span></span>'; host.appendChild(el); }
+  // over the HUD counters: a little below the top of the game picture
+  const P = window.Snes9xPlayer, r = P && P.fx && P.fx.pictureRect && P.fx.pictureRect();
+  if (r && r.w > 0) {
+    el.style.left = Math.round(r.x + r.w * 0.43) + 'px';
+    el.style.top = Math.round(r.y + r.h * 0.045) + 'px';
+    el.style.maxWidth = Math.round(r.w * 0.4) + 'px';
+  }
   el.querySelector('.lab').textContent = name ? 'NOW PLAYING' : 'MSU-1 OFF';
   el.querySelector('.nm').textContent = name || "The game's own music";
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');

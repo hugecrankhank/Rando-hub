@@ -5,6 +5,14 @@ Crowd Control+ is the regular Rando Hub Crowd Control with a control
 panel and stream overlays added. Every gift effect, big-donation seed
 roll and the subathon clock work exactly as before.
 
+NEW IN 1.2.0
+------------
+- Boss detour: a gift sends Link to fight Ganon, Agahnim or a random
+  boss. The game saves first and loads it back when the fight ends, so
+  nothing is lost. Rewards for winning or surviving, a "rescue" gift,
+  gold alerts on stream, test buttons on the Live games tab
+  (needs Rando Hub 1.2.0 or newer)
+
 NEW IN 1.1.0
 ------------
 - Live games: chat votes, team battle (Light vs Dark World), mystery box

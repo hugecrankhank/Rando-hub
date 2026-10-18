@@ -318,6 +318,16 @@
     <label class="row"><span>Bonus effect</span><select data-s="combo.bonusEffect" data-effects data-none></select></label>
   </div>
 
+  <h2>BOSS DETOUR</h2>
+  <div class="card">
+    <p class="hint">Gifts set to <b>Boss detour: Ganon / Agahnim / random boss</b> send Link into that fight. The game saves first and puts everything back when the fight ends (time's up, Link falls, or he wins), so nothing is lost. Set how long it lasts on <b>Gifts &amp; effects → Timed effects</b>. A gift set to <b>Rescue Link from a boss detour</b> ends it early.</p>
+    <label class="check"><input type="checkbox" data-s="detour.alert"> Show "BOSS DETOUR" alerts</label>
+    <div class="row"><span class="muted" style="min-width:170px">If he beats the boss</span><select data-s="detour.winEffect" data-effects data-none></select> and <input type="number" min="0" data-s="detour.winTimerSeconds" style="width:80px"> seconds on the subathon clock</div>
+    <div class="row"><span class="muted" style="min-width:170px">If he survives the timer</span><select data-s="detour.surviveEffect" data-effects data-none></select> and <input type="number" min="0" data-s="detour.surviveTimerSeconds" style="width:80px"> seconds on the clock</div>
+    <div class="row"><button class="small" data-test-detour="boss_ganon">Test Ganon</button><button class="small" data-test-detour="boss_aga">Test Agahnim</button><button class="small" data-test-detour="boss_random">Test random boss</button><button class="small" data-test-detour="detour_rescue">Rescue</button></div>
+    <p class="hint">Tests run in the game, so it must be connected and Link in normal play.</p>
+  </div>
+
   <h2>PREDICTIONS</h2>
   <div class="grid g2">
     <div class="card">
@@ -434,7 +444,7 @@ function chips(st) {
 CC.on('tick', (d) => { chips(CC.state); const n = d.overlays || 0; $('chip-ov').className = 'chip ' + (n ? 'ok' : ''); $('chip-ov').lastElementChild.textContent = n + ' overlay' + (n === 1 ? '' : 's') + ' on stream'; paintClock(); });
 
 // ── dashboard ──
-const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', chat: '💬', death: '☠', music: '♪' };
+const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', chat: '💬', death: '☠', music: '♪', detour: '⚔', 'detour-end': '⚔', 'detour-rescue': '🛟' };
 function paintStats() {
   const s = S.stats;
   $('stats').innerHTML = [['Coins', s.coins], ['Gifts', s.gifts], ['Likes', s.likes], ['Follows', s.follows], ['Shares', s.shares], ['Chat', s.chats]]
@@ -453,6 +463,9 @@ function evRow(e) {
     (e.vote ? ' <span class="pill">voted ' + e.vote + '</span>' : '') + (e.predict ? ' <span class="pill">' + esc(e.predict) + '</span>' : '') + (e.team ? ' <span class="pill">joined ' + esc(e.team) + '</span>' : '') + (e.clipped ? ' <span class="pill">clip marked</span>' : '');
   else if (e.type === 'death') what = '<b>Link</b> died (death #' + (e.deaths || '?') + ')' + (e.text ? ' <span class="muted">' + esc(e.text) + '</span>' : '');
   else if (e.type === 'music') what = '<b>Music</b> <span class="muted">now ' + esc(e.text) + '</span>';
+  else if (e.type === 'detour') what = '<b>' + esc(CC.name(e)) + '</b> sent Link to fight ' + esc(e.text);
+  else if (e.type === 'detour-end') what = '<b>Boss detour</b> ' + esc(e.text) + ': ' + esc(e.result) + (e.bonus ? ' <span class="muted">(bonus: ' + esc(e.bonus) + ')</span>' : '');
+  else if (e.type === 'detour-rescue') what = '<b>' + esc(CC.name(e)) + '</b> rescued Link from the boss';
   if (e.welcome) what += ' <span class="pill">regular · stream #' + e.welcome.streams + '</span>';
   if (e.test) what += '<span class="tag">test</span>';
   const fx = e.effectName ? '→ ' + esc(e.effectName) : e.tier ? esc(e.tier) : '';
@@ -505,7 +518,7 @@ document.addEventListener('change', (ev) => { if (ev.target.type === 'checkbox' 
 $('tts-banned').oninput = () => { draft.tts.bannedWords = $('tts-banned').value.split('\n').map((x) => x.trim()).filter(Boolean); markS(); };
 function markS() { sDirty = true; document.querySelectorAll('[data-dirty]').forEach((x) => x.textContent = 'Unsaved changes'); }
 document.querySelectorAll('[data-save-settings]').forEach((b) => b.onclick = async () => {
-  const keys = ['alerts', 'leaderboard', 'feed', 'tts', 'commands', 'votes', 'battle', 'mystery', 'combo', 'deathTax', 'predict', 'clips', 'hallOfFame', 'welcome'];
+  const keys = ['alerts', 'leaderboard', 'feed', 'tts', 'commands', 'votes', 'battle', 'mystery', 'combo', 'deathTax', 'predict', 'clips', 'hallOfFame', 'welcome', 'detour'];
   await call('settings', { settings: Object.fromEntries(keys.map((k) => [k, draft[k]])) }, 'Saved');
   sDirty = false; document.querySelectorAll('[data-dirty]').forEach((x) => x.textContent = '');
 });
@@ -767,6 +780,7 @@ function paintMysteryPool() {
     draft.mystery.pool = [...set]; markS();
   });
 }
+document.querySelectorAll('[data-test-detour]').forEach((b) => b.onclick = () => call('test-effect', { effect: b.dataset.testDetour, user: $('t-user').value || 'TestViewer' }, 'Sent to the game'));
 $('mb-test').onclick = () => call('mystery', { user: $('t-user').value || 'Streamer' });
 $('pd-start').onclick = () => call('predict-start', { question: $('pd-q').value, labels: [$('pd-a').value, $('pd-b').value], seconds: draft.predict.seconds }, 'Prediction started');
 $('pd-lock').onclick = () => call('predict-lock', {});
@@ -790,7 +804,7 @@ function paintRunNow(r) {
 $('run-test').onclick = () => call('run-test', {});
 $('dt-test').onclick = () => call('death-test', {}, 'Test death sent');
 const fmtElapsed = (s) => Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-const CLIP_ICON = { gift: '🎁', seed: '🎲', death: '☠', vote: '🗳', battle: '⚔', combo: '🔥', predict: '🔮', chat: '💬', manual: '📌' };
+const CLIP_ICON = { detour: '⚔', gift: '🎁', seed: '🎲', death: '☠', vote: '🗳', battle: '⚔', combo: '🔥', predict: '🔮', chat: '💬', manual: '📌' };
 function paintClips() {
   const list = ((S.live && S.live.clips) || []).slice().reverse();
   $('cl-list').innerHTML = list.length ? list.map((c) => '<div class="ev" style="grid-template-columns:80px 26px 1fr auto"><time title="' + new Date(c.at).toLocaleString() + '">' + fmtElapsed(c.elapsed) + '</time><span class="ic">' + (CLIP_ICON[c.kind] || '📌') + '</span><div>' + esc(c.label) +

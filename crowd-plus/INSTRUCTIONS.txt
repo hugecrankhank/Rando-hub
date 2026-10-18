@@ -460,6 +460,12 @@ All effect names (use these on the right side):
     bee_bottle     Bee in the first empty bottle
     music_roulette A random song from your MSU-1 pack
 
+  BOSS DETOURS (the game saves first and loads it back afterwards)
+    boss_ganon     Fight Ganon ..................... 60s
+    boss_aga       Fight Agahnim ................... 60s
+    boss_random    Fight a random boss ............. 60s
+                   change the length with "durations": { "boss_detour": 90 }
+
   APP ACTIONS
     sprite_roll    Random Link sprite
     sprite_fav     Random sprite from your starred favourites
@@ -467,6 +473,10 @@ All effect names (use these on the right side):
     seed_roll      New seed, same settings      } need "Allow seed
     seed_preset    New seed, random preset      }  reroll" ticked
     seed_chaos     New CHAOS seed               }
+
+  CROWD CONTROL+ ONLY
+    mystery_box    Slot machine picks an effect
+    detour_rescue  Ends a boss detour early (Link comes home)
 
 Other settings in mapping.json:
   "coinTiers": [ { "coins": 1000, "effect": "seed_roll" }, ... ]
@@ -520,6 +530,21 @@ MYSTERY BOX
 COMBO METER
   Gifts that arrive within a few seconds of each other build a combo.
   Every 10 in a row (you choose) fires a bonus effect.
+
+BOSS DETOUR
+  Set a gift to "Boss detour: Ganon", "Boss detour: Agahnim" or "Boss
+  detour: random boss" (Gifts & effects tab). The game saves first, drops
+  Link into that fight, and when it ends (time's up, Link falls, or he
+  wins) it loads the save, so the run carries on exactly where it was:
+  same room, same hearts, same items. A gold BOSS DETOUR alert shows on
+  stream at the start and end.
+    - How long: Gifts & effects -> Timed effects -> boss_detour (60s)
+    - Rewards: pick an effect and/or subathon seconds for beating the
+      boss and for surviving until time's up
+    - "Rescue Link from a boss detour" as a gift's effect ends it early
+    - On the game: ⚙ menu -> "End boss detour now" if you need out
+  Other effects wait until he's back. Early in a seed Ganon is usually
+  a survival challenge. Not for races (it's a save state).
 
 PREDICTIONS
   "Will he beat this dungeon without dying?" Chat types !yes or !no

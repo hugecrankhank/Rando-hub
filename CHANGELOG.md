@@ -5,6 +5,19 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.0 (2026-10-17)
+
+**Rando Hub**
+- Boss detour crowd effects: `boss_ganon`, `boss_aga`, `boss_random`. The game takes a
+  save state, drops Link into the fight, and loads the save when the fight ends (time's
+  up, Link falls, or he wins), so the run continues untouched. Length is
+  `durations.boss_detour` (60 s). ⚙ menu → "End boss detour now" ends one early.
+
+**Crowd Control+**
+- Boss detour card on the Live games tab: rewards for winning or surviving (effect and
+  subathon seconds), test buttons, and a "Rescue Link" gift effect (`detour_rescue`).
+- Gold BOSS DETOUR alerts at the start and end of each detour.
+
 ## 1.1.1 (2026-10-17)
 
 - The "NOW PLAYING" MSU card now sits at the top of the game, over the rupee, bomb

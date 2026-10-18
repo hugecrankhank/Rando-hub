@@ -238,9 +238,11 @@ const effectNames = {
   mirror: 'Mirror mode', upside_down: 'Upside down', wobble: 'Drunk wobble', tiny: 'Tiny screen', crt: 'Retro CRT',
   speed_up: 'Speed up (1.5x)', slow_mo: 'Slow motion', freeze: 'Freeze!', fairy: 'Fairy in a bottle', bee_bottle: 'Bee in a bottle',
   pink_link: 'Pink Link', music_roulette: 'Music roulette',
+  boss_ganon: 'Boss detour: Ganon', boss_aga: 'Boss detour: Agahnim', boss_random: 'Boss detour: random boss',
 };
 const defaultSecs = { ice: 20, cucco_storm: 30, invert: 20, no_sword: 20, no_item: 20, swap_by: 20, one_hit: 30, no_magic: 30,
-  mirror: 20, upside_down: 15, wobble: 20, tiny: 20, crt: 30, speed_up: 20, slow_mo: 15, freeze: 3, pink_link: 60 };
+  mirror: 20, upside_down: 15, wobble: 20, tiny: 20, crt: 30, speed_up: 20, slow_mo: 15, freeze: 3, pink_link: 60,
+  boss_ganon: 60, boss_aga: 60, boss_random: 60 };
 
 function tickerData() {
   const t = cfg.ticker || {};

@@ -33,6 +33,7 @@ export const LIVE_DEFAULTS = {
   clips: { minCoins: 500, deaths: true, seeds: true, chatClip: true, chatCooldown: 30 },
   hallOfFame: { title: 'HALL OF FAME', size: 5 },
   welcome: { enabled: true, minStreams: 3, title: 'WELCOME BACK' },
+  detour: { alert: true, winEffect: 'heal_full', winTimerSeconds: 300, surviveEffect: 'rupees_plus', surviveTimerSeconds: 0 },
 };
 
 const DUNGEON_ORDER = ['Hyrule Castle', 'Eastern Palace', 'Desert Palace', 'Tower of Hera', "Agahnim's Tower", 'Palace of Darkness',
@@ -67,6 +68,30 @@ export function createLive(ctx) {
     } else if (m.type === 'death') {
       runStats.deaths = +m.deaths || runStats.deaths + 1;
       onDeath();
+    } else if (m.type === 'detour') {
+      const D = S().detour;
+      if (m.phase === 'start') {
+        ctx.record({ type: 'detour', user: m.user || 'someone', text: clean(m.boss, 40), secs: +m.secs || 60,
+          alert: D.alert ? { tier: 'detour', title: 'BOSS DETOUR!' } : undefined });
+        addClip(`Boss detour: ${clean(m.boss, 40)}${m.user ? ' (sent by ' + clean(m.user, 40) + ')' : ''}`, 'detour', m.user);
+        send('detour', { detour: { boss: clean(m.boss, 40), user: clean(m.user, 40), secs: +m.secs || 60, at: Date.now() } });
+      } else {
+        const r = String(m.result || '');
+        let bonus = '';
+        if (r === 'won' || r === 'survived') {
+          const eff = r === 'won' ? D.winEffect : D.surviveEffect, secs = Math.round(+(r === 'won' ? D.winTimerSeconds : D.surviveTimerSeconds) || 0);
+          if (eff) { setTimeout(() => ctx.fire(eff, r === 'won' ? 'Boss beaten' : 'Survived', 'Detour bonus'), 1500); bonus = ctx.effectName(eff); }
+          const tv = ctx.timerView();
+          if (secs && tv.active && !tv.ended) { ctx.timerApi('add', secs); bonus += (bonus ? ' + ' : '') + `${fmtShort(secs)} on the clock`; }
+        }
+        const title = { won: 'BOSS DEFEATED!', survived: 'SURVIVED THE DETOUR!', ko: 'KNOCKED OUT!', escaped: 'ESCAPED!', lost: 'DETOUR OVER' }[r] || 'DETOUR OVER';
+        ctx.record({ type: 'detour-end', user: 'Link', text: clean(m.boss, 40), result: r, bonus,
+          alert: D.alert ? { tier: r === 'won' || r === 'survived' ? 'big' : 'death', title } : undefined });
+        if (r === 'won') addClip(`Beat ${clean(m.boss, 40)} on a boss detour!`, 'detour');
+        send('detour', { detour: null, result: r });
+      }
+    } else if (m.type === 'rescue') {
+      ctx.record({ type: 'detour-rescue', user: m.user || 'someone', text: 'rescued Link from the boss!' });
     } else if (m.type === 'music') {
       runStats.music = clean(m.pack, 80);
       send('music', { pack: runStats.music });

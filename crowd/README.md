@@ -69,6 +69,17 @@ speed ones, so they work on any seed):
 | | | | `freeze` | Link can't move, 3 s |
 | | | | `pink_link` | Pink Link, 60 s |
 
+**Boss detour** (new in 1.2.0): the game saves itself, drops Link into a boss
+fight, then loads that save when the fight ends (timer runs out, Link falls, or he
+wins), so the run carries on exactly where it was. Length = `durations.boss_detour`
+(default 60 s). Not for races.
+
+| id | effect |
+|---|---|
+| `boss_ganon` | Ganon's fight (drop through the Pyramid hole) |
+| `boss_aga` | Agahnim's first fight (Castle Tower top) |
+| `boss_random` | A random boss: Ganon, either Agahnim, or any dungeon boss |
+
 **App rolls** (use the app's own buttons):
 
 | id | effect |

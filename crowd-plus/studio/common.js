@@ -25,12 +25,41 @@
   if (q.get('font') === 'plain') document.documentElement.classList.add('plain');
   if (/^(green|magenta)$/.test(q.get('screen') || '')) document.documentElement.classList.add('screen-' + q.get('screen'));
 
+  // Browsers allow only ~6 open connections to one address. The Overlays tab
+  // previews (one per overlay) used to open their own and starve the buttons, so
+  // a preview now borrows the control panel's connection (postMessage relay).
+  const isPreview = q.get('preview') === '1' && window.parent !== window;
+  let lastState = null;
+  function handle(raw) {
+    let d; try { d = JSON.parse(raw); } catch { return; }
+    if (d.kind === 'state') lastState = raw;
+    dispatch(d);
+  }
+  function relay(raw) {
+    for (const f of document.querySelectorAll('iframe')) { try { f.contentWindow.postMessage({ ccsse: raw }, location.origin); } catch {} }
+  }
+  if (!isPreview) window.addEventListener('message', (e) => {
+    if (e.origin !== location.origin || !e.data || !e.data.ccHello || !lastState) return;
+    try { e.source.postMessage({ ccsse: lastState }, location.origin); } catch {}
+  });
+  function connectPreview() {
+    window.addEventListener('message', (e) => {
+      if (e.origin !== location.origin || !e.data || typeof e.data.ccsse !== 'string') return;
+      CC.connected = true; document.documentElement.classList.remove('offline');
+      let d; try { d = JSON.parse(e.data.ccsse); } catch { return; }
+      dispatch(d);
+    });
+    window.parent.postMessage({ ccHello: true }, location.origin);
+  }
   function connect() {
+    if (isPreview) return connectPreview();
     const es = new EventSource('/studio/events?page=' + encodeURIComponent(location.pathname + (q.get('preview') === '1' ? '#preview' : '')));
     es.onopen = () => { CC.connected = true; document.documentElement.classList.remove('offline'); };
     es.onerror = () => { CC.connected = false; document.documentElement.classList.add('offline'); };
-    es.onmessage = (m) => {
-      let d; try { d = JSON.parse(m.data); } catch { return; }
+    es.onmessage = (m) => { handle(m.data); relay(m.data); };
+  }
+  function dispatch(d) {
+    {
       if (d.kind === 'state') CC.state = d;
       if (d.kind === 'event' && CC.state) {
         CC.state.recent = (CC.state.recent || []).concat(d.ev).slice(-40);

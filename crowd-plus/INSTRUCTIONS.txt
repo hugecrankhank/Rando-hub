@@ -615,6 +615,13 @@ TROUBLESHOOTING
 Double-clicking "Start Crowd Control+.bat" says "Node.js is not installed"
   Install it from https://nodejs.org (Part 1, Step 2), then try again.
 
+Buttons or the timer do nothing for minutes, then everything fires at once
+  Too many Crowd Control+ pages open in the same browser (browsers allow
+  about 6 connections to one address). Update to 1.3.4 or newer, keep the
+  control panel open in ONE tab, and add overlays to OBS / TikTok Studio
+  rather than opening them as browser tabs. The panel shows a red bar if
+  it's open in more than one tab.
+
 The black window shows an error about mapping.json when it starts
   mapping.json has a typo (a missing quote or comma). Open it in
   Notepad and compare with the examples in Part 11, or load a

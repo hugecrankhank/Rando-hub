@@ -865,11 +865,13 @@ server.listen(cfg.port, '127.0.0.1', () => {
   log(`scrolling gift list for OBS: http://localhost:${cfg.port}/ticker`);
   log(`subathon timer: http://localhost:${cfg.port}/timer   (controls: http://localhost:${cfg.port}/timer/control)`);
   if (timer.active) log(`⏱ timer restored: ${fmtTime(timer.remaining)} left${timer.ended ? ' (finished)' : ', paused. Press Start on the control page'}`);
-  if (!args.includes('--no-open')) {
+  if (!args.includes('--no-open')) setTimeout(() => {
+    // a Studio tab left open from last time reconnects by itself: don't open another
+    if (studio.pageCount && studio.pageCount('/studio') > 0) { log('control panel already open in your browser'); return; }
     const url = `http://localhost:${cfg.port}/studio`;
     const cmd = process.platform === 'win32' ? `start "" "${url}"` : process.platform === 'darwin' ? `open "${url}"` : `xdg-open "${url}"`;
     try { exec(cmd, () => {}); } catch {}
-  }
+  }, 4000);
   if (TEST) startTest();
   else if (cfg.source === 'tikfinity') startTikFinity();
   else if (cfg.source === 'direct') startTikTok();

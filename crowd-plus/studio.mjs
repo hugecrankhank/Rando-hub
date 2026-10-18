@@ -129,7 +129,7 @@ export function createStudio(ctx) {
   let stateT = null;
   function pushState() { clearTimeout(stateT); stateT = setTimeout(() => push(snapshot()), 80); }
   const overlayCount = () => [...streams].filter((x) => x.page.startsWith('/overlay/') && !x.page.endsWith('#preview')).length;
-  setInterval(() => push({ kind: 'tick', status: ctx.status(), timer: ctx.timerView(false), overlays: overlayCount() }), 2000);
+  setInterval(() => push({ kind: 'tick', status: ctx.status(), timer: ctx.timerView(false), overlays: overlayCount(), studioTabs: pageCount('/studio') }), 2000);
 
   // ── the gift list for the panel: icons + mapped + seen live ──────────────
   function giftCatalog() {
@@ -360,5 +360,6 @@ export function createStudio(ctx) {
     }
   }
 
-  return { record, handle, pushState, onGame: (m) => live.onGame(m), mystery: (u, l) => live.mystery(u, l), get settings() { return settings; } };
+  const pageCount = (path) => [...streams].filter((x) => x.page === path).length;
+  return { record, handle, pushState, pageCount, onGame: (m) => live.onGame(m), mystery: (u, l) => live.mystery(u, l), get settings() { return settings; } };
 }

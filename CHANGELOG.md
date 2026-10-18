@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.6 (2026-10-18)
+
+- Fixed rupee crowd effects (+50 / -50, and the boss detour's "survived" reward) cutting a
+  wallet over 999 down to 999. Randomizer wallets go to 9999.
+
 ## 1.2.5 (2026-10-18)
 
 - **Boss detour:**

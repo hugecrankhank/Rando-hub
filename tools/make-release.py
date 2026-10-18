@@ -117,6 +117,8 @@ def main():
                 info = zipfile.ZipInfo('Crowd Control+/' + r, date_time=stamp)
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = (0o755 if r.endswith(('.command', '.sh')) else 0o644) << 16
+                if r == 'EFFECTS-OVERVIEW.md':   # always the current list, never a stale copy
+                    src = os.path.join(ROOT, 'crowd', 'README.md')
                 z.writestr(info, open(src, 'rb').read()); n2 += 1
         print(f'{out2}: {n2} files, {os.path.getsize(out2) / 1e6:.1f} MB')
     if missing:

@@ -232,6 +232,17 @@ Extra options:
   Goal bar       ?id=g1        show only one goal (ids are in studio.json)
   Top gifters    ?size=3       number of rows
 
+WHITE BOX BEHIND AN OVERLAY?
+  The overlays are see-through when there's nothing to show. A white box
+  means the page was captured the wrong way:
+    - OBS: use Sources -> + -> Browser (not Window Capture or Display
+      Capture of a Chrome window). Leave "Custom CSS" as OBS fills it in.
+    - TikTok LIVE Studio: use a Link source with the address.
+    - Opening the address in Chrome shows white; that's normal, Chrome
+      paints white behind see-through pages. It's clear in OBS.
+  If your app still can't show it clear, add ?screen=green to the end of
+  the address and put a Chroma Key filter (green) on that source.
+
 The overlays only work while Crowd Control+ is running. If an overlay
 says "Waiting for the Crowd Control+ bridge", start it, then right-click
 the source in OBS -> Refresh.

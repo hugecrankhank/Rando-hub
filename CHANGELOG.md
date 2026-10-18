@@ -5,6 +5,16 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.2 (2026-10-18)
+
+- Boss detour:
+  - The BOSS DETOUR banner now sits at the very top of the game, over the HUD, instead
+    of over the room. It's the only announcement: no extra gift card for detours.
+  - Fixed getting stuck in a dungeon lobby (seen at Swamp Palace), which also blocked
+    the test buttons until the app was restarted. The detour no longer waits for Link
+    to be "unfrozen", drops in through another lobby if the first doesn't work, and
+    every detour now ends on its own at the latest 45 s after its timer, whatever happens.
+
 ## 1.3.1 (2026-10-18)
 
 - Boss detour: fixed only a narrow strip of the room showing (seen at Agahnim 2). The

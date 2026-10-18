@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.1.1 (2026-10-17)
+
+- The "NOW PLAYING" MSU card now sits at the top of the game, over the rupee, bomb
+  and arrow counters, so it never covers Link or the room.
+
 ## 1.1.0 (2026-10-17)
 
 **Rando Hub**

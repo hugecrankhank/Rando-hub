@@ -664,6 +664,13 @@
       setScreen: function (name, on) { if (!!screenFx[name] === !!on) return; if (on) screenFx[name] = true; else delete screenFx[name]; applyScreenFx(); },
       setTempFilter: function (id) { if (tempFilter === (id || null)) return; tempFilter = id || null; if (video) applyFilter(); },
       get container() { return root || null; },
+      // where the game picture is inside the player (CSS pixels), for things
+      // drawn over a particular part of it (the MSU card over the HUD)
+      pictureRect: function () {
+        if (!video || !canvas) return null;
+        var v = video.viewport(), d = canvas.width / Math.max(1, canvas.getBoundingClientRect().width);
+        return { x: v.x / d, y: v.y / d, w: v.w / d, h: v.h / d };
+      },
     },
     openMenu: function () { if (running) openMenu(); },
     get ready() { return running; },

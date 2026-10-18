@@ -140,6 +140,10 @@ function writeFrame(socket, payload, op = 0x1) {
 function sendTo(c, msg) { try { writeFrame(c.socket, Buffer.from(JSON.stringify(msg))); } catch {} }
 function broadcast(msg) { for (const c of clients) sendTo(c, msg); }
 
+// One bad message or setting must never close the bridge mid-stream: log it and carry on.
+process.on('uncaughtException', (e) => { try { log(`! error, still running: ${e && e.stack || e}`); } catch {} });
+process.on('unhandledRejection', (e) => { try { log(`! error, still running: ${e && e.stack || e}`); } catch {} });
+
 function onGameMessage(text) {
   let m; try { m = JSON.parse(text); } catch { return; }
   if (m.type === 'hello') {
@@ -159,7 +163,7 @@ function onGameMessage(text) {
     if (m.type === 'detour') log(m.phase === 'start' ? `⚔ boss detour: ${m.boss}${m.user ? ' (sent by ' + m.user + ')' : ''}` : `⚔ boss detour over: ${m.result}`);
     if (m.type === 'death') log(`☠ Link died (death #${m.deaths})`);
     if (m.type === 'music') log(`♪ music: ${m.pack || "the game's own"}`);
-    studio.onGame(m);
+    try { studio.onGame(m); } catch (e) { log(`! control panel error (${m.type}): ${e && e.message}`); }
   } else if (m.type === 'applied') {
     log(`  ✓ applied ${m.effect}${m.user ? ' for ' + m.user : ''}`);
   }

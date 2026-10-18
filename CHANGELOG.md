@@ -5,6 +5,13 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.3 (2026-10-18)
+
+- Crowd Control+ keeps running if something goes wrong while handling a game message
+  (it logs the error in the black window instead of closing).
+- The game's Crowd effects menu shows how many effects are waiting and, during a boss
+  detour, which boss and what stage it's at. A boss test that can't start now says why.
+
 ## 1.3.2 (2026-10-18)
 
 - Boss detour:

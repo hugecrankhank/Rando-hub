@@ -5,6 +5,15 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.2.4 (2026-10-18)
+
+- **Boss detour:** Link now lands on open floor inside the boss arena with the camera
+  on him. Before, he kept his spot from the dungeon's entrance room, so he could end up
+  inside a wall (Ice Palace) or in the wrong part of the room (Thieves' Town). Entry
+  spots come from the boss doors (thanks to the lttphack practice ROM's presets);
+  rooms without one use the part of the room with the most floor. Falling into a pit
+  during a detour also puts him back there.
+
 ## 1.2.3 (2026-10-18)
 
 - Fixed the **drunk wobble** crowd effect: it showed as applied but the picture didn't move

@@ -4,3 +4,8 @@ emu/build/.obj/
 crowd/bridge/timer-state.json
 dist/
 notes.md
+crowd-plus/studio.json
+crowd-plus/stats.json
+crowd-plus/seen-gifts.json
+crowd-plus/timer-state.json
+crowd-plus/profiles/*.json

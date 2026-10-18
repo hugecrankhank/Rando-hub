@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build the downloadable release zip: dist/Rando-Hub-v<version>.zip
+"""Build the downloadable release zips: dist/Rando-Hub-v<version>.zip and
+dist/Crowd-Control-Plus-v<version>.zip (crowd-plus/, if present)
 
     python3 tools/make-release.py            version from index.html
     python3 tools/make-release.py 1.0.0      check it matches index.html
@@ -22,7 +23,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 REL = os.path.join(ROOT, 'release')
 
 # Not part of the app itself (they're placed elsewhere in the zip, or dev-only)
-APP_SKIP_TOP = {'.git', '.github', '.gitignore', '.nojekyll', 'release', 'tools', 'relay',
+APP_SKIP_TOP = {'.git', '.github', '.gitignore', '.nojekyll', 'release', 'tools', 'relay', 'crowd-plus',
                 'dist', 'README.md', 'CHANGELOG.md', 'node_modules'}
 APP_SKIP_PATHS = {'crowd/bridge', 'randomizer/test', 'randomizer/tools'}
 SKIP_NAMES = {'__pycache__', '.DS_Store', 'Thumbs.db', 'timer-state.json', 'node_modules'}
@@ -104,6 +105,20 @@ def main():
 
     mb = os.path.getsize(out) / 1e6
     print(f'{out}: {count} files, {mb:.1f} MB')
+
+    # second download: Crowd Control+ (crowd-plus/), its own folder in its own zip
+    plus = os.path.join(ROOT, 'crowd-plus')
+    if os.path.isdir(plus):
+        out2 = os.path.join(ROOT, 'dist', f'Crowd-Control-Plus-v{ver}.zip')
+        n2 = 0
+        skip2 = {'studio.json', 'stats.json', 'seen-gifts.json', 'timer-state.json'}
+        with zipfile.ZipFile(out2, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+            for src, r in walk(plus, lambda r: r in skip2 or (r.startswith('profiles/') and r.endswith('.json'))):
+                info = zipfile.ZipInfo('Crowd Control+/' + r, date_time=stamp)
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = (0o755 if r.endswith(('.command', '.sh')) else 0o644) << 16
+                z.writestr(info, open(src, 'rb').read()); n2 += 1
+        print(f'{out2}: {n2} files, {os.path.getsize(out2) / 1e6:.1f} MB')
     if missing:
         print('Note: built without ' + ', '.join(missing))
 

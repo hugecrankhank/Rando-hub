@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Rando Hub</title>
 <meta name="application-name" content="Rando Hub">
-<meta name="version" content="1.0.0">
+<meta name="version" content="1.0.1">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#161b22">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -35,10 +35,17 @@
     padding-left: max(16px, env(safe-area-inset-left)) !important; padding-right: max(16px, env(safe-area-inset-right)) !important; }
   header { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
     padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
-  header h1 { font-size: 15px; margin: 0 8px 0 0; letter-spacing: .02em; }
-  header h1 span { color: var(--accent); }
-  header h1 .app-ver { font-size: 10px; font-weight: 400; color: var(--dim); margin-left: 6px; letter-spacing: 0; }
+  @font-face { font-family: "Rando Pixel"; src: url(fonts/PressStart2P-Regular.ttf) format("truetype"); font-display: swap; }
+  header h1 { font-size: 15px; margin: 0 8px 0 0; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  header h1 .app-name { font-family: "Rando Pixel", ui-monospace, monospace; font-weight: 400; color: #fff; font-size: .9em; line-height: 1; }
+  header h1 .app-name span { color: #e63946; }
+  header h1 .app-die { width: 1.65em; height: 1.65em; flex: none; }
+  header h1 .app-ver { font-size: 10px; font-weight: 400; color: var(--dim); margin-left: -2px; letter-spacing: 0; }
   body.phone header h1 .app-ver, body.tablet header h1 .app-ver { display: none; }
+  /* phones: the pixel font at its native 8px, so the name fits beside the buttons */
+  body.phone header h1 { gap: 5px; }
+  body.phone header h1 .app-name { font-size: 8px; }
+  body.phone header h1 .app-die { width: 18px; height: 18px; }
   label.ctl { display: flex; gap: 6px; align-items: center; color: var(--dim); font-size: 13px; }
   select, button, .filebtn { background: #0d1117; color: var(--text); border: 1px solid var(--line);
     border-radius: 6px; padding: 5px 10px; font: inherit; font-size: 13px; cursor: pointer; }
@@ -528,7 +535,7 @@
 </head>
 <body>
 <header>
-  <h1 title="Rando Hub v1.0.0">Rando <span>Hub</span><small class="app-ver">v1.0.0</small></h1>
+  <h1 title="Rando Hub v1.0.1"><svg class="app-die" viewBox="-130 -130 260 260" aria-hidden="true"><g transform="rotate(-12)"><rect x="-108" y="-108" width="216" height="216" rx="32" fill="#fff" stroke="#c8102e" stroke-width="16"/><circle cx="-56" cy="-56" r="23" fill="#c8102e"/><circle cx="56" cy="-56" r="23" fill="#14213d"/><circle r="23" fill="#c8102e"/><circle cx="-56" cy="56" r="23" fill="#14213d"/><circle cx="56" cy="56" r="23" fill="#c8102e"/></g></svg><span class="app-name">RANDO <span>HUB</span></span><small class="app-ver">v1.0.1</small></h1>
 
   <div id="rando-split">
     <button id="r-toggle" aria-expanded="false" aria-controls="rando-bar" title="Show or hide the randomizer settings (they fold away by themselves when you go back to playing)">Randomizer<span id="r-gen-name"> · alttpr.com</span></button>

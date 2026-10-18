@@ -111,7 +111,7 @@ def main():
     if os.path.isdir(plus):
         out2 = os.path.join(ROOT, 'dist', f'Crowd-Control-Plus-v{ver}.zip')
         n2 = 0
-        skip2 = {'studio.json', 'stats.json', 'seen-gifts.json', 'timer-state.json'}
+        skip2 = {'studio.json', 'stats.json', 'seen-gifts.json', 'timer-state.json', 'hall-of-fame.json', 'viewers.json', 'clips.json'}
         with zipfile.ZipFile(out2, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
             for src, r in walk(plus, lambda r: r in skip2 or (r.startswith('profiles/') and r.endswith('.json'))):
                 info = zipfile.ZipInfo('Crowd Control+/' + r, date_time=stamp)

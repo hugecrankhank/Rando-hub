@@ -55,6 +55,20 @@ reloads by itself when you save it.
 | `seed_preset` / `seed_chaos` | Random preset / CHAOS seed (see below) | | | |
 | `arrows_plus` / `arrows_none` | +10 / lose all arrows | | `cucco_storm` | Cucco attack: angry cuccos fly at Link, 30 s of outdoor time (the clock pauses indoors) |
 
+**Screen, speed and Link** (new in 1.1.0; the emulator does the screen and
+speed ones, so they work on any seed):
+
+| id | effect | | id | effect (timed) |
+|---|---|---|---|---|
+| `fairy` | Fairy in the first empty bottle | | `mirror` | Picture flipped left-right, 20 s |
+| `bee_bottle` | Bee in the first empty bottle | | `upside_down` | Picture upside down, 15 s |
+| `music_roulette` | A random song from the MSU-1 pack, right now | | `wobble` | Drunk wobble, 20 s |
+| | | | `tiny` | Half-size picture, 20 s |
+| | | | `crt` | Retro CRT filter, 30 s |
+| | | | `speed_up` / `slow_mo` | 1.5x speed 20 s / half speed 15 s |
+| | | | `freeze` | Link can't move, 3 s |
+| | | | `pink_link` | Pink Link, 60 s |
+
 **App rolls** (use the app's own buttons):
 
 | id | effect |

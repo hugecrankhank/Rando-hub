@@ -1226,6 +1226,34 @@ function askPackName(guess, title = 'Name this MSU-1 pack') {
   return v || guess;
 }
 
+// A small "♪ pack name" card over the game for 3 seconds whenever the MSU-1
+// pack changes (menu, 🎲 roll or a crowd gift), so viewers see what's playing.
+function msuToast(name) {
+  const host = document.querySelector('.s9x');
+  if (!host) return;
+  if (!document.getElementById('msu-toast-css')) {
+    const st = document.createElement('style'); st.id = 'msu-toast-css';
+    st.textContent =
+      '@font-face { font-family: "Rando Pixel"; src: url(fonts/PressStart2P-Regular.ttf) format("truetype"); font-display: swap; }' +
+      '.msu-toast { position: absolute; left: 50%; bottom: 14%; transform: translate(-50%, 10px); z-index: 26; pointer-events: none;' +
+      ' display: flex; align-items: center; gap: 10px; max-width: 86%; padding: 9px 16px 9px 12px; border-radius: 10px;' +
+      ' background: rgba(18,12,34,.9); border: 2px solid #e63946; box-shadow: 0 4px 14px rgba(0,0,0,.5); color: #fff;' +
+      ' opacity: 0; transition: opacity .35s ease, transform .35s ease; }' +
+      '.msu-toast.show { opacity: 1; transform: translate(-50%, 0); }' +
+      '.msu-toast .note { font-size: 22px; line-height: 1; color: #f5c542; animation: msu-bop .5s ease-in-out infinite alternate; }' +
+      '@keyframes msu-bop { to { transform: translateY(-3px) rotate(-8deg); } }' +
+      '.msu-toast .lab { display: block; font: 8px/1.2 "Rando Pixel", ui-monospace, monospace; color: #ff8a92; letter-spacing: .04em; margin-bottom: 4px; }' +
+      '.msu-toast .nm { display: block; font: 700 15px/1.2 system-ui, sans-serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px #000; }';
+    document.head.appendChild(st);
+  }
+  let el = host.querySelector('.msu-toast');
+  if (!el) { el = document.createElement('div'); el.className = 'msu-toast'; el.innerHTML = '<span class="note">♪</span><span><span class="lab"></span><span class="nm"></span></span>'; host.appendChild(el); }
+  el.querySelector('.lab').textContent = name ? 'NOW PLAYING' : 'MSU-1 OFF';
+  el.querySelector('.nm').textContent = name || "The game's own music";
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(msuToast.t); msuToast.t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
 function showMsu(name) {
   // the pick button shows the pack in use (or asks for one)
   $('r-msu-pick-text').textContent = msu.count ? name : 'Choose pack…';
@@ -1327,6 +1355,7 @@ async function addPack(data, count, size) {
   const same = packs.find((x) => (x.src || x.name) === src && x.count === count && x.size === size);
   if (same) {
     playPackData({ ...data, name: same.name });
+    msuToast(same.name);
     visitPack = null;
     await setCurrent(same.id);
     status(`MSU-1 pack: ${same.name} (already in My packs). ${musicNote(await liveMusic(true).catch(() => null))}`, 'ok');
@@ -1335,6 +1364,7 @@ async function addPack(data, count, size) {
   }
   data = { ...data, name: askPackName(src) };
   playPackData(data);
+  msuToast(data.name);
   status(`Saving ${data.name} in this browser…`);
   const id = 'p' + Date.now().toString(36);
   const keep = data.zip ? data : { name: data.name, tracks: data.tracks.map(([n, f]) => [n, new Blob([f], { type: 'application/octet-stream' })]) };
@@ -1377,6 +1407,7 @@ async function usePack(id) {
   const data = await kvGet('msu-pack:' + id).catch(() => null);
   if (!data) throw new Error(`${meta.name} isn't in this browser any more. Remove it and add it again.`);
   playPackData({ ...data, name: meta.name });
+  msuToast(meta.name);
   visitPack = null;
   await setCurrent(id);
   status(`MSU-1 pack: ${meta.name}. ${musicNote(await liveMusic(true).catch(() => null))}`, 'ok');
@@ -1386,6 +1417,7 @@ async function usePack(id) {
 async function musicOff() {
   msu.setTracks(new Map());
   showMsu('');
+  msuToast('');
   await setCurrent(null);
   const live = await liveMusic(false).catch(() => null);
   status(live === 'now' ? "MSU-1 off. The game's own music is back, here and on seeds after." :
@@ -1782,7 +1814,14 @@ export function init() {
   buildMusicButton();
   refreshSprite();
 
-  window.UnifiedRando = { useIfBaseRom, prepareLoadedRom, noteRom, crowd: crowdApi() };
+  window.UnifiedRando = { useIfBaseRom, prepareLoadedRom, noteRom, crowd: crowdApi(),
+    // crowd "music roulette" and the run-stats overlay
+    music: {
+      roulette: () => msu.roulette(),
+      get count() { return msu.count; },
+      get pack() { const m = packs.find((x) => x.id === currentPack); return m ? m.name : (visitPack ? visitPack.name : ''); },
+    },
+  };
   if (window.__pendingRomNote) { noteRom(window.__pendingRomNote.bytes, window.__pendingRomNote.name); window.__pendingRomNote = null; }
   $('r-sprite-lib').addEventListener('click', () => openLibrary($, useLibrarySprite, coll));
   $('r-sprite-prev').addEventListener('click', () => {

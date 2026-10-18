@@ -58,7 +58,10 @@
   // ── styles ──────────────────────────────────────────────────────────────
   var CSS = [
     '.s9x { position: absolute; inset: 0; background: #000; overflow: hidden; user-select: none; -webkit-user-select: none; }',
-    '.s9x canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }',
+    '.s9x canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; transform: var(--s9x-tf, none); transition: transform .35s ease; }',
+    /* screen effects (crowd control): the picture only, never the controls or menus */
+    '.s9x canvas.s9x-wobble { animation: s9x-wobble 1.6s ease-in-out infinite; transition: none; }',
+    '@keyframes s9x-wobble { 0%, 100% { transform: var(--s9x-tf, none) rotate(-3deg) skewX(2deg); } 50% { transform: var(--s9x-tf, none) rotate(3deg) skewX(-2deg) scale(1.03); } }',
     '.s9x-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8b95a3; font: 14px system-ui, sans-serif; pointer-events: none; }',
     '.s9x-toast { position: absolute; left: 50%; top: 44px; transform: translate(-50%, -6px); opacity: 0; z-index: 30;',
     '  background: rgba(22,27,34,.92); color: #e6e9ee; border: 1px solid #2a313c; padding: 5px 11px; border-radius: 8px;',
@@ -141,6 +144,8 @@
   var started = false, core = null, video = null, audio = null, input = null;
   var root, canvas, touchEl, menuEl, pill, toastEl, msgEl;
   var running = false, paused = false, ff = false, gameName = '', lastSram = null;
+  var speedMul = 1, audioAcc = 0;   // crowd speed effects: 1.5 = faster, 0.5 = slow motion
+  var screenFx = {}, tempFilter = null;
   // Add-ons (crowd/effects.js) plug in here without touching the loop:
   //   input(pad) -> pad   change the buttons the game sees this frame
   //   frame(core)         runs after every emulated frame
@@ -392,7 +397,17 @@
     video.dirty = true;
     if (placement === 'outside') layoutTouch();   // the picture's box follows the shape
   }
+  function applyScreenFx() {
+    if (!canvas) return;
+    var t = [];
+    if (screenFx.mirror) t.push('scaleX(-1)');
+    if (screenFx.flip) t.push('rotate(180deg)');
+    if (screenFx.tiny) t.push('scale(.5)');
+    canvas.style.setProperty('--s9x-tf', t.length ? t.join(' ') : 'none');
+    canvas.classList.toggle('s9x-wobble', !!screenFx.wobble);
+  }
   function applyFilter() {
+    if (tempFilter && video) { video.setPreset(tempFilter).catch(function () {}); return; }
     if (!video) return;
     video.setPreset(cfg.filter).catch(function (e) {
       console.warn('[snes9x] filter', e);
@@ -482,10 +497,10 @@
     if (!running || paused) { try { video.draw(); } catch (e) {} return; }
     var frameMs = 1000 / core.fps, pad = input.read(), n = 0;
     if (hooks.input) { try { pad = hooks.input(pad) | 0; } catch (e) { console.warn('[snes9x] input hook', e); } }
-    var vsync = !ff && Math.abs(ema - frameMs) / frameMs < 0.01;
+    var vsync = !ff && speedMul === 1 && Math.abs(ema - frameMs) / frameMs < 0.01;
     if (vsync) { n = 1; acc = 0; }
     else {
-      acc += dt * (ff ? 4 : 1);
+      acc += dt * (ff ? 4 : speedMul);
       n = Math.floor(acc / frameMs); acc -= n * frameMs;
       var max = ff ? 8 : 3;
       if (n > max) { n = max; acc = 0; }
@@ -496,7 +511,11 @@
         stats.frames++;
         if (hooks.frame) { try { hooks.frame(core); } catch (e) { console.warn('[snes9x] frame hook', e); } }
         var a = core.audio();
-        if (!ff) { try { audio.push(a); } catch (e) {} }
+        if (!ff) {
+          // faster than normal: drop some frames' sound so it doesn't pile up
+          audioAcc += speedMul > 1 ? 1 / speedMul : 1;
+          if (audioAcc >= 1) { audioAcc -= 1; try { audio.push(a); } catch (e) {} }
+        }
       }
     } catch (e) { stopWithError('Emulator', e); return; }
     try {
@@ -638,7 +657,16 @@
     get core() { return running ? core : null; },
     get paused() { return paused; },
     toast: function (msg) { if (toastEl) toast(msg); },
+    // crowd effects: speed (1 = normal), picture tricks, a filter for a while
+    fx: {
+      setSpeed: function (m) { m = +m || 1; if (m !== speedMul) { speedMul = Math.max(0.25, Math.min(3, m)); acc = 0; audioAcc = 0; if (audio) audio.clear(); } },
+      get speed() { return speedMul; },
+      setScreen: function (name, on) { if (!!screenFx[name] === !!on) return; if (on) screenFx[name] = true; else delete screenFx[name]; applyScreenFx(); },
+      setTempFilter: function (id) { if (tempFilter === (id || null)) return; tempFilter = id || null; if (video) applyFilter(); },
+      get container() { return root || null; },
+    },
     openMenu: function () { if (running) openMenu(); },
     get ready() { return running; },
+    get gameName() { return gameName; },
   };
 })();

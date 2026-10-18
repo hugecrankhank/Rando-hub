@@ -178,7 +178,9 @@ Rando-Hub-v1.0.0/
 Streamers can also grab the second download, **`Crowd-Control-Plus-v<version>.zip`**:
 the crowd control bridge plus a control panel (`http://localhost:21214/studio`) and
 OBS / TikTok LIVE Studio overlays: gift alerts with sounds, goal bars, top gifters,
-recent events and chat command replies, plus reading chat aloud. Its `INSTRUCTIONS.txt`
+recent events and chat command replies, plus reading chat aloud, chat votes, team
+battles, a mystery box, a combo meter, predictions, run stats, death tax, clip
+markers, a hall of fame and welcome-back pop-ups. Its `INSTRUCTIONS.txt`
 walks through setup. Source: [`crowd-plus/`](crowd-plus).
 
 Playing from the zip needs [Node.js](https://nodejs.org) (or Python 3) and runs at

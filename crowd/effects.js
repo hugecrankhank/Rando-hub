@@ -48,6 +48,44 @@
   function rupees(ram) { return ram[A.RUPEES] | (ram[A.RUPEES + 1] << 8); }
   function setRupees(ram, v) { v = Math.max(0, Math.min(999, v)); ram[A.RUPEES] = v & 0xFF; ram[A.RUPEES + 1] = v >> 8; }
   function fill(ram, addr, amount, cap) { ram[addr] = Math.min(cap, ram[addr] + amount); }
+  function fx() { var p = root.Snes9xPlayer; return p && p.fx; }
+  function core() { var p = root.Snes9xPlayer; return p && p.core; }
+
+  // Bottles ($7EF35C-$7EF35F): 2 = empty, 6 = fairy, 7 = bee, 8 = good bee.
+  function fillBottle(r, what) {
+    for (var a = 0xF35C; a <= 0xF35F; a++) if (r[a] === 2) { r[a] = what; return true; }
+    return 'No empty bottle';
+  }
+
+  // Pink Link: tint Link's palette (main palette buffer $7EC6E2, 15 colours)
+  // and ask the game to re-upload palettes ($15). The original colours are
+  // kept and put back when it ends; if the game reloads them meanwhile (new
+  // area, tunic change) the new ones are kept instead.
+  var LINK_PAL = 0xC6E2, LINK_N = 15, pinkSaved = null, pinkWritten = null;
+  function pinkify(c) {
+    var r = c & 31, g = (c >> 5) & 31, b = (c >> 10) & 31;
+    var l = (r * 3 + g * 6 + b) / 10;
+    r = Math.min(31, Math.round(l * 0.55 + 14)); g = Math.round(l * 0.45 + 2); b = Math.min(31, Math.round(l * 0.6 + 9));
+    return r | (g << 5) | (b << 10);
+  }
+  function pinkFrame(r) {
+    var cur = [], same = !!pinkWritten;
+    for (var i = 0; i < LINK_N; i++) { cur[i] = r[LINK_PAL + i * 2] | (r[LINK_PAL + i * 2 + 1] << 8); if (pinkWritten && cur[i] !== pinkWritten[i]) same = false; }
+    if (!same) pinkSaved = cur;            // first frame, or the game loaded new colours
+    if (!pinkWritten || !same) {
+      pinkWritten = pinkSaved.map(pinkify);
+      for (var k = 0; k < LINK_N; k++) { r[LINK_PAL + k * 2] = pinkWritten[k] & 0xFF; r[LINK_PAL + k * 2 + 1] = pinkWritten[k] >> 8; }
+      r[0x15] = 1;
+    }
+  }
+  function pinkEnd(r) {
+    if (pinkSaved && pinkWritten) {
+      var still = true;
+      for (var i = 0; i < LINK_N; i++) if ((r[LINK_PAL + i * 2] | (r[LINK_PAL + i * 2 + 1] << 8)) !== pinkWritten[i]) still = false;
+      if (still) { for (var k = 0; k < LINK_N; k++) { r[LINK_PAL + k * 2] = pinkSaved[k] & 0xFF; r[LINK_PAL + k * 2 + 1] = pinkSaved[k] >> 8; } r[0x15] = 1; }
+    }
+    pinkSaved = pinkWritten = null;
+  }
 
   // SNES pad bits, same order as Snes9xCore.BTN
   var B = { B: 1 << 0, Y: 1 << 1, UP: 1 << 4, DOWN: 1 << 5, LEFT: 1 << 6, RIGHT: 1 << 7 };
@@ -158,6 +196,31 @@
       hold: { addr: 0x150C7, on: 0x01 }, romCheck: [0x0F, 0xC7, 0x50, 0x7F] },   // ORA.l $7F50C7
     cucco_storm: { name: 'Cucco attack', good: false, secs: 30, outdoors: true,
       hold: { addr: 0x150C5, on: 0x01 }, romCheck: [0xAF, 0xC5, 0x50, 0x7F] },   // LDA.l $7F50C5
+
+    // ── screen and speed tricks (the emulator, so they work on any seed) ──
+    mirror:      { name: 'Mirror mode', good: false, secs: 20, start: function () { fx() && fx().setScreen('mirror', true); }, end: function () { fx() && fx().setScreen('mirror', false); } },
+    upside_down: { name: 'Upside down', good: false, secs: 15, start: function () { fx() && fx().setScreen('flip', true); }, end: function () { fx() && fx().setScreen('flip', false); } },
+    wobble:      { name: 'Drunk wobble', good: false, secs: 20, start: function () { fx() && fx().setScreen('wobble', true); }, end: function () { fx() && fx().setScreen('wobble', false); } },
+    tiny:        { name: 'Tiny screen', good: false, secs: 20, start: function () { fx() && fx().setScreen('tiny', true); }, end: function () { fx() && fx().setScreen('tiny', false); } },
+    crt:         { name: 'Retro CRT', good: true, secs: 30, start: function () { fx() && fx().setTempFilter('crt'); }, end: function () { fx() && fx().setTempFilter(null); } },
+    speed_up:    { name: 'Speed up (1.5x)', good: false, secs: 20, start: function () { fx() && fx().setSpeed(1.5); }, end: function () { fx() && fx().setSpeed(1); } },
+    slow_mo:     { name: 'Slow motion', good: true, secs: 15, start: function () { fx() && fx().setSpeed(0.5); }, end: function () { fx() && fx().setSpeed(1); } },
+
+    // ── Link ──
+    freeze:      { name: 'Freeze!', good: false, secs: 3,
+      input: function () { return 0; } },
+    fairy:       { name: 'Fairy in a bottle', good: true,
+      apply: function (r) { return fillBottle(r, 6); } },
+    bee_bottle:  { name: 'Bee in a bottle', good: true,
+      apply: function (r) { return fillBottle(r, 7); } },
+    pink_link:   { name: 'Pink Link', good: true, secs: 60,
+      frame: pinkFrame, end: function () { var c = core(); if (c) pinkEnd(c.wram()); } },
+    music_roulette: { name: 'Music roulette', good: true,
+      app: function () {
+        var m = root.UnifiedRando && root.UnifiedRando.music;
+        if (!m || !m.count) { feed('Music roulette needs an MSU-1 pack (♪)', 'info'); return false; }
+        return !!m.roulette();
+      } },
 
     one_hit:     { name: 'One-heart mode', good: false, secs: 30,
       frame: function (r) { if (r[A.HP] > 8) r[A.HP] = 8; r[A.HP_FILL] = 0; } },
@@ -488,6 +551,7 @@
   function onFrame(core) {
     var ram = core.wram();
     holdSwitches(core, ram);
+    try { sendRun(ram); } catch (e) {}
     if (!inPlay(ram)) return;
     // timed effects
     var outside = ram[A.MODE] === 0x09;   // the ROM only spawns cuccos on the overworld
@@ -502,7 +566,7 @@
         }
         if (paused[id]) { delete paused[id]; feed(fx.name + ' resumed', 'bad'); render(); }
       }
-      if (--active[id] <= 0) { delete active[id]; delete paused[id]; feed(fx.name + ' ended', 'end'); render(); }
+      if (--active[id] <= 0) { delete active[id]; delete paused[id]; if (fx.end) { try { fx.end(); } catch (e) {} } feed(fx.name + ' ended', 'end'); render(); }
     }
     if (gap > 0) { gap--; return; }
     var job = queue.shift();
@@ -512,7 +576,10 @@
       feed(f.name + ' needs a randomizer ROM (not this one)', 'info'); render(); return;
     }
     var secs = secsOf(job.id);
-    if (secs) active[job.id] = (active[job.id] || 0) + Math.round(secs * (core.fps || 60.1));
+    if (secs) {
+      if (!active[job.id] && f.start) { try { f.start(); } catch (e) { console.warn('[crowd]', job.id, e); } }
+      active[job.id] = (active[job.id] || 0) + Math.round(secs * (core.fps || 60.1));
+    }
     else if (f.app) { try { f.app(job); } catch (e) { console.warn('[crowd]', job.id, e); } }
     else {
       var res = f.apply(ram);
@@ -523,6 +590,46 @@
       f.good ? 'good' : 'bad');
     send({ type: 'applied', effect: job.id, user: job.user });
     render();
+  }
+
+  function endAll() {
+    for (var id in active) { var f = EFFECTS[id]; if (f && f.end) { try { f.end(); } catch (e) {} } }
+    active = {};
+  }
+
+  // ── run stats for the bridge (deaths, checks, dungeon, seed, music) ─────
+  // SRAM counters from z3randomizer sram.asm (see tracker/js/items.js):
+  // TotalItemCounter $7EF423 (2 bytes), DeathCounter $7EF449, BonkCounter $7EF420.
+  var DUNGEONS = ['Hyrule Castle', 'Hyrule Castle', 'Eastern Palace', 'Desert Palace', "Agahnim's Tower", 'Swamp Palace',
+    'Palace of Darkness', 'Misery Mire', 'Skull Woods', 'Ice Palace', 'Tower of Hera', "Thieves' Town", 'Turtle Rock', "Ganon's Tower"];
+  var run = { deaths: -1, checks: 0, bonks: 0, place: '', seed: '', music: '' }, runSent = '', runT = 0;
+  function readRun(ram) {
+    if (ram.length < 0x20000) return;
+    var mode = ram[A.MODE];
+    if (PLAY_MODES[mode]) {
+      var checks = ram[0xF423] | (ram[0xF424] << 8), deaths = ram[0xF449], bonks = ram[0xF420];
+      if (checks < 2000 && checks >= run.checks) run.checks = checks;
+      if (bonks >= run.bonks && bonks < 10000) run.bonks = bonks;
+      if (run.deaths < 0) run.deaths = deaths;                    // first read: no "death" for old ones
+      else if (deaths > run.deaths && deaths - run.deaths < 5) { run.deaths = deaths; send({ type: 'death', deaths: deaths }); }
+      var d = ram[0x40C];
+      run.place = mode === 0x07 && d !== 0xFF && d / 2 < DUNGEONS.length ? DUNGEONS[d >> 1] : mode === 0x07 ? 'Indoors' : ram[0x8A] >= 0x40 ? 'Dark World' : 'Light World';
+    }
+    var P = root.Snes9xPlayer;
+    run.seed = (P && P.gameName) || '';
+    var m = root.UnifiedRando && root.UnifiedRando.music;
+    run.music = m && m.count ? m.pack || 'MSU-1' : '';
+    run.hearts = ram[A.HP_MAX] >> 3;
+  }
+  function sendRun(ram) {
+    if (status !== 'connected') return;
+    if (++runT % 60) return;                                       // about once a second
+    readRun(ram);
+    var j = JSON.stringify(run);
+    if (j !== runSent) {
+      if (run.music !== JSON.parse(runSent || '{}').music && runSent) send({ type: 'music', pack: run.music });
+      runSent = j; send(Object.assign({ type: 'run' }, run, { deaths: Math.max(0, run.deaths) }));
+    }
   }
 
   function onInput(pad) {
@@ -571,6 +678,7 @@
     ws.onopen = function () {
       status = 'connected'; retryMs = 2000; render();
       send({ type: 'hello', app: 'alttpr-snes9x', effects: list() });
+      runSent = '';
     };
     ws.onmessage = function (e) {
       var m; try { m = JSON.parse(e.data); } catch (x) { return; }
@@ -628,7 +736,7 @@
     rerender = rr;
     var a = b.dataset.ext;
     if (a === 'cc-test') trigger(b.dataset.id, 'test');
-    else if (a === 'cc-clear') { queue.length = 0; active = {}; paused = {}; cancelReroll(); }
+    else if (a === 'cc-clear') { endAll(); queue.length = 0; paused = {}; cancelReroll(); }
     else if (a === 'cc-cancel-reroll') cancelReroll();
     rr();
   }

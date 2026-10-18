@@ -255,8 +255,19 @@ export class MsuPlayer {
     return chain.find((c) => this.tracks.has(c)) || 0;
   }
 
-  async request(req) {
-    const t = this.pickTrack(req);
+  // Crowd "music roulette": play a random track of this pack right now. The
+  // game's next song change brings the normal music back.
+  roulette() {
+    const pool = [...this.tracks.keys()].filter((t) => !PLAY_ONCE.has(t) && t !== this.playing);
+    if (!pool.length || !this.active()) return 0;
+    const t = pool[Math.floor(Math.random() * pool.length)];
+    this.target = 1; this.fadingOut = false;
+    this.request(0, t);
+    return t;
+  }
+
+  async request(req, forced) {
+    const t = forced || this.pickTrack(req);
     if (t === this.playing && this.source) return;
     // remember where an overworld song was, for a quick return
     if (this.playing && OVERWORLD.has(this.playing) && (this.source || this.stream) && this.ctx) {

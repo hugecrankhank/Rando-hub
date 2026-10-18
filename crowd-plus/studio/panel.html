@@ -97,6 +97,8 @@
   <button data-tab="dash" class="on">Dashboard</button>
   <button data-tab="gifts">Gifts &amp; effects</button>
   <button data-tab="alerts">Alerts</button>
+  <button data-tab="games">Live games</button>
+  <button data-tab="run">Run &amp; stream</button>
   <button data-tab="goals">Goals</button>
   <button data-tab="overlays">Overlays</button>
   <button data-tab="chat">Chat &amp; TTS</button>
@@ -270,6 +272,122 @@
   </div>
 </section>
 
+<!-- LIVE GAMES -->
+<section id="tab-games">
+  <h2>CHAT VOTE</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="hint">Chat types <span class="kbd">1</span> to <span class="kbd">4</span> (or <span class="kbd">!vote 2</span>). When time's up, the winner's effect runs. Choices without an effect are just a poll ("Which dungeon next?").</p>
+      <label class="row"><span>Question</span><input id="pv-q" value="PICK THE NEXT CURSE" style="flex:1"></label>
+      <div id="pv-opts"></div>
+      <div class="row"><button class="small" id="pv-more">+ choice</button><button class="small" id="pv-random">Random curses</button><button class="small" id="pv-blessing">Curse or blessing</button><button class="small" id="pv-dungeon">Which dungeon next?</button></div>
+      <label class="row"><span>Seconds</span><input type="number" min="10" max="600" data-s="votes.seconds"></label>
+      <label class="check"><input type="checkbox" data-s="votes.autoRun"> Run the winner's effect automatically</label>
+      <div class="row"><button class="primary" id="pv-start">Start vote</button><button id="pv-end">End now</button><button class="danger" id="pv-cancel">Cancel</button></div>
+    </div>
+    <div class="card"><h3>Now</h3><div id="pv-now" class="muted">No vote running.</div></div>
+  </div>
+
+  <h2>TEAM BATTLE</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="hint">Viewers join a team by typing its word in chat. Their gifts fill their team's bar; gifters who didn't join help the team that's behind. First to the target (or ahead when time runs out) wins, and that team's effect runs.</p>
+      <div class="row"><span class="muted" style="min-width:90px">Team 1</span><input data-s="battle.names.0" style="width:150px"><input data-s="battle.join.0" style="width:90px" title="Word to join"><select data-s="battle.effects.0" data-effects data-none></select></div>
+      <div class="row"><span class="muted" style="min-width:90px">Team 2</span><input data-s="battle.names.1" style="width:150px"><input data-s="battle.join.1" style="width:90px" title="Word to join"><select data-s="battle.effects.1" data-effects data-none></select></div>
+      <label class="row"><span>First to</span><input type="number" min="0" data-s="battle.target"> coins <span class="hint">(0 = no target)</span></label>
+      <label class="row"><span>Time limit</span><input type="number" min="0" id="bt-min" value="0"> minutes <span class="hint">(0 = none)</span></label>
+      <div class="row"><button class="primary" id="bt-start">Start battle</button><button id="bt-end">End now</button><button class="danger" id="bt-cancel">Cancel</button></div>
+    </div>
+    <div class="card"><h3>Now</h3><div id="bt-now" class="muted">No battle running.</div>
+      <div class="row"><button class="small" data-bt="0" data-amt="100">Team 1 +100</button><button class="small" data-bt="1" data-amt="100">Team 2 +100</button></div></div>
+  </div>
+
+  <h2>MYSTERY BOX</h2>
+  <div class="card">
+    <p class="hint">Choose <b>Mystery box</b> as a gift's effect (Gifts &amp; effects tab), as a big-donation level, or as the combo bonus. A slot machine spins on stream and lands on one of the effects ticked here.</p>
+    <label class="row"><span>Spin time</span><input type="number" min="2" max="10" data-s="mystery.spinSeconds"> seconds</label>
+    <div id="mb-pool" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px 12px"></div>
+    <div class="row"><button id="mb-test">Spin one now</button></div>
+  </div>
+
+  <h2>COMBO METER</h2>
+  <div class="card">
+    <label class="check"><input type="checkbox" data-s="combo.enabled"> Combo meter on</label>
+    <label class="row"><span>Gifts count as a combo within</span><input type="number" min="2" max="60" data-s="combo.windowSeconds"> seconds of each other</label>
+    <label class="row"><span>Bonus every</span><input type="number" min="2" data-s="combo.bonusAt"> gifts in a row</label>
+    <label class="row"><span>Bonus effect</span><select data-s="combo.bonusEffect" data-effects data-none></select></label>
+  </div>
+
+  <h2>PREDICTIONS</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="hint">Chat types <span class="kbd">!yes</span> or <span class="kbd">!no</span> before it locks. You say what happened; the people who called it get a shout-out on stream. Just for fun, no points or money.</p>
+      <label class="row"><span>Question</span><input id="pd-q" value="Will he beat this dungeon without dying?" style="flex:1"></label>
+      <div class="row"><span class="muted" style="min-width:170px">Answers</span><input id="pd-a" value="YES" style="width:110px"><input id="pd-b" value="NO" style="width:110px"></div>
+      <label class="row"><span>Votes lock after</span><input type="number" min="10" data-s="predict.seconds"> seconds</label>
+      <div class="row"><button class="primary" id="pd-start">Start prediction</button><button id="pd-lock">Lock now</button></div>
+      <div class="row"><button id="pd-yes">It happened (answer 1)</button><button id="pd-no">It didn't (answer 2)</button><button class="danger" id="pd-cancel">Cancel</button></div>
+    </div>
+    <div class="card"><h3>Now</h3><div id="pd-now" class="muted">No prediction running.</div></div>
+  </div>
+  <div class="savebar"><button class="primary" data-save-settings>Save settings</button><span class="dirty" data-dirty></span></div>
+</section>
+
+<!-- RUN & STREAM -->
+<section id="tab-run">
+  <h2>RUN STATS</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="hint">Live from the game while Crowd effects is on: deaths, checks, where Link is, the MSU-1 pack and the seed. Put the <b>Run stats</b> overlay on stream.</p>
+      <div class="stats" id="run-now"></div>
+      <div class="row"><button class="small" id="run-test">Test with fake numbers</button></div>
+    </div>
+    <div class="card">
+      <h3>Death tax</h3>
+      <p class="hint">Every time Link dies...</p>
+      <label class="check"><input type="checkbox" data-s="deathTax.enabled"> Death tax on</label>
+      <label class="row"><span>Add to the subathon clock</span><input type="number" min="0" data-s="deathTax.timerSeconds"> seconds</label>
+      <label class="row"><span>Move this goal</span><select data-s="deathTax.goalId" id="dt-goal"></select> by <input type="number" data-s="deathTax.goalAmount" style="width:80px"></label>
+      <label class="check"><input type="checkbox" data-s="deathTax.alert"> Show a "DEATH TAX" alert</label>
+      <div class="row"><button class="small" id="dt-test">Test a death</button></div>
+    </div>
+  </div>
+
+  <h2>CLIP MARKERS</h2>
+  <div class="card">
+    <p class="hint">Big moments are time-stamped here so you can find them in your recording for TikTok clips. "Stream time" counts from the last <b>Reset stream stats</b>.</p>
+    <div class="row">
+      <label class="check" style="margin:0"><input type="checkbox" data-s="clips.deaths"> deaths</label>
+      <label class="check" style="margin:0"><input type="checkbox" data-s="clips.seeds"> seed rolls</label>
+      <label class="check" style="margin:0"><input type="checkbox" data-s="clips.chatClip"> viewers can type <span class="kbd">!clip</span></label>
+      <span class="muted">gifts worth</span><input type="number" min="1" data-s="clips.minCoins" style="width:80px"><span class="muted">coins or more</span>
+    </div>
+    <div class="row"><input id="cl-label" placeholder="What happened? (optional)" style="flex:1"><button class="primary" id="cl-add">Mark now</button><button id="cl-export">Download list</button><button class="danger" id="cl-clear">Clear</button></div>
+    <div class="log" id="cl-list" style="max-height:340px"></div>
+  </div>
+
+  <h2>HALL OF FAME</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="hint">All-time top gifters, across every stream (Reset stream stats doesn't clear it). Put the <b>Hall of fame</b> overlay on stream.</p>
+      <label class="row"><span>Title</span><input data-s="hallOfFame.title"></label>
+      <label class="row"><span>Rows</span><input type="number" min="1" max="10" data-s="hallOfFame.size"></label>
+      <div class="row"><button class="danger small" id="hf-reset">Reset hall of fame</button></div>
+    </div>
+    <div class="card"><table><tbody id="hf-list"></tbody></table></div>
+  </div>
+
+  <h2>WELCOME BACK</h2>
+  <div class="card">
+    <p class="hint">When a regular shows up (chat, gift, like, follow) for the first time in a stream, the <b>Welcome back</b> overlay pops up. A stream starts at <b>Reset stream stats</b>. <span id="wb-known"></span></p>
+    <label class="check"><input type="checkbox" data-s="welcome.enabled"> Welcome back on</label>
+    <label class="row"><span>Regular = seen in at least</span><input type="number" min="2" data-s="welcome.minStreams"> streams</label>
+    <label class="row"><span>Headline</span><input data-s="welcome.title"></label>
+    <div class="row"><button class="small" id="wb-test">Test</button></div>
+  </div>
+  <div class="savebar"><button class="primary" data-save-settings>Save settings</button><span class="dirty" data-dirty></span></div>
+</section>
+
 <!-- PROFILES -->
 <section id="tab-profiles">
   <h2>PROFILES</h2>
@@ -316,7 +434,7 @@ function chips(st) {
 CC.on('tick', (d) => { chips(CC.state); const n = d.overlays || 0; $('chip-ov').className = 'chip ' + (n ? 'ok' : ''); $('chip-ov').lastElementChild.textContent = n + ' overlay' + (n === 1 ? '' : 's') + ' on stream'; paintClock(); });
 
 // ── dashboard ──
-const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', chat: '💬' };
+const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', chat: '💬', death: '☠', music: '♪' };
 function paintStats() {
   const s = S.stats;
   $('stats').innerHTML = [['Coins', s.coins], ['Gifts', s.gifts], ['Likes', s.likes], ['Follows', s.follows], ['Shares', s.shares], ['Chat', s.chats]]
@@ -331,7 +449,11 @@ function evRow(e) {
   else if (e.type === 'like') what += 'liked x' + e.count;
   else if (e.type === 'follow') what += 'followed';
   else if (e.type === 'share') what += 'shared the LIVE';
-  else if (e.type === 'chat') what += '<span class="muted">' + esc(e.text) + '</span>' + (e.command ? ' <span class="pill">command</span>' : '') + (e.speak ? ' <span class="pill">read aloud</span>' : '');
+  else if (e.type === 'chat') what += '<span class="muted">' + esc(e.text) + '</span>' + (e.command ? ' <span class="pill">command</span>' : '') + (e.speak ? ' <span class="pill">read aloud</span>' : '') +
+    (e.vote ? ' <span class="pill">voted ' + e.vote + '</span>' : '') + (e.predict ? ' <span class="pill">' + esc(e.predict) + '</span>' : '') + (e.team ? ' <span class="pill">joined ' + esc(e.team) + '</span>' : '') + (e.clipped ? ' <span class="pill">clip marked</span>' : '');
+  else if (e.type === 'death') what = '<b>Link</b> died (death #' + (e.deaths || '?') + ')' + (e.text ? ' <span class="muted">' + esc(e.text) + '</span>' : '');
+  else if (e.type === 'music') what = '<b>Music</b> <span class="muted">now ' + esc(e.text) + '</span>';
+  if (e.welcome) what += ' <span class="pill">regular · stream #' + e.welcome.streams + '</span>';
   if (e.test) what += '<span class="tag">test</span>';
   const fx = e.effectName ? '→ ' + esc(e.effectName) : e.tier ? esc(e.tier) : '';
   return '<div class="ev' + (e.test ? ' test' : '') + '"><time>' + t + '</time>' + pic + '<div>' + what + '</div><div class="fx">' + fx + '</div></div>';
@@ -361,6 +483,10 @@ $('reset-stats').onclick = () => { if (confirm('Reset coins, gifts, likes, the t
 const getPath = (o, p) => p.split('.').reduce((x, k) => x?.[k], o);
 const setPath = (o, p, v) => { const ks = p.split('.'); const last = ks.pop(); ks.reduce((x, k) => x[k], o)[last] = v; };
 function paintSettingsForms() {
+  // effect menus and the goal menu need their options before values are set
+  document.querySelectorAll('select[data-effects]').forEach((el) => { el.innerHTML = effectOptions(getPath(draft, el.dataset.s), el.hasAttribute('data-none')); });
+  $('dt-goal').innerHTML = '<option value="">— no goal —</option>' + S.settings.goals.map((g) => '<option value="' + esc(g.id) + '">' + esc(g.label) + '</option>').join('');
+  paintMysteryPool();
   document.querySelectorAll('[data-s]').forEach((el) => {
     const v = getPath(draft, el.dataset.s);
     if (el.type === 'checkbox') el.checked = !!v; else el.value = v ?? '';
@@ -379,7 +505,8 @@ document.addEventListener('change', (ev) => { if (ev.target.type === 'checkbox' 
 $('tts-banned').oninput = () => { draft.tts.bannedWords = $('tts-banned').value.split('\n').map((x) => x.trim()).filter(Boolean); markS(); };
 function markS() { sDirty = true; document.querySelectorAll('[data-dirty]').forEach((x) => x.textContent = 'Unsaved changes'); }
 document.querySelectorAll('[data-save-settings]').forEach((b) => b.onclick = async () => {
-  await call('settings', { settings: { alerts: draft.alerts, leaderboard: draft.leaderboard, feed: draft.feed, tts: draft.tts, commands: draft.commands } }, 'Saved');
+  const keys = ['alerts', 'leaderboard', 'feed', 'tts', 'commands', 'votes', 'battle', 'mystery', 'combo', 'deathTax', 'predict', 'clips', 'hallOfFame', 'welcome'];
+  await call('settings', { settings: Object.fromEntries(keys.map((k) => [k, draft[k]])) }, 'Saved');
   sDirty = false; document.querySelectorAll('[data-dirty]').forEach((x) => x.textContent = '');
 });
 
@@ -531,6 +658,14 @@ $('goal-add').onclick = () => call('goal', { op: 'add' }, 'Goal added');
 
 // ── overlays ──
 const OVS = [
+  ['run', 'Run stats', 'Deaths, checks, where Link is, music and seed, live from the game. ?layout=column for a box; ?hide=seed,music to hide parts.', '1000 x 90 (box: 320 x 330)'],
+  ['vote', 'Chat vote', 'The vote and its results.', '560 x 420'],
+  ['battle', 'Team battle', 'Light World vs Dark World tug of war.', '900 x 200'],
+  ['mystery', 'Mystery box', 'The slot machine.', '700 x 260'],
+  ['combo', 'Combo meter', 'The gift combo while it lasts.', '360 x 200'],
+  ['predict', 'Prediction', 'The question, the votes, and who called it.', '620 x 300'],
+  ['halloffame', 'Hall of fame', 'All-time top gifters.', '420 x 420'],
+  ['welcome', 'Welcome back', 'Pops up when a regular shows up.', '520 x 140'],
   ['alerts', 'Gift alerts', 'Pops up with the viewer, the gift and what it did in the game, with a sound. Bigger donations get bigger alerts.', '1920 x 1080 (full screen, it centers itself)'],
   ['goal', 'Goal bar', 'The goals ticked "On stream", filling up live.', '800 x 160 (one goal; add 110 height per extra goal)'],
   ['leaderboard', 'Top gifters', 'This stream\'s biggest gifters.', '420 x 420'],
@@ -584,6 +719,109 @@ function paintProfiles() {
 }
 $('pf-save').onclick = () => { const n = $('pf-name').value.trim(); if (!n) return toast('Give the profile a name', true); call('profile-save', { name: n }, 'Saved "' + n + '"').then(() => $('pf-name').value = ''); };
 
+// ── live games ──
+const effName = (id) => ((S.effects || []).find((e) => e.id === id) || {}).name || id;
+let pvOpts = [{ label: 'Ice physics', effect: 'ice' }, { label: 'Cucco attack', effect: 'cucco_storm' }, { label: 'Mirror mode', effect: 'mirror' }];
+function paintPvOpts() {
+  $('pv-opts').innerHTML = pvOpts.map((o, i) => '<div class="row"><span class="kbd">' + (i + 1) + '</span><input value="' + esc(o.label) + '" data-pv="' + i + '" data-k="label" style="width:200px">' +
+    '<select data-pv="' + i + '" data-k="effect">' + effectOptions(o.effect, true) + '</select>' + (pvOpts.length > 2 ? '<button class="small danger" data-pvdel="' + i + '">✕</button>' : '') + '</div>').join('');
+  $('pv-opts').querySelectorAll('[data-pv]').forEach((el) => el[el.tagName === 'SELECT' ? 'onchange' : 'oninput'] = () => {
+    const o = pvOpts[+el.dataset.pv]; o[el.dataset.k] = el.value;
+    if (el.dataset.k === 'effect' && el.value) { o.label = effName(el.value); paintPvOpts(); }
+  });
+  $('pv-opts').querySelectorAll('[data-pvdel]').forEach((b) => b.onclick = () => { pvOpts.splice(+b.dataset.pvdel, 1); paintPvOpts(); });
+}
+const BAD = ['invert', 'no_sword', 'no_item', 'swap_by', 'ice', 'cucco_storm', 'one_hit', 'no_magic', 'mirror', 'upside_down', 'wobble', 'tiny', 'speed_up', 'enemy_spawn', 'freeze'];
+const GOOD = ['heal_full', 'magic_full', 'rupees_plus', 'bombs_plus', 'arrows_plus', 'slow_mo', 'fairy', 'pink_link', 'crt'];
+function pickFrom(list, n) { const have = new Set((S.effects || []).map((e) => e.id)); const pool = list.filter((x) => have.has(x)); const out = []; while (out.length < n && pool.length) out.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]); return out; }
+$('pv-more').onclick = () => { if (pvOpts.length < 4) { pvOpts.push({ label: 'Choice ' + (pvOpts.length + 1), effect: '' }); paintPvOpts(); } };
+$('pv-random').onclick = () => { $('pv-q').value = 'PICK THE NEXT CURSE'; pvOpts = pickFrom(BAD, 3).map((id) => ({ label: effName(id), effect: id })); paintPvOpts(); };
+$('pv-blessing').onclick = () => { $('pv-q').value = 'CURSE OR BLESSING?'; const [b] = pickFrom(BAD, 1), [g] = pickFrom(GOOD, 1); pvOpts = [{ label: 'Curse: ' + effName(b), effect: b }, { label: 'Blessing: ' + effName(g), effect: g }]; paintPvOpts(); };
+$('pv-dungeon').onclick = () => { $('pv-q').value = 'WHICH DUNGEON NEXT?'; pvOpts = [{ label: 'Eastern Palace', effect: '' }, { label: 'Desert Palace', effect: '' }, { label: 'Tower of Hera', effect: '' }]; paintPvOpts(); };
+$('pv-start').onclick = () => call('poll-start', { question: $('pv-q').value, options: pvOpts, seconds: draft.votes.seconds }, 'Vote started');
+$('pv-end').onclick = () => call('poll-end', {});
+$('pv-cancel').onclick = () => call('poll-cancel', {}, 'Vote cancelled');
+function paintPollNow(P) {
+  if (!P) { $('pv-now').innerHTML = '<span class="muted">No vote running.</span>'; return; }
+  const total = P.options.reduce((n, o) => n + o.votes, 0);
+  $('pv-now').innerHTML = '<b>' + esc(P.question) + '</b> <span class="pill">' + (P.done ? 'done' : Math.max(0, Math.ceil((P.endsAt - Date.now()) / 1000)) + 's left') + '</span>' +
+    P.options.map((o, i) => '<div class="row" style="margin:6px 0"><span class="kbd">' + (i + 1) + '</span><span style="flex:1">' + esc(o.label) + (o.effect ? ' <span class="muted">→ ' + esc(effName(o.effect)) + '</span>' : '') + '</span><b>' + o.votes + '</b>' + (P.done && i === P.winner ? ' 🏆' : '') + '</div>' +
+      '<div class="meter"><i style="width:' + (total ? o.votes / total * 100 : 0) + '%"></i></div>').join('');
+}
+$('bt-start').onclick = () => call('battle-start', { names: draft.battle.names, effects: draft.battle.effects, target: draft.battle.target, minutes: +$('bt-min').value || 0 }, 'Battle started');
+$('bt-end').onclick = () => call('battle-end', {});
+$('bt-cancel').onclick = () => call('battle-cancel', {}, 'Battle cancelled');
+document.querySelectorAll('[data-bt]').forEach((b) => b.onclick = () => call('battle-add', { team: +b.dataset.bt, amount: +b.dataset.amt }));
+function paintBattleNow(B) {
+  if (!B) { $('bt-now').innerHTML = '<span class="muted">No battle running.</span>'; return; }
+  const tot = B.scores[0] + B.scores[1];
+  $('bt-now').innerHTML = [0, 1].map((i) => '<div class="row" style="margin:6px 0"><b style="flex:1">' + esc(B.names[i]) + '</b><span class="muted">' + B.members[i] + ' joined</span> <b>' + CC.num(B.scores[i]) + '</b>' + (B.done && B.winner === i ? ' 🏆' : '') + '</div>' +
+    '<div class="meter"><i style="width:' + (tot ? B.scores[i] / tot * 100 : 50) + '%"></i></div>').join('') +
+    '<p class="hint">' + (B.done ? esc(B.names[B.winner]) + ' won' + (B.effects[B.winner] ? ' → ' + esc(effName(B.effects[B.winner])) : '') : (B.target ? 'First to ' + CC.num(B.target) + ' coins' : '') + (B.endsAt ? ' · ends ' + new Date(B.endsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')) + '</p>';
+}
+function paintMysteryPool() {
+  const pool = new Set(draft.mystery.pool || []);
+  $('mb-pool').innerHTML = (S.effects || []).filter((e) => e.id !== 'mystery_box').map((e) => '<label class="check" style="margin:3px 0"><input type="checkbox" data-mb="' + esc(e.id) + '"' + (pool.has(e.id) ? ' checked' : '') + '> ' + esc(e.name) + '</label>').join('');
+  $('mb-pool').querySelectorAll('[data-mb]').forEach((el) => el.onchange = () => {
+    const set = new Set(draft.mystery.pool || []); el.checked ? set.add(el.dataset.mb) : set.delete(el.dataset.mb);
+    draft.mystery.pool = [...set]; markS();
+  });
+}
+$('mb-test').onclick = () => call('mystery', { user: $('t-user').value || 'Streamer' });
+$('pd-start').onclick = () => call('predict-start', { question: $('pd-q').value, labels: [$('pd-a').value, $('pd-b').value], seconds: draft.predict.seconds }, 'Prediction started');
+$('pd-lock').onclick = () => call('predict-lock', {});
+$('pd-yes').onclick = () => call('predict-resolve', { result: 0 });
+$('pd-no').onclick = () => call('predict-resolve', { result: 1 });
+$('pd-cancel').onclick = () => call('predict-cancel', {}, 'Prediction cancelled');
+function paintPredNow(P) {
+  if (!P) { $('pd-now').innerHTML = '<span class="muted">No prediction running.</span>'; return; }
+  $('pd-now').innerHTML = '<b>' + esc(P.question) + '</b> <span class="pill">' + (P.result >= 0 ? 'answered: ' + esc(P.labels[P.result]) : P.locked ? 'locked' : Math.max(0, Math.ceil((P.locksAt - Date.now()) / 1000)) + 's to vote') + '</span>' +
+    [0, 1].map((i) => '<div class="row" style="margin:6px 0"><span class="kbd">' + esc(P.words[i]) + '</span><span style="flex:1">' + esc(P.labels[i]) + '</span><b>' + P.counts[i] + '</b></div>').join('') +
+    (P.result >= 0 ? '<p class="hint">Called it: ' + (P.winners.length ? P.winners.map(esc).join(', ') : 'nobody') + '</p>' : '');
+}
+
+// ── run & stream ──
+function paintRunNow(r) {
+  r = r || {};
+  $('run-now').innerHTML = [['Deaths', r.deaths || 0], ['Checks', r.checks || 0], ['Where', r.place || '—'], ['Music', r.music || 'Game music'], ['Seed', (r.seed || '—').replace(/^ALttPR\s*-\s*/i, '')]]
+    .map(([k, v]) => '<div class="stat"><span>' + k + '</span><b style="font-size:' + (String(v).length > 10 ? 11 : 16) + 'px">' + esc(v) + '</b></div>').join('') +
+    '<p class="hint" style="grid-column:1/-1;margin:0">' + (r.at ? 'Updated ' + new Date(r.at).toLocaleTimeString() : 'Waiting for the game (turn on Crowd effects in Rando Hub).') + '</p>';
+}
+$('run-test').onclick = () => call('run-test', {});
+$('dt-test').onclick = () => call('death-test', {}, 'Test death sent');
+const fmtElapsed = (s) => Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+const CLIP_ICON = { gift: '🎁', seed: '🎲', death: '☠', vote: '🗳', battle: '⚔', combo: '🔥', predict: '🔮', chat: '💬', manual: '📌' };
+function paintClips() {
+  const list = ((S.live && S.live.clips) || []).slice().reverse();
+  $('cl-list').innerHTML = list.length ? list.map((c) => '<div class="ev" style="grid-template-columns:80px 26px 1fr auto"><time title="' + new Date(c.at).toLocaleString() + '">' + fmtElapsed(c.elapsed) + '</time><span class="ic">' + (CLIP_ICON[c.kind] || '📌') + '</span><div>' + esc(c.label) +
+    ' <span class="muted" style="font-size:11.5px">' + new Date(c.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span></div><button class="small danger" data-cldel="' + esc(c.id) + '">✕</button></div>').join('') : '<p class="muted">No clips yet.</p>';
+  $('cl-list').querySelectorAll('[data-cldel]').forEach((b) => b.onclick = () => call('clip-delete', { id: b.dataset.cldel }));
+}
+$('cl-add').onclick = () => call('clip-add', { label: $('cl-label').value || undefined }, 'Marked').then(() => $('cl-label').value = '');
+$('cl-label').onkeydown = (e) => { if (e.key === 'Enter') $('cl-add').click(); };
+$('cl-clear').onclick = () => { if (confirm('Clear every clip marker?')) call('clips-clear', {}); };
+$('cl-export').onclick = () => {
+  const list = (S.live && S.live.clips) || [];
+  const txt = 'Stream time\tClock time\tWhat\n' + list.map((c) => fmtElapsed(c.elapsed) + '\t' + new Date(c.at).toLocaleString() + '\t' + c.label).join('\n') + '\n';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' })); a.download = 'clip-markers-' + new Date().toISOString().slice(0, 10) + '.txt'; a.click();
+};
+function paintFame() {
+  const f = (S.live && S.live.fame) || [];
+  $('hf-list').innerHTML = f.length ? f.map((g, i) => '<tr><td class="muted">' + (i + 1) + '</td><td><b>' + esc(g.nickname || g.user) + '</b></td><td style="text-align:right">' + CC.num(g.coins) + ' coins</td><td class="muted" style="text-align:right">' + g.gifts + ' gifts</td><td><button class="small danger" data-hfdel="' + esc(g.user) + '">✕</button></td></tr>').join('') : '<tr><td class="muted">Nobody yet.</td></tr>';
+  $('hf-list').querySelectorAll('[data-hfdel]').forEach((b) => b.onclick = () => { if (confirm('Remove ' + b.dataset.hfdel + ' from the hall of fame?')) call('fame-remove', { user: b.dataset.hfdel }); });
+  $('wb-known').textContent = S.live ? CC.num(S.live.viewersKnown) + ' viewers remembered so far.' : '';
+}
+$('hf-reset').onclick = () => { if (confirm('Reset the all-time hall of fame? This can\'t be undone.')) call('fame-reset', {}, 'Hall of fame reset'); };
+$('wb-test').onclick = () => call('welcome-test', { user: $('t-user').value || 'RegularViewer' });
+function paintLive() { const L = S.live || {}; paintPollNow(L.poll); paintBattleNow(L.battle); paintPredNow(L.predict); paintRunNow(L.run); paintClips(); paintFame(); }
+setInterval(() => { if (S && S.live) { paintPollNow(S.live.poll); paintPredNow(S.live.predict); } }, 1000);
+CC.on('live', (d) => {
+  if (!S || !S.live) return;
+  if (d.fame) S.live.fame = d.fame;
+  paintLive();
+});
+let pvPainted = false;
+
 // ── wiring ──
 let overlaysPainted = false;
 CC.on('state', (d) => {
@@ -592,6 +830,8 @@ CC.on('state', (d) => {
   if (!sDirty || !draft) { draft = JSON.parse(JSON.stringify(S.settings)); paintSettingsForms(); voices(); }
   if (!gDirty || !gdraft) { if (!gdraft || !gDirty) newGDraft(); paintGifts(); }
   if (!overlaysPainted) { overlaysPainted = true; paintOverlays(); }
+  paintLive();
+  if (!pvPainted) { pvPainted = true; paintPvOpts(); }
 });
 CC.on('event', (d) => {
   if (!S) return;

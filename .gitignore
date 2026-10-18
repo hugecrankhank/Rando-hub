@@ -9,3 +9,6 @@ crowd-plus/stats.json
 crowd-plus/seen-gifts.json
 crowd-plus/timer-state.json
 crowd-plus/profiles/*.json
+crowd-plus/hall-of-fame.json
+crowd-plus/viewers.json
+crowd-plus/clips.json

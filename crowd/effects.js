@@ -759,6 +759,9 @@
     if (d.state === 'warping') {
       if (mode === 0x07 && sub === 0) {
         try { if (!placeLink(ram, d.boss.at)) console.warn('[crowd] detour: no clear floor found, Link stays where the warp put him'); } catch (e) { console.warn('[crowd] detour place', e); }
+        // a screen mask left on from the entrance (spotlight/water windows) would show
+        // only a strip of the room: turn window masking off (W12SEL, W34SEL, WOBJSEL, TMW, TSW)
+        ram[0x96] = 0; ram[0x97] = 0; ram[0x98] = 0; ram[0x1E] = 0; ram[0x1F] = 0;
         d.state = 'fight'; d.frames = 0;
       }
       return;

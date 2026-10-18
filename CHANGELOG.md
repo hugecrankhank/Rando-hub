@@ -5,6 +5,14 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.0.2 (2026-10-17)
+
+- New second download: **Crowd Control+** (`Crowd-Control-Plus-v1.0.2.zip`), the
+  crowd control bridge with a control panel (gift setup with menus, test buttons,
+  live event log, profiles) and stream overlays in the Rando Hub style: gift alerts
+  with sounds, goal bars, top gifters, recent events and chat command replies, plus
+  reading chat aloud. Source in `crowd-plus/`.
+
 ## 1.0.1 (2026-10-17)
 
 - New Rando Hub logo: a red-and-white randomizer die with "RANDO HUB" in pixel

@@ -161,6 +161,10 @@ about 15 minutes. Short version:
 
 The bridge works with the website and with the zip copy.
 
+Want on-screen gift alerts, goal bars, a top-gifters board, chat
+commands and a control panel too? Download Crowd Control+ (the second
+download on the Releases page) and use it instead of this folder.
+
 
 =========================================================================
 PART 6 - RELAYS (OPTIONAL, MOST PEOPLE CAN SKIP THIS)

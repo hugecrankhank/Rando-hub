@@ -1,0 +1,43 @@
+CROWD CONTROL+  -  WHAT'S NEW
+=============================
+
+Crowd Control+ is the regular Rando Hub Crowd Control with a control
+panel and stream overlays added. Every gift effect, big-donation seed
+roll and the subathon clock work exactly as before.
+
+NEW
+---
+1. Control panel (http://localhost:21214/studio, opens by itself)
+     - Gift setup with menus and gift pictures, no more editing files
+     - Test buttons for every gift, effect and alert
+     - Live event log and stream totals
+     - Gifts seen on stream that aren't set up yet, one click to add
+     - Subathon clock controls
+     - Profiles: save and switch whole setups
+
+2. Stream overlays for OBS / TikTok LIVE Studio
+     - Gift alerts with sounds and confetti (small, big, huge)
+     - Goal bars (coins, likes, follows, shares or gifts)
+     - Top gifters leaderboard
+     - Recent events feed
+     - Chat command replies
+   All in the Rando Hub style: pixel lettering, dice, red and white.
+
+3. Chat
+     - Read chat aloud (text-to-speech) with filters
+     - Chat commands like !effects, !rules and !timer, plus your own
+
+4. The scrolling gift list and the subathon clock now use the Rando Hub
+   red instead of gold.
+
+
+MOVING OVER FROM THE REGULAR CROWD CONTROL
+------------------------------------------
+1. Close the regular bridge's black window. (Only run one at a time.)
+2. Extract Crowd Control+ to its own folder.
+3. Copy your old mapping.json into it (say Yes to replace), so your gift
+   setup comes along. timer-state.json can be copied the same way to
+   keep your subathon clock.
+4. Double-click "Start Crowd Control+.bat".
+The game's Crowd effects address stays ws://localhost:21214.
+Full guide: INSTRUCTIONS.txt.

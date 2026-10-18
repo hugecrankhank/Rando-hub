@@ -65,7 +65,7 @@ jobs:
           V="${TAG#v}"
           awk -v v="$V" '$0 ~ "^## "v"( |$)" {on=1; next} /^## / && on {exit} on' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "Rando Hub $TAG" > notes.md
-          printf '\n---\n**Download:** `Rando-Hub-%s.zip` below. Unzip it and open INSTRUCTIONS.txt.\n**Play online:** https://hugecrankhank.github.io/Rando-hub/\n' "$TAG" >> notes.md
+          printf '\n---\n**Downloads** (below, under Assets). Unzip and open INSTRUCTIONS.txt:\n- `Rando-Hub-%s.zip`: the whole app, crowd control and relays\n- `Crowd-Control-Plus-%s.zip`: Crowd Control+ for streamers (control panel, alerts, goals, top gifters, chat commands, read-aloud)\n\n**Play online:** https://hugecrankhank.github.io/Rando-hub/\n' "$TAG" "$TAG" >> notes.md
       - name: Publish the release
         if: steps.ver.outputs.skip != '1'
         env:

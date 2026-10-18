@@ -132,6 +132,10 @@ OBS / TikTok LIVE Studio. The ROM is never changed; any seed works.
 TikTok LIVE ──► TikFinity ──ws://localhost:21213──► crowd bridge ──ws://localhost:21214──► Rando Hub ──► Snes9x
 ```
 
+Want alerts, goal bars and a control panel too? Use **Crowd Control+** (the second
+download on the [Releases page](https://github.com/hugecrankhank/Rando-hub/releases/latest));
+it does everything below plus a full streaming studio.
+
 **Setup (about 15 minutes, once):**
 
 1. Download the [latest release zip](https://github.com/hugecrankhank/Rando-hub/releases/latest)
@@ -170,6 +174,12 @@ Rando-Hub-v1.0.0/
 ├── README.md
 └── CHANGELOG.md
 ```
+
+Streamers can also grab the second download, **`Crowd-Control-Plus-v<version>.zip`**:
+the crowd control bridge plus a control panel (`http://localhost:21214/studio`) and
+OBS / TikTok LIVE Studio overlays: gift alerts with sounds, goal bars, top gifters,
+recent events and chat command replies, plus reading chat aloud. Its `INSTRUCTIONS.txt`
+walks through setup. Source: [`crowd-plus/`](crowd-plus).
 
 Playing from the zip needs [Node.js](https://nodejs.org) (or Python 3) and runs at
 `http://localhost:8067/`. The zip copy keeps its own saves, separate from the

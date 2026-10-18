@@ -23,6 +23,7 @@
   if (q.get('scale')) document.documentElement.style.setProperty('--scale', +q.get('scale') || 1);
   if (q.get('bg') === '0') document.documentElement.classList.add('clear');
   if (q.get('font') === 'plain') document.documentElement.classList.add('plain');
+  if (/^(green|magenta)$/.test(q.get('screen') || '')) document.documentElement.classList.add('screen-' + q.get('screen'));
 
   function connect() {
     const es = new EventSource('/studio/events?page=' + encodeURIComponent(location.pathname + (q.get('preview') === '1' ? '#preview' : '')));

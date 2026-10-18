@@ -5,6 +5,12 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.3.7 (2026-10-18)
+
+- Boss detour to Ganon: fixed getting stuck in a black room until "couldn't reach the boss".
+  Ganon is now reached like the other bosses (dungeon lobby, then straight to his room)
+  instead of the Pyramid hole drop.
+
 ## 1.3.6 (2026-10-18)
 
 - The game's … menu → Crowd effects now lists the last few things that happened to crowd

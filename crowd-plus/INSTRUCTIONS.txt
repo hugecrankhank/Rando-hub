@@ -32,13 +32,18 @@ Crowd Control+ is Rando Hub's crowd control: the gift bridge, plus:
 
 How the pieces connect (all on the PC you stream from):
 
-  TikTok LIVE --> TikFinity --> Crowd Control+ --> the game
-  (viewers)       (free app,    (this folder)  |-> your overlays
-                   hears your                  '-> the control panel
-                   LIVE)
+  TikTok LIVE --> your LIVE page --> Crowd Control+ --> the game
+  (viewers)       (a Chrome/Edge    (this folder)  |-> your overlays
+                   window it opens)                '-> the control panel
 
-TikFinity only hears your LIVE and passes the events on. Everything your
-viewers see and everything you control comes from Crowd Control+.
+Crowd Control+ opens your own TikTok LIVE page in a separate Chrome or
+Edge window and reads the gifts, likes, follows, shares and chat that
+TikTok shows there. This is the LOCAL SIGNER, and it's the recommended
+way: free, no other apps, no accounts or keys.
+
+If a TikTok update ever breaks it, switch to the backup, TikFinity (a
+free app that does the listening instead), with one click on the
+control panel. See "THE BACKUP: TIKFINITY" at the end of Part 1.
 
 You set things up once (about 20 minutes). After that, starting it for a
 stream takes three clicks.
@@ -79,7 +84,8 @@ WHAT YOU NEED
   - Your own copy of the original Japanese 1.0 "Zelda no Densetsu:
     Kamigami no Triforce" ROM (.sfc). It isn't included and can't be
     shared.
-  - Chrome or Edge (recommended).
+  - Google Chrome or Microsoft Edge installed (the local signer opens
+    your LIVE page in it; Edge comes with Windows).
   - OBS or TikTok LIVE Studio, for the overlays.
 
 
@@ -100,16 +106,23 @@ STEP 2. Install Node.js (it runs Crowd Control+)
   Go to https://nodejs.org, download the "LTS" version, run the installer
   and click Next through everything.
 
-STEP 3. Install TikFinity (hears your TikTok LIVE, free)
-  Go to https://tikfinity.zerody.one, download the desktop app, open it
-  and log in with your TikTok account. Its WebSocket / Events API port
-  should be 21213 (the default).
-
-STEP 4. Start Crowd Control+
+STEP 3. Start Crowd Control+
   Double-click "Start Crowd Control+.bat". A black window opens (keep it
   open) and the CONTROL PANEL opens in your browser:
       http://localhost:21214/studio
   Bookmark it. If it didn't open by itself, type that address in.
+
+STEP 4. Connect to TikTok (the local signer)
+  On the control panel's Dashboard, in "TikTok connection":
+  - Leave it on "Local signer (recommended)".
+  - Type your TikTok name (without @) and click Connect.
+  - A new Chrome / Edge window opens on your LIVE page. Log in to
+    TikTok in that window (once; it remembers you next time).
+  - Keep that window open while you stream. You can minimize it or put
+    it behind other windows. Its sound is muted, so it won't echo.
+  The dot turns green ("Connected to TikTok LIVE") once you're LIVE.
+  Before you go live it says "Waiting for the LIVE"; that's normal.
+  Closed the window by mistake? Click "Open my LIVE window".
 
 STEP 5. Connect the game
   - Open Rando Hub: https://hugecrankhank.github.io/Rando-hub/
@@ -138,23 +151,35 @@ STEP 6. Add the overlays to your stream
 
 That's the setup done.
 
+THE BACKUP: TIKFINITY
+  Only if the local signer stops working (TikTok sometimes changes its
+  website, and a Crowd Control+ update will fix it):
+  1. Install TikFinity from https://tikfinity.zerody.one, open it and
+     log in with your TikTok account. Its WebSocket / Events API port
+     should be 21213 (the default).
+  2. Control panel -> Dashboard -> TikTok connection -> choose
+     "TikFinity (backup)" -> Connect.
+  Switch back to "Local signer" the same way once it's fixed. Your gift
+  setup, overlays and everything else stay the same either way.
+
 
 =========================================================================
 PART 2 - EVERY TIME YOU STREAM
 =========================================================================
 
-1. Open TikFinity and make sure it's logged in.
-2. Double-click "Start Crowd Control+.bat". The control panel opens.
+1. Double-click "Start Crowd Control+.bat". The control panel opens,
+   and so does your LIVE window (it reconnects by itself).
+   (Using the TikFinity backup? Open TikFinity first.)
+2. Go LIVE on TikTok.
 3. Open (or refresh) Rando Hub. The panel's top bar should show:
-     TikTok: Connected to TikFinity      (green)
+     Connected to TikTok LIVE            (green)
      Game connected                      (green)
      N overlays on stream                (green once OBS is open)
 4. Optional: Dashboard -> "Reset stream stats" for a fresh top-gifters
    board, and reset goals on the Goals tab.
-5. Go LIVE.
 
-Keep the black window open the whole stream. Closing it stops
-everything. Keep the control panel tab open too if you use read-aloud.
+Keep the black window and the LIVE window open the whole stream.
+Closing the black window stops everything. Keep the control panel tab open too if you use read-aloud.
 
 
 =========================================================================
@@ -162,6 +187,9 @@ PART 3 - THE CONTROL PANEL, TAB BY TAB
 =========================================================================
 
 DASHBOARD
+  "TikTok connection" at the top: local signer (recommended) or the
+  TikFinity backup, your TikTok name, Connect, "Open my LIVE window",
+  and a green / red dot with what's happening.
   Totals for this stream, the top gifter, and every event as it happens
   (gifts, follows, shares, chat), with what it did in the game.
   "Test without going live": pretend a viewer sent a gift, followed,
@@ -326,7 +354,7 @@ PART 9 - PRACTICE MODE (NO TIKTOK)
 =========================================================================
 
 Double-click "Test mode (no TikTok).bat". Everything works without
-TikFinity: use the Dashboard's test buttons, or type in the black window:
+TikTok (no LIVE window opens): use the Dashboard's test buttons, or type in the black window:
     gift Rose 3        a gift (uses your gift setup)
     coins 1500         a donation worth 1,500 coins
     like 300           likes
@@ -633,7 +661,27 @@ The black window shows an error about mapping.json when it starts
   Notepad and compare with the examples in Part 11, or load a
   profile from the control panel.
 
-"can't reach TikFinity on port 21213"
+The dot stays red: "Waiting for the LIVE"
+  Normal before you go live. Once you're LIVE: look at the LIVE window.
+  If TikTok asks you to log in or to verify ("drag the slider"), do it
+  there. If the window shows a different account's page, check your
+  TikTok name on the Dashboard and click Connect.
+
+"No Chrome or Edge found"
+  Install Google Chrome (or Microsoft Edge), then click Connect. If it's
+  installed somewhere unusual, put its full path in mapping.json as
+  "browserPath".
+
+Gifts stopped coming through with the local signer, but you're live
+  First click "Open my LIVE window" (or reload that window). Still
+  nothing? TikTok may have changed its site: switch the Dashboard's
+  TikTok connection to "TikFinity (backup)" (Part 1, "THE BACKUP") and
+  keep streaming. Check the Releases page for a Crowd Control+ update.
+
+The LIVE window opened with no sound
+  On purpose: it's muted so your stream doesn't echo.
+
+"can't reach TikFinity on port 21213" (TikFinity backup only)
   TikFinity isn't open, isn't logged in, or its port isn't 21213.
   The bridge keeps retrying, so just open TikFinity.
 
@@ -678,7 +726,7 @@ New seed doesn't happen
 
 A big donation didn't trigger a new seed / didn't add time
   The black window should show "= N coins" next to every gift. If it
-  doesn't, TikFinity isn't sending coin values: add the gift's value to
+  doesn't, TikTok didn't send the coin value: add the gift's value to
   "giftCoins" in mapping.json. Time is only added once the clock has been
   set (Part 8) and while it hasn't run out.
 
@@ -726,6 +774,8 @@ Everything else is the same.
 THANK YOU
 =========================================================================
 Built for Rando Hub (https://hugecrankhank.github.io/Rando-hub/).
-TikTok events come through TikFinity. Pixel lettering: Press Start 2P
+TikTok events come from your own LIVE page (local signer) or TikFinity
+(backup). Message layout per the community's TikTok webcast notes
+(github.com/isaackogan/TikTok-Webcast-Protobuf). Pixel lettering: Press Start 2P
 (SIL Open Font License, studio\PressStart2P-OFL.txt).
 

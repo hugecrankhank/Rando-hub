@@ -9,15 +9,17 @@
  * Listens to your TikTok LIVE (gifts, likes, follows, shares) and sends the
  * matching effect to the game page over a WebSocket on this computer.
  *
- * Two ways to hear the LIVE ("source" in mapping.json):
- *   "tikfinity" (default, free): the TikFinity desktop app connects to TikTok
- *       and the bridge reads its Events API on port 21213. The bridge itself
- *       listens on 21214 (the game's default address).
- *   "direct": the bridge connects to TikTok itself with tiktok-live-connector.
- *       That needs a sign-server key ("signServer" + "signApiKey"), which
- *       Euler Stream and tik.tools both charge for.
+ * Ways to hear the LIVE ("source" in mapping.json, or the control panel):
+ *   "local" (default, recommended, free): the local signer (localsigner.mjs)
+ *       opens your own LIVE page in a Chrome/Edge window and reads what TikTok
+ *       sends it. No other apps, no keys. Set "username" (or use the panel).
+ *   "tikfinity" (backup, free): the TikFinity desktop app connects to TikTok
+ *       and the bridge reads its Events API on port 21213.
+ *   "direct" (advanced, file only): tiktok-live-connector with a sign-server key
+ *       ("signServer" + "signApiKey"; Euler Stream's free Community plan works).
+ *       Needs `npm install`.
+ * The bridge itself listens on 21214 (the game's default address).
  *
- *   npm install
  *   node bridge.mjs                 # uses mapping.json
  *   node bridge.mjs --test          # no TikTok: type commands to fake events
  *
@@ -37,6 +39,7 @@ import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { exec } from 'node:child_process';
 import { createStudio } from './studio.mjs';
+import { startLocalSigner, findBrowser } from './localsigner.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -46,7 +49,7 @@ const cfgPath = (() => { const i = args.indexOf('--config'); return i >= 0 ? arg
 let cfg = loadConfig();
 function loadConfig() {
   const c = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-  c.source = String(c.source || 'tikfinity').toLowerCase();
+  c.source = String(c.source || 'local').toLowerCase();   // local signer unless set (old mapping.json files say "tikfinity")
   c.tikfinityPort ??= 21213;
   // TikFinity's Events API already uses 21213, so the bridge uses 21214.
   c.port ??= 21214;
@@ -654,8 +657,10 @@ setInterval(paint, 250); poll();
 // built-in WebSocket client, so this is a small one on top of node:net.
 function startTikFinity() {
   const port = cfg.tikfinityPort;
-  let warned = false;
+  let warned = false, stopped = false, live = null, retryT = null;
+  const later = (ms) => { clearTimeout(retryT); if (!stopped) retryT = setTimeout(connect, ms); };
   function connect() {
+    if (stopped) return;
     const key = crypto.randomBytes(16).toString('base64');
     const req = http.request({ host: '127.0.0.1', port, path: '/', headers: {
       Connection: 'Upgrade', Upgrade: 'websocket', 'Sec-WebSocket-Version': '13', 'Sec-WebSocket-Key': key } });
@@ -664,28 +669,68 @@ function startTikFinity() {
       liveText = 'Connected to TikFinity';
       log(`connected to TikFinity on port ${port}. Gifts, likes, follows and shares will come through while you're live.`);
       broadcast({ type: 'status', text: liveText });
-      const conn = { socket, buf: Buffer.alloc(0) };
+      if (stopped) { socket.destroy(); return; }
+      const conn = live = { socket, buf: Buffer.alloc(0) };
       socket.on('data', (d) => { conn.buf = Buffer.concat([conn.buf, d]); readClientFrames(conn); });
       const lost = () => {
         if (conn.gone) return; conn.gone = true;
+        if (stopped) return;
         liveText = 'TikFinity disconnected';
         broadcast({ type: 'status', text: liveText });
-        log('lost TikFinity, retrying in 5s'); setTimeout(connect, 5000);
+        log('lost TikFinity, retrying in 5s'); later(5000);
       };
       socket.on('close', lost); socket.on('error', lost);
     });
-    req.on('response', (res) => { log(`TikFinity answered with HTTP ${res.statusCode} instead of a WebSocket. Retrying in 10s.`); res.resume(); setTimeout(connect, 10000); });
+    req.on('response', (res) => { log(`TikFinity answered with HTTP ${res.statusCode} instead of a WebSocket. Retrying in 10s.`); res.resume(); later(10000); });
     req.on('error', () => {
       if (!warned) {
         log(`can't reach TikFinity on port ${port}. Open TikFinity, connect it to your TikTok, and check`);
         log('its Events API / WebSocket port is ' + port + '. Retrying every 5s quietly.');
         warned = true;
       }
-      liveText = 'Waiting for TikFinity'; setTimeout(connect, 5000);
+      liveText = 'Waiting for TikFinity'; later(5000);
     });
     req.end();
   }
   connect();
+  return { stop() { stopped = true; clearTimeout(retryT); if (live) { live.gone = true; try { live.socket.destroy(); } catch {} } } };
+}
+
+// ── Local signer source (recommended): TikTok's own LIVE page in a browser window ──
+// See localsigner.mjs. No TikFinity, no keys, no accounts.
+function startLocal() {
+  const src = startLocalSigner({
+    username: cfg.username && cfg.username !== 'your_tiktok_username' ? cfg.username : '',
+    browserPath: findBrowser(cfg.browserPath),
+    port: +cfg.localSignerPort || 21215,
+    profileDir: path.join(HERE, 'tiktok-window'),
+    liveUrl: cfg.localLiveUrl || '',
+    log,
+    onStatus: (text) => { if (text !== liveText) { liveText = text; broadcast({ type: 'status', text }); log('TikTok: ' + text); } },
+    onEvent: (ev) => {
+      const who = { nickname: ev.nickname || '', avatar: ev.avatar || '' };
+      if (ev.kind === 'gift') {
+        if (ev.gift && ev.picture) extraIcons.set(ev.gift.toLowerCase(), ev.picture);
+        onGift(ev.user, ev.gift, ev.giftId, ev.count, ev.diamonds, who);
+      } else if (ev.kind === 'like') onLike(ev.user, ev.count, who);
+      else if (ev.kind === 'follow' || ev.kind === 'share') onSocial(ev.kind, ev.user, who);
+      else if (ev.kind === 'chat') onChat(ev.user, ev.text || '', who);
+      else if (ev.kind === 'end') { liveText = 'TikTok LIVE ended'; broadcast({ type: 'status', text: liveText }); log(liveText); }
+    },
+  });
+  return src;
+}
+
+// Start (or switch to) the source in mapping.json; the control panel calls this too.
+let activeSource = null;
+function startSource() {
+  if (TEST) return;
+  try { activeSource && activeSource.stop && activeSource.stop(); } catch {}
+  activeSource = null; liveText = '';
+  if (cfg.source === 'local') activeSource = startLocal();
+  else if (cfg.source === 'tikfinity') activeSource = startTikFinity();
+  else if (cfg.source === 'direct') startTikTok();
+  else log(`"source" in mapping.json should be "local", "tikfinity" or "direct" (got "${cfg.source}").`);
 }
 
 function readClientFrames(c) {
@@ -746,19 +791,18 @@ async function startTikTok() {
   if (!cfg.username || cfg.username === 'your_tiktok_username') {
     log('Set "username" in mapping.json to your TikTok name (without @). Or run with --test.'); process.exit(1);
   }
-  // TikTok connections must be signed by an outside "sign server". Euler Stream
-  // (the library default) now wants a paid plan for this, so the default here
-  // is tik.tools, which has a free key. "signServer" in mapping.json can be
-  // "tiktools", "euler", or a full https:// URL of any compatible server.
+  // Direct connections must be signed by an outside "sign server". Euler Stream
+  // (the library default) has a free Community plan with a key; tik.tools only a
+  // 7-day trial. "signServer" can be "euler", "tiktools", or an https:// URL.
   const SIGN_SERVERS = { tiktools: 'https://api.tik.tools', euler: 'https://api.eulerstream.com' };
-  const signChoice = String(cfg.signServer || 'tiktools');
+  const signChoice = String(cfg.signServer || 'euler');
   const signUrl = SIGN_SERVERS[signChoice.toLowerCase()] || signChoice;
   const key = String(cfg.signApiKey || '').trim();
   if (!/^https:\/\//.test(signUrl)) {
     log(`"signServer" in mapping.json should be "tiktools", "euler", or an https:// address (got "${signChoice}").`); process.exit(1);
   }
   if (!key || key === 'paste_your_key_here') {
-    log('No "signApiKey" in mapping.json. Get a free key at https://tik.tools/login,');
+    log('No "signApiKey" in mapping.json. Get a free key (Community plan) at https://www.eulerstream.com,');
     log('paste it into mapping.json as "signApiKey", then start the bridge again.'); process.exit(1);
   }
   // The library reads these when it loads, so set them before importing it.
@@ -863,7 +907,14 @@ const studio = createStudio({
   },
   timerView,
   timerApi: (op, seconds) => timerAction(op, seconds),
-  status: () => ({ source: TEST ? 'test' : cfg.source, live: liveText || (TEST ? 'Test mode' : 'Starting…'), games: clients.size, port: cfg.port, gameKnowsEffects: !!knownEffects }),
+  connectSource: (source, username) => {
+    const patch = {};
+    if (['local', 'tikfinity'].includes(source)) patch.source = source;
+    if (typeof username === 'string') patch.username = username.replace(/^@/, '').trim();
+    saveCfg(patch); log(`source: ${cfg.source}${cfg.username ? ' as @' + cfg.username : ''}`); startSource();
+  },
+  openLive: () => { if (activeSource && activeSource.open) activeSource.open(); else if (!TEST && cfg.source === 'local') startSource(); },
+  status: () => ({ source: TEST ? 'test' : cfg.source, username: cfg.username || '', browser: cfg.source === 'local' ? !!findBrowser(cfg.browserPath) : undefined, live: liveText || (TEST ? 'Test mode' : 'Starting…'), games: clients.size, port: cfg.port, gameKnowsEffects: !!knownEffects }),
 });
 
 server.listen(cfg.port, '127.0.0.1', () => {
@@ -880,8 +931,6 @@ server.listen(cfg.port, '127.0.0.1', () => {
     try { exec(cmd, () => {}); } catch {}
   }, 4000);
   if (TEST) startTest();
-  else if (cfg.source === 'tikfinity') startTikFinity();
-  else if (cfg.source === 'direct') startTikTok();
-  else { log(`"source" in mapping.json should be "tikfinity" or "direct" (got "${cfg.source}").`); process.exit(1); }
+  else startSource();
 });
 server.on('error', (e) => { log(e.code === 'EADDRINUSE' ? `port ${cfg.port} is in use (bridge already running?)` : e.message); process.exit(1); });

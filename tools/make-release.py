@@ -109,7 +109,7 @@ def main():
         n2 = 0
         skip2 = {'studio.json', 'stats.json', 'seen-gifts.json', 'timer-state.json', 'hall-of-fame.json', 'viewers.json', 'clips.json'}
         with zipfile.ZipFile(out2, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-            for src, r in walk(plus, lambda r: r in skip2 or (r.startswith('profiles/') and r.endswith('.json'))):
+            for src, r in walk(plus, lambda r: r in skip2 or r == 'tiktok-window' or r.startswith('tiktok-window/') or (r.startswith('profiles/') and r.endswith('.json'))):
                 info = zipfile.ZipInfo('Crowd Control+/' + r, date_time=stamp)
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.external_attr = (0o755 if r.endswith(('.command', '.sh')) else 0o644) << 16

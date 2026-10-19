@@ -5,6 +5,24 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.5.0 (2026-10-18)
+
+**Crowd Control+**
+- **Local signer (recommended): no TikFinity needed.** Dashboard → TikTok connection: type
+  your TikTok name and click Connect. Crowd Control+ opens your own LIVE page in its own
+  Chrome / Edge window (separate profile, so the TikTok login is remembered; muted) and
+  reads the gifts, likes, follows, shares and chat TikTok sends that page, over Chrome's
+  debugging connection. Free, no other apps, no keys, no npm packages
+  (`crowd-plus/localsigner.mjs`: a small WebSocket client and protobuf reader of our own).
+- **TikFinity is the one-click backup** if a TikTok update breaks the local signer:
+  Dashboard → TikTok connection → "TikFinity (backup)". Switching needs no restart.
+- New installs default to the local signer; existing `mapping.json` files that say
+  `"source": "tikfinity"` keep TikFinity until switched on the Dashboard.
+- The advanced "direct" source now defaults to Euler Stream's free Community plan.
+- Instructions, README and release notes: local signer first, TikFinity as the fallback.
+- The local signer's browser profile (`crowd-plus/tiktok-window/`, holds the TikTok login)
+  is never put in release zips or the repository.
+
 ## 1.4.0 (2026-10-18)
 
 - **Crowd Control+ is the only crowd control.** The Rando Hub zip no longer has a "Crowd

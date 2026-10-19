@@ -129,7 +129,7 @@ donations. There's also a **subathon clock** and a **scrolling gift list** for
 OBS / TikTok LIVE Studio. The ROM is never changed; any seed works.
 
 ```
-TikTok LIVE ──► TikFinity ──ws://localhost:21213──► Crowd Control+ ──ws://localhost:21214──► Rando Hub ──► Snes9x
+TikTok LIVE ──► your LIVE page (Chrome/Edge window) ──► Crowd Control+ ──ws://localhost:21214──► Rando Hub ──► Snes9x
                                                          │
                                                          └──► control panel + stream overlays (http://localhost:21214)
 ```
@@ -143,13 +143,18 @@ top gifters, chat votes, team battles, mystery box, boss detours, read-aloud and
 
 1. Download **`Crowd-Control-Plus-v<version>.zip`** from the
    [latest release](https://github.com/hugecrankhank/Rando-hub/releases/latest) and unzip it.
-2. Install [Node.js](https://nodejs.org) (LTS) and [TikFinity](https://tikfinity.zerody.one)
-   (free), and log in to TikFinity with your TikTok account.
+2. Install [Node.js](https://nodejs.org) (LTS). You also need Chrome or Edge.
 3. Double-click **`Start Crowd Control+.bat`** (Mac: the `.command` file). The control
    panel opens in your browser at `http://localhost:21214/studio`.
-4. In Rando Hub on the **same PC**: **⋯ → Crowd effects** → turn on, address
+4. **Dashboard → TikTok connection:** type your TikTok name and click **Connect**. This
+   is the **local signer** (recommended): Crowd Control+ opens your LIVE page in its own
+   Chrome / Edge window (log in to TikTok there once, keep it open; it's muted) and reads
+   gifts, likes, follows, shares and chat from it. Free, no other apps, no keys.
+   If a TikTok update ever breaks it, pick **TikFinity (backup)** there instead: the
+   free [TikFinity](https://tikfinity.zerody.one) app does the listening.
+5. In Rando Hub on the **same PC**: **⋯ → Crowd effects** → turn on, address
    `ws://localhost:21214`. Allow local-network access if the browser asks.
-5. Test effects from either place (the game's **⋯ → Crowd effects** or the control
+6. Test effects from either place (the game's **⋯ → Crowd effects** or the control
    panel's **Gifts & effects → Test any effect**), then go live.
 
 Gifts are set up in the control panel (no file editing). The beginner-friendly guide is

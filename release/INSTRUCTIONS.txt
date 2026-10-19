@@ -154,8 +154,9 @@ alerts, goal bars, top gifters, votes, boss detours and more). Open its
 INSTRUCTIONS.txt and follow it from the top; it's written for first-timers
 and takes about 15 minutes. Short version:
 
-  1. Install Node.js and TikFinity (both free).
+  1. Install Node.js (free). Have Chrome or Edge.
   2. Double-click "Start Crowd Control+.bat". The control panel opens.
+     Type your TikTok name and click Connect (no other apps needed).
   3. In the game: ... menu -> Crowd effects -> turn on, address
      ws://localhost:21214.
 

@@ -408,6 +408,8 @@ control panel's Gifts & effects tab.
 
   ALSO
     Every 300 likes ....... +1 heart
+    Every 500 likes ....... small magic refill
+    Every 2000 likes ...... full heal
     Follow ................ +50 rupees
     Share ................. +10 bombs
     (follows and shares count once per viewer every 10 minutes)
@@ -481,6 +483,18 @@ All effect names (use these on the right side):
                    appears next to it. Nothing happens if there are no
                    enemies around. (It can't pick a specific enemy: the
                    game only has graphics loaded for the enemies nearby.)
+    enemy_random   Random enemy: a random enemy that fits this area (one
+                   whose graphics are loaded here) appears a few steps
+                   from Link. Which ones can appear changes from area to
+                   area; if none fit, it copies a nearby enemy instead.
+    magic_small    Small magic refill (a quarter of the meter)
+    warp_dungeon   Warp to a random dungeon: Link drops into a random
+                   dungeon's entrance. Keys of the dungeon he was in are
+                   kept. (It's for real: no going back like a boss detour.)
+    warp_flute     Flute warp: the flute bird takes Link to a random flute
+                   spot. Only outside in the Light World (where the flute
+                   works); anywhere else it warps to a random dungeon.
+    warp_random    Random warp: a flute spot or a dungeon, 50/50.
 
   TIMED (default length; more gifts add more time)
     invert         Inverted D-pad .............. 20s
@@ -511,7 +525,7 @@ All effect names (use these on the right side):
   BOSS DETOURS (the game saves first and loads it back afterwards)
     boss_ganon     Fight Ganon ..................... 60s
     boss_aga       Fight Agahnim ................... 60s
-    boss_random    Fight a random boss ............. 60s
+    boss_random    Fight a random boss you haven't beaten yet ... 60s
                    change the length with "durations": { "boss_detour": 90 }
 
   APP ACTIONS
@@ -540,8 +554,11 @@ Other settings in mapping.json:
                    "= N coins" for a gift: tells the bridge what it's worth
   "durations": { "one_hit": 20, "no_magic": 20, "cucco_storm": 20 }
                    how many seconds timed effects last
-  "likes": { "every": 300, "effect": "heal_1" }
-                   one effect for every 300 likes
+  "likes": [ { "every": 300, "effect": "heal_1" },
+             { "every": 500, "effect": "magic_small" },
+             { "every": 2000, "effect": "heal_full" } ]
+                   like triggers, each counting on its own (add or remove
+                   them on the Gifts & effects tab)
   "follow": "rupees_plus"     effect for a follow
   "share": "bombs_plus"       effect for a share
   "maxPerGift": 5             cap for gift streaks (20 Roses = 5 hearts)

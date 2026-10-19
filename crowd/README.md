@@ -58,6 +58,11 @@ even unmapped ones, with a one-click "add".
 | `rupees_plus` / `rupees_minus` | ±50 rupees | | `no_magic` | Magic locked, 30 s |
 | `bombs_plus` / `bombs_none` | +10 / lose all bombs | | `ice` | Ice physics (slippery floors everywhere), 20 s |
 | `enemy_spawn` | Extra enemy (copies one already in the room) | | | |
+| `enemy_random` | Random enemy that fits the area's loaded graphics (sheet needs from Enemizer) | | | |
+| `magic_small` | Small magic refill (¼ meter) | | | |
+| `warp_dungeon` | Drop into a random dungeon's entrance (keeps the current dungeon's keys) | | | |
+| `warp_flute` | Flute bird to a random flute spot (Light World outdoors; otherwise a random dungeon) | | | |
+| `warp_random` | Flute spot or dungeon, 50/50 | | | |
 | `insta_kill` | Instant death (a bottled fairy still saves you) | | | |
 | `seed_preset` / `seed_chaos` | Random preset / CHAOS seed (see below) | | | |
 | `arrows_plus` / `arrows_none` | +10 / lose all arrows | | `cucco_storm` | Cucco attack: angry cuccos fly at Link, 30 s of outdoor time (the clock pauses indoors) |
@@ -85,7 +90,7 @@ wins), so the run carries on exactly where it was. Length = `durations.boss_deto
 |---|---|
 | `boss_ganon` | Ganon's fight (drop through the Pyramid hole) |
 | `boss_aga` | Agahnim's first fight (Castle Tower top) |
-| `boss_random` | A random boss: Ganon, either Agahnim, or any dungeon boss |
+| `boss_random` | A random boss not beaten yet in this run: Ganon, either Agahnim, or any dungeon boss |
 
 **App rolls** (use the app's own buttons):
 

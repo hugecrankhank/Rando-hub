@@ -1,6 +1,6 @@
 {
   "name": "rando-hub-crowd-bridge",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
   "description": "TikTok LIVE gifts → effects in the Rando Hub web app",
   "type": "module",

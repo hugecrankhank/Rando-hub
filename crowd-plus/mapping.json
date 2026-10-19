@@ -37,7 +37,11 @@
 
   "durations": { "cucco_storm": 20, "one_hit": 20, "no_magic": 20 },
 
-  "likes": { "every": 300, "effect": "heal_1" },
+  "likes": [
+    { "every": 300, "effect": "heal_1" },
+    { "every": 500, "effect": "magic_small" },
+    { "every": 2000, "effect": "heal_full" }
+  ],
   "follow": "rupees_plus",
   "share": "bombs_plus",
 

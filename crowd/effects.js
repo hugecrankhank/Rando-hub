@@ -141,6 +141,102 @@
     return true;
   }
 
+  // Random enemy: only enemies whose graphics are already loaded here. Each
+  // area loads 4 sprite sheets ($7EC2FC-F); an enemy needs particular sheets in
+  // particular slots, or it shows up as garbled tiles. Sheet needs per enemy from
+  // Enemizer (github.com/Zarby89/Enemizer, MIT); 0 = any sheet in that slot.
+  var RANDOM_ENEMIES = [
+    [0x08, [[0,0,[12,24],0]]], [0x0A, [[0,0,[12],0]]], [0x0D, [[0,0,0,[17]]]], [0x0E, [[[22],0,[23],0]]],
+    [0x0F, [[0,0,[12],0]]], [0x11, [[[22],0,0,0]]], [0x12, [[0,0,[23],0]]], [0x13, [[0,[30],0,0]]],
+    [0x17, [[0,0,0,[17]]]], [0x18, [[0,[30],0,0]]], [0x19, [[0,0,0,[14,21]]]], [0x20, [[0,0,[37],0]]],
+    [0x22, [[[22],0,0,0]]], [0x23, [[[31],0,0,0]]], [0x24, [[[31],0,0,0]]], [0x26, [[0,[30],0,0]]],
+    [0x27, [[0,0,0,[16]]]], [0x3E, [[0,0,0,[17]]]], [0x41, [[0,[13,73],0,0]]], [0x42, [[0,[73],0,0]]],
+    [0x43, [[0,[13,73],0,0]]], [0x44, [[[70],[13,73],0,0]]], [0x46, [[[72],[73],0,0]]], [0x47, [[[72],[73],0,0]]],
+    [0x48, [[[70],[73],0,0]]], [0x4B, [[0,[73],[19],0],[0,[73],[28],0],[0,[73],[35],0]]], [0x4E, [[0,[44],0,0]]],
+    [0x4F, [[0,[44],0,0]]], [0x51, [[0,0,0,[16]]]], [0x58, [[0,0,[12],0]]], [0x6D, [[0,0,[28,36],0]]],
+    [0x6E, [[0,0,[28,36],0]]], [0x71, [[[47],0,0,0]]], [0x7C, [[[31],0,0,[82,83]]]], [0x83, [[0,[44],0,0]]],
+    [0x8E, [[0,0,[42],0]]], [0x91, [[0,[32],0,0]]], [0x99, [[0,0,[38],0]]], [0xA5, [[0,0,[40],0]]],
+    [0xA6, [[0,0,[40],0]]], [0xA7, [[[31],0,0,0]]], [0xA8, [[0,0,0,[27]]]], [0xA9, [[0,0,0,[27]]]],
+    [0xAA, [[0,0,0,[27]]]], [0xC3, [[0,0,[40],0]]], [0xC4, [[[14,21],0,0,0]]], [0xC7, [[0,0,[39],0]]],
+    [0xC9, [[0,0,0,[16]]]], [0xD0, [[0,0,0,[20]]]],
+  ];
+  function enemiesThatFit(r) {
+    var sheets = [r[0xC2FC], r[0xC2FD], r[0xC2FE], r[0xC2FF]];
+    return RANDOM_ENEMIES.filter(function (e) {
+      return e[1].some(function (opt) { return opt.every(function (need, i) { return !need || need.indexOf(sheets[i]) >= 0; }); });
+    }).map(function (e) { return e[0]; });
+  }
+  function spawnRandomEnemy(r) {
+    var types = enemiesThatFit(r);
+    if (!types.length) return cloneEnemy(r) === true ? true : 'No enemy fits this area';
+    var free = -1;
+    for (var k = 15; k >= 1; k--) if (r[S.STATE + k] === 0) { free = k; break; }
+    if (free < 0) return 'Too many sprites on screen';
+    var lx = r[0x22] | (r[0x23] << 8), ly = r[0x20] | (r[0x21] << 8), indoors = r[0x1B];
+    // a spot 3-4 tiles from Link; indoors, one with open floor (BG2 tile attributes)
+    var spots = [[48, 0], [-48, 0], [0, 40], [0, -40], [36, 32], [-36, 32], [36, -32], [-36, -32]], at = null;
+    for (var t = 0; t < 16 && !at; t++) {
+      var d = spots[Math.floor(Math.random() * spots.length)], x = lx + d[0], y = ly + d[1];
+      if (!indoors) { at = [x, y]; break; }
+      var tx = ((x + 8) & 0x1FF) >> 3, ty = ((y + 12) & 0x1FF) >> 3, ok = true;
+      for (var dy = -1; dy <= 1 && ok; dy++) for (var dx = -1; dx <= 1 && ok; dx++) {
+        var a = r[0x12000 + (((ty + dy) & 63) * 64) + ((tx + dx) & 63)];
+        if (!(a === 0x00 || a === 0x09 || a === 0x0E || a === 0x0F)) ok = false;
+      }
+      if (ok) at = [x, y];
+    }
+    if (!at) return 'No room for an enemy here';
+    for (var i = 0; i < SLOT_TABLES.length; i++) r[SLOT_TABLES[i] + free] = 0;
+    r[S.TYPE + free] = types[Math.floor(Math.random() * types.length)];
+    r[S.XL + free] = at[0] & 0xFF; r[S.XH + free] = (at[0] >> 8) & 0xFF;
+    r[S.YL + free] = at[1] & 0xFF; r[S.YH + free] = (at[1] >> 8) & 0xFF;
+    r[S.FLOOR + free] = r[0xEE];
+    if (indoors) r[S.N + free] = 0xFF; else { r[0xBC0 + free * 2] = 0xFF; r[0xBC1 + free * 2] = 0xFF; }   // not from the room's list
+    r[S.STATE + free] = 0x08;    // "initialize": the game loads its stats and sets it up
+    return true;
+  }
+
+  // ── warps ──
+  // Dungeon: drop in through a dungeon's front entrance (Module $11, like the
+  // boss detour, but for keeps). The dungeon Link is in keeps its small keys.
+  var DUNGEON_ENTRANCES = [
+    ['Hyrule Castle', 0x04], ['Eastern Palace', 0x08], ['Desert Palace', 0x09], ['Tower of Hera', 0x33],
+    ['Castle Tower', 0x24], ['Palace of Darkness', 0x26], ['Swamp Palace', 0x25], ['Skull Woods', 0x2B],
+    ["Thieves' Town", 0x34], ['Ice Palace', 0x2D], ['Misery Mire', 0x27], ['Turtle Rock', 0x35], ["Ganon's Tower", 0x37],
+  ];
+  var lastWarp = '';
+  function warpDungeon(r) {
+    var pick = DUNGEON_ENTRANCES[Math.floor(Math.random() * DUNGEON_ENTRANCES.length)];
+    if (r[0x1B]) {   // indoors: save this dungeon's keys like leaving it would (SaveDungeonKeys)
+      var idx = r[0x40C];
+      if (idx !== 0xFF) { if (idx === 2) idx = 0; r[0xF37C + (idx >> 1)] = r[0xF36F]; }
+    }
+    r[0x10E] = pick[1]; r[0x10F] = 0;
+    r[0x10] = 0x11; r[0x11] = 0; r[0xB0] = 0;
+    lastWarp = pick[0];
+    return true;
+  }
+  // Flute: open the game's own flute menu (Module $0E.0A, as the bird does),
+  // choose a random spot for the player, and let the bird carry Link there.
+  // Only outdoors in the Light World, where the flute works.
+  var fluteWarp = null;
+  function canFlute(r) { return r[A.MODE] === 0x09 && r[0x8A] < 0x40; }
+  function warpFlute(r) {
+    if (!canFlute(r)) return warpDungeon(r) && 'flute only works outside in the Light World, so: ' + lastWarp;
+    r[0x10C] = 0x09; r[0x10] = 0x0E; r[0x11] = 0x0A; r[0x200] = 0; r[0xC8] = 0; r[0xB0] = 0;
+    fluteWarp = { spot: Math.floor(Math.random() * 8), frames: 0 };
+    lastWarp = 'flute spot ' + (fluteWarp.spot + 1);
+    return true;
+  }
+  function fluteFrame(r) {
+    if (!fluteWarp) return;
+    if (++fluteWarp.frames > 60 * 20 || r[0x10] !== 0x0E) { fluteWarp = null; return; }
+    if (r[0x11] === 0x0A && r[0x200] === 5) {   // the map is up and waiting for a choice
+      r[0x1AF0] = fluteWarp.spot; r[0xC8] = 0; r[0x200] = 6;
+      fluteWarp = null;
+    }
+  }
+
   // ── the effects ─────────────────────────────────────────────────────────
   // Instant effects run once (apply). Timed ones last `secs` seconds of play
   // (the clock stops in menus and text boxes); a second gift adds more time.
@@ -187,6 +283,16 @@
       apply: function (r) { r[0x373] = r[A.HP]; } },
     enemy_spawn: { name: 'Extra enemy', good: false,
       apply: function (r) { return cloneEnemy(r); } },
+    enemy_random: { name: 'Random enemy', good: false,
+      apply: function (r) { return spawnRandomEnemy(r); } },
+    magic_small: { name: 'Small magic refill', good: true,
+      apply: function (r) { r[A.MAGIC_FILL] = Math.min(0x80, r[A.MAGIC_FILL] + 0x20); } },
+    warp_dungeon: { name: 'Warp to a random dungeon', good: false,
+      apply: function (r) { return warpDungeon(r); } },
+    warp_flute:  { name: 'Flute warp (random spot)', good: false,
+      apply: function (r) { return warpFlute(r); } },
+    warp_random: { name: 'Random warp (flute spot or dungeon)', good: false,
+      apply: function (r) { return canFlute(r) && Math.random() < 0.5 ? warpFlute(r) : warpDungeon(r); } },
 
     // These two flip switches the randomizer ROM itself keeps for crowd
     // control (z3randomizer: IceModifier $7F50C7, CuccoStormer $7F50C5).
@@ -571,6 +677,7 @@
     var ram = core.wram();
     holdSwitches(core, ram);
     try { if (detour) detourFrame(core, ram); else sendRun(ram); } catch (e) { console.warn('[crowd] detour', e); }
+    if (fluteWarp) fluteFrame(ram);
     // say why effects are waiting, once, if they wait more than ~4 s
     if (queue.length && (detour || !inPlay(ram))) {
       if (++waitT === 240) feed(queue.length + ' waiting: ' + (detour ? 'boss detour still running (' + detour.state + ')' :
@@ -613,10 +720,12 @@
     else if (f.app) { try { f.app(job); } catch (e) { console.warn('[crowd]', job.id, e); } }
     else {
       var res = f.apply(ram);
-      if (typeof res === 'string') { feed(f.name + ': ' + res, 'info'); render(); return; }
+      if (typeof res === 'string' && !/^flute only/.test(res)) { feed(f.name + ': ' + res, 'info'); render(); return; }
+      if (typeof res === 'string') feed(res, 'info');
+      if (/^warp_/.test(job.id) && lastWarp) note('warp: ' + lastWarp);
     }
     gap = GAP_FRAMES;
-    if (!f.detour) giftCard(job.user, job.label, f.name + (secs ? ' · ' + secs + 's' : ''), f.good);
+    if (!f.detour) giftCard(job.user, job.label, f.name + (secs ? ' · ' + secs + 's' : '') + (/^warp_/.test(job.id) && lastWarp ? ': ' + lastWarp : ''), f.good);
     if (!cfg.alerts) feed((job.user ? job.user + ': ' : '') + (job.label ? job.label + ' → ' : '') + f.name + (secs ? ' (' + secs + 's)' : ''),
       f.good ? 'good' : 'bad');   // the gift card already says it
     send({ type: 'applied', effect: job.id, user: job.user });
@@ -740,7 +849,16 @@
   function startDetour(job, which, core, ram) {
     if (detour) return 'Already on a boss detour';
     var ids = Object.keys(BOSSES);
-    var key = which === 'random' ? ids[Math.floor(Math.random() * ids.length)] : which;
+    // random: only bosses not beaten yet in this run (their room's "boss beaten" flag),
+    // so viewers never send Link to an arena he already cleared. Ganon is always in.
+    var fresh = ids.filter(function (k) {
+      var b = BOSSES[k];
+      if (k === 'ganon' || b.room == null) return true;
+      if (k === 'aga1') return ram[0xF3C5] < 3;            // game progress: 3 = Agahnim beaten
+      return !(ram[0xF000 + b.room * 2 + 1] & 0x80);
+    });
+    if (!fresh.length) fresh = ids;
+    var key = which === 'random' ? fresh[Math.floor(Math.random() * fresh.length)] : which;
     var b = BOSSES[key]; if (!b) return 'Unknown boss';
     var snap; try { snap = core.saveState(); } catch (e) { snap = null; }
     if (!snap || !snap.length) return 'Could not save the game first, so no detour';
@@ -1122,6 +1240,7 @@
     // for testing a single boss from the console: CrowdEffects.detourTo('moldorm')
     placeLink: function () { var c = core(); return !!(c && placeLink(c.wram(), detour && detour.boss.at)); },
     giftCard: giftCard,
+    get waiting() { return queue.length + (gap > 0 ? 1 : 0); },
     detourTo: function (key) { return testBoss(key, 'test'); },
     _onFrame: onFrame, _onInput: onInput, _showClock: showClock,
     get queue() { return queue.slice(); }, get active() { return Object.assign({}, active); },

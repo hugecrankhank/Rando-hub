@@ -5,6 +5,24 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.6.0 (2026-10-18)
+
+New crowd control, from playtester requests:
+- **Random enemy** (`enemy_random`): spawns a random enemy a few steps from Link, chosen
+  from the ones whose graphics are already loaded in that area (each area loads four
+  sprite sheets; enemies from other sheets would show as garbled tiles). Sheet needs come
+  from Enemizer (MIT). Indoors it picks open floor. If nothing fits, it copies a nearby
+  enemy like Extra enemy.
+- **Warps:** `warp_dungeon` drops Link into a random dungeon entrance (the dungeon he
+  leaves keeps its small keys); `warp_flute` opens the game's flute menu and the bird
+  takes him to a random flute spot (Light World outdoors; elsewhere it falls back to a
+  dungeon); `warp_random` does either. The gift card says where he went.
+- **Several like triggers:** e.g. +1 heart every 300 likes, small magic every 500, full
+  heal every 2000, each counting on its own. Edit them on Gifts & effects (old single
+  `likes` settings still work). New `magic_small` effect (¼ meter).
+- **Boss detour random boss** only picks bosses not beaten yet in the run (Ganon always
+  can be picked), so no empty arenas.
+
 ## 1.5.0 (2026-10-18)
 
 **Crowd Control+**

@@ -169,7 +169,8 @@
 
   <h2>LIKES, FOLLOWS, SHARES</h2>
   <div class="card">
-    <div class="row"><span style="min-width:170px" class="muted">Every</span><input id="likes-every" type="number" min="0"> likes <select id="likes-effect"></select></div>
+    <div id="like-rows"></div>
+    <div class="row"><button class="small" id="like-add">Add a like trigger</button> <span class="hint">Each one counts on its own, e.g. +1 heart every 300, magic every 500, full heal every 2000.</span></div>
     <div class="row"><span style="min-width:170px" class="muted">A follow</span><select id="follow-effect"></select></div>
     <div class="row"><span style="min-width:170px" class="muted">A share</span><select id="share-effect"></select></div>
     <p class="hint">Follows and shares count once per viewer every 10 minutes.</p>
@@ -640,7 +641,7 @@ function newGDraft() {
   gdraft = {
     gifts: Object.entries(m.gifts).map(([name, effect]) => ({ name, effect, coins: m.giftCoins[name] ?? '' })),
     coinTiers: JSON.parse(JSON.stringify(m.coinTiers || [])),
-    likes: { every: m.likes.every || 0, effect: m.likes.effect || '' },
+    likes: (Array.isArray(m.likes) ? m.likes : m.likes && m.likes.every ? [m.likes] : []).map((t) => ({ every: +t.every || 0, effect: t.effect || '' })),
     follow: m.follow || '', share: m.share || '', durations: { ...(m.durations || {}) }, maxPerGift: m.maxPerGift ?? 5,
   };
   gDirty = false; $('gifts-dirty').textContent = '';
@@ -667,8 +668,12 @@ function paintGifts() {
   $('tier-rows').querySelectorAll('[data-ti]').forEach((el) => el[el.tagName === 'SELECT' ? 'onchange' : 'oninput'] = () => { const t = gdraft.coinTiers[+el.dataset.ti]; t[el.dataset.k] = el.dataset.k === 'coins' ? +el.value : el.value; markG(); });
   $('tier-rows').querySelectorAll('[data-tdel]').forEach((b) => b.onclick = () => { gdraft.coinTiers.splice(+b.dataset.tdel, 1); markG(); paintGifts(); });
   // likes / follow / share
-  $('likes-every').value = gdraft.likes.every || '';
-  $('likes-effect').innerHTML = effectOptions(gdraft.likes.effect, true);
+  $('like-rows').innerHTML = gdraft.likes.map((t, i) => '<div class="row"><span style="min-width:170px" class="muted">Every</span>' +
+    '<input type="number" min="1" value="' + (t.every || '') + '" data-li="' + i + '" data-k="every" style="width:90px"> likes ' +
+    '<select data-li="' + i + '" data-k="effect">' + effectOptions(t.effect, true) + '</select> <button class="small danger" data-ldel="' + i + '">✕</button></div>').join('') ||
+    '<p class="hint">No like triggers. Add one below.</p>';
+  $('like-rows').querySelectorAll('[data-li]').forEach((el) => el[el.tagName === 'SELECT' ? 'onchange' : 'oninput'] = () => { const t = gdraft.likes[+el.dataset.li]; t[el.dataset.k] = el.dataset.k === 'every' ? +el.value : el.value; markG(); });
+  $('like-rows').querySelectorAll('[data-ldel]').forEach((b) => b.onclick = () => { gdraft.likes.splice(+b.dataset.ldel, 1); markG(); paintGifts(); });
   $('follow-effect').innerHTML = effectOptions(gdraft.follow, true);
   $('share-effect').innerHTML = effectOptions(gdraft.share, true);
   $('max-per').value = gdraft.maxPerGift;
@@ -682,8 +687,7 @@ function paintGifts() {
   $('unmapped').innerHTML = un.length ? '<p class="hint" style="margin-top:14px">Seen on stream but not set up: ' + un.map((g) => '<button class="small" data-addseen="' + esc(g.name) + '">+ ' + esc(g.name) + (g.coins ? ' (' + g.coins + ')' : '') + '</button>').join(' ') + '</p>' : '';
   $('unmapped').querySelectorAll('[data-addseen]').forEach((b) => b.onclick = () => { gdraft.gifts.push({ name: b.dataset.addseen, effect: (S.effects[0] || {}).id || '', coins: '' }); markG(); paintGifts(); });
 }
-$('likes-every').oninput = () => { gdraft.likes.every = +$('likes-every').value; markG(); };
-$('likes-effect').onchange = () => { gdraft.likes.effect = $('likes-effect').value; markG(); };
+$('like-add').onclick = () => { const last = gdraft.likes[gdraft.likes.length - 1]; gdraft.likes.push({ every: last ? last.every * 2 : 300, effect: 'heal_1' }); markG(); paintGifts(); };
 $('follow-effect').onchange = () => { gdraft.follow = $('follow-effect').value; markG(); };
 $('share-effect').onchange = () => { gdraft.share = $('share-effect').value; markG(); };
 $('max-per').oninput = () => { gdraft.maxPerGift = Math.max(1, +$('max-per').value || 1); markG(); };
@@ -696,7 +700,7 @@ $('gifts-save').onclick = async () => {
   const durations = {}; for (const [k, v] of Object.entries(gdraft.durations)) if (+v > 0) durations[k] = +v;
   const mapping = {
     gifts, giftCoins, coinTiers: gdraft.coinTiers.filter((t) => +t.coins > 0 && t.effect).map((t) => ({ coins: +t.coins, effect: t.effect, ...(t.label ? { label: t.label } : {}) })),
-    likes: gdraft.likes.every && gdraft.likes.effect ? { every: +gdraft.likes.every, effect: gdraft.likes.effect } : {},
+    likes: gdraft.likes.filter((t) => +t.every > 0 && t.effect).map((t) => ({ every: +t.every, effect: t.effect })),
     follow: gdraft.follow, share: gdraft.share, durations, maxPerGift: gdraft.maxPerGift,
   };
   await call('mapping', { mapping }, 'Gift setup saved. The bridge uses it right away.');

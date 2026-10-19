@@ -5,6 +5,22 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.8.0 (2026-10-19)
+
+Crowd Control+:
+- **Checks and bosses on the subathon clock** (Subathon tab → Progress on the clock):
+  each new check and each boss beaten takes time off the clock (or adds time), e.g.
+  1 minute per check and 5 minutes per boss. Counts from when Crowd Control+ first
+  sees the game, so a game picked up halfway doesn't take hours off at once; a new
+  seed starts over; boss detours don't count. The clock overlay shows each change
+  (red for time off, with the reason) and bosses can pop a "BOSS DEFEATED!" alert.
+  Test buttons for both.
+- The game now reports which bosses are beaten (the 10 dungeon bosses, Agahnim,
+  Agahnim 2) along with the other run stats.
+- Fix: boss detours used the wrong bit for "boss beaten" (now the room flag's 0x08,
+  the same bit the trackers read). "Random boss" now really skips beaten bosses,
+  and a detour to a beaten boss brings him back for the fight.
+
 ## 1.7.1 (2026-10-19)
 
 - **License:** Rando Hub and Crowd Control+ are now under the PolyForm Strict License

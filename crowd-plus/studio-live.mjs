@@ -29,6 +29,9 @@ export const LIVE_DEFAULTS = {
     'tiny', 'crt', 'speed_up', 'slow_mo', 'freeze', 'fairy', 'pink_link', 'sprite_roll', 'music_roulette'] },
   combo: { enabled: true, windowSeconds: 8, bonusAt: 10, bonusEffect: 'mystery_box' },
   deathTax: { enabled: true, timerSeconds: 300, goalId: '', goalAmount: 0, alert: true },
+  // progress changes the subathon clock: each new check and each boss beaten
+  // takes time off (mode 'remove') or puts it on ('add')
+  runClock: { enabled: false, mode: 'remove', checkSeconds: 60, bossSeconds: 300, alert: true },
   predict: { seconds: 60, winnersShown: 12 },
   clips: { minCoins: 500, deaths: true, seeds: true, chatClip: true, chatCooldown: 30 },
   hallOfFame: { title: 'HALL OF FAME', size: 5 },
@@ -59,11 +62,12 @@ export function createLive(ctx) {
   let clips = readJson(CLIPS_FILE, []);        // { id, at, elapsed, label, kind }
 
   // ── run stats from the game ────────────────────────────────────────────
-  let runStats = { deaths: 0, checks: 0, bonks: 0, place: '', seed: '', music: '', hearts: 0, at: 0 };
+  let runStats = { deaths: 0, checks: 0, bonks: 0, place: '', seed: '', music: '', hearts: 0, bosses: [], at: 0 };
   function onGame(m) {
     if (m.type === 'run') {
       runStats = { deaths: +m.deaths || 0, checks: +m.checks || 0, bonks: +m.bonks || 0, place: clean(m.place, 40), seed: clean(m.seed, 80),
-        music: clean(m.music, 80), hearts: +m.hearts || 0, at: Date.now() };
+        music: clean(m.music, 80), hearts: +m.hearts || 0, bosses: Array.isArray(m.bosses) ? m.bosses.map((b) => clean(b, 20)).slice(0, 20) : [], at: Date.now() };
+      onProgress(runStats);
       send('run', { run: runStats });
     } else if (m.type === 'death') {
       runStats.deaths = +m.deaths || runStats.deaths + 1;
@@ -82,7 +86,7 @@ export function createLive(ctx) {
           const eff = r === 'won' ? D.winEffect : D.surviveEffect, secs = Math.round(+(r === 'won' ? D.winTimerSeconds : D.surviveTimerSeconds) || 0);
           if (eff) { setTimeout(() => ctx.fire(eff, r === 'won' ? 'Boss beaten' : 'Survived', 'Detour bonus'), 1500); bonus = ctx.effectName(eff); }
           const tv = ctx.timerView();
-          if (secs && tv.active && !tv.ended) { ctx.timerApi('add', secs); bonus += (bonus ? ' + ' : '') + `${fmtShort(secs)} on the clock`; }
+          if (secs && tv.active && !tv.ended) { ctx.timerApi('add', secs, 'boss detour bonus'); bonus += (bonus ? ' + ' : '') + `${fmtShort(secs)} on the clock`; }
         }
         const title = { won: 'BOSS DEFEATED!', survived: 'SURVIVED THE DETOUR!', ko: 'KNOCKED OUT!', escaped: 'ESCAPED!', lost: 'DETOUR OVER' }[r] || 'DETOUR OVER';
         ctx.record({ type: 'detour-end', user: 'Link', text: clean(m.boss, 40), result: r, bonus,
@@ -104,7 +108,7 @@ export function createLive(ctx) {
     if (T.enabled) {
       const secs = Math.round(+T.timerSeconds || 0);
       const tv = ctx.timerView();
-      if (secs && tv.active && !tv.ended) { ctx.timerApi('add', secs); taxed = `+${fmtShort(secs)} on the clock`; }
+      if (secs && tv.active && !tv.ended) { ctx.timerApi('add', secs, 'death tax'); taxed = `+${fmtShort(secs)} on the clock`; }
       const g = (S().goals || []).find((x) => x.id === T.goalId);
       if (g && +T.goalAmount) { g.current = Math.max(0, (+g.current || 0) + +T.goalAmount); ctx.saveSettings(); taxed += (taxed ? ', ' : '') + `${g.label} +${T.goalAmount}`; }
     }
@@ -112,6 +116,43 @@ export function createLive(ctx) {
     if (S().clips.deaths) addClip(`Death #${runStats.deaths}`, 'death');
     send('run', { run: runStats });
   }
+  // ── progress on the subathon clock ─────────────────────────────────────
+  // The first numbers seen for a game (the bridge just started, or another
+  // seed) are only a starting point: a game picked up halfway doesn't take
+  // hours off at once. After that, each new check and each newly beaten boss
+  // counts. A big jump in one go (a different save loaded) is a new starting
+  // point too.
+  const BOSS_NAMES = { armos: 'Armos Knights', lanmolas: 'Lanmolas', moldorm: 'Moldorm', helmasaur: 'Helmasaur King', arrghus: 'Arrghus',
+    mothula: 'Mothula', blind: 'Blind', kholdstare: 'Kholdstare', vitreous: 'Vitreous', trinexx: 'Trinexx', aga1: 'Agahnim', aga2: 'Agahnim 2' };
+  let base = null;   // { seed, checks, bosses: Set }
+  function onProgress(r) {
+    const C = S().runClock;
+    if (!base || base.seed !== r.seed || r.checks < base.checks || r.checks - base.checks > 25) {
+      base = { seed: r.seed, checks: r.checks, bosses: new Set(r.bosses) };
+      return;
+    }
+    const newChecks = r.checks - base.checks;
+    const newBosses = r.bosses.filter((b) => !base.bosses.has(b));
+    base.checks = r.checks;
+    newBosses.forEach((b) => base.bosses.add(b));
+    if (newBosses.length > 3) return;                     // a different save, not a fight
+    if (!C.enabled) return;
+    const tv = ctx.timerView();
+    if (!tv.active || tv.ended) return;
+    const sign = C.mode === 'add' ? 1 : -1;
+    if (newChecks > 0 && +C.checkSeconds > 0) {
+      const secs = Math.round(+C.checkSeconds) * newChecks;
+      ctx.timerApi('add', sign * secs, newChecks === 1 ? `check #${r.checks}` : `${newChecks} checks`);
+    }
+    for (const b of newBosses) {
+      const secs = Math.round(+C.bossSeconds || 0), nm = BOSS_NAMES[b] || b;
+      if (secs > 0) ctx.timerApi('add', sign * secs, `beat ${nm}`);
+      ctx.record({ type: 'boss', user: 'Link', text: nm, bonus: secs > 0 ? `${sign < 0 ? '−' : '+'}${fmtShort(secs)} on the clock` : '',
+        alert: C.alert ? { tier: 'big', title: 'BOSS DEFEATED!' } : undefined });
+      if (S().clips.deaths) addClip(`Beat ${nm}`, 'boss');
+    }
+  }
+
   const fmtShort = (s) => s < 60 ? s + 's' : s < 3600 ? Math.floor(s / 60) + 'm' + (s % 60 ? ' ' + (s % 60) + 's' : '') : Math.floor(s / 3600) + 'h ' + Math.floor(s / 60) % 60 + 'm';
 
   // ── chat votes ─────────────────────────────────────────────────────────
@@ -348,7 +389,21 @@ export function createLive(ctx) {
       case 'fame-reset': fame = {}; writeLater(FAME_FILE, fame); send('fame', { fame: [] }); return true;
       case 'fame-remove': delete fame[a.user]; writeLater(FAME_FILE, fame); send('fame', { fame: famous(20) }); return true;
       case 'death-test': runStats.deaths++; onDeath(); return true;
-      case 'run-test': onGame({ type: 'run', deaths: runStats.deaths, checks: runStats.checks + 7, bonks: runStats.bonks, place: DUNGEON_ORDER[Math.floor(Math.random() * DUNGEON_ORDER.length)], seed: runStats.seed || 'ALttPR - TestSeed', music: runStats.music, hearts: Math.max(3, runStats.hearts) }); return true;
+      case 'run-test': {
+        const seed = runStats.seed || 'ALttPR - TestSeed';
+        // the first test only sets the starting point (like a real game does)
+        if (!base || base.seed !== seed) onGame({ type: 'run', deaths: runStats.deaths, checks: runStats.checks, bonks: runStats.bonks, place: runStats.place, seed, music: runStats.music, hearts: Math.max(3, runStats.hearts), bosses: runStats.bosses });
+        onGame({ type: 'run', deaths: runStats.deaths, checks: runStats.checks + 7, bonks: runStats.bonks, place: DUNGEON_ORDER[Math.floor(Math.random() * DUNGEON_ORDER.length)], seed, music: runStats.music, hearts: Math.max(3, runStats.hearts), bosses: runStats.bosses });
+        return true;
+      }
+      case 'boss-test': {
+        const seed = runStats.seed || 'ALttPR - TestSeed';
+        if (!base || base.seed !== seed) onGame({ type: 'run', ...runStats, seed });
+        const left = Object.keys(BOSS_NAMES).filter((b) => !runStats.bosses.includes(b));
+        if (!left.length) return true;
+        onGame({ type: 'run', ...runStats, seed, bosses: [...runStats.bosses, left[0]] });
+        return true;
+      }
       case 'welcome-test': ctx.record({ type: 'chat', user: a.user || 'RegularViewer', text: 'hey!', welcome: { streams: 12, title: S().welcome.title || 'WELCOME BACK' }, test: true }); return true;
       default: return false;
     }

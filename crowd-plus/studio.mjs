@@ -107,7 +107,7 @@ export function createStudio(ctx) {
     fire: (effect, user, label) => ctx.fire(effect, user, label),
     effectName: (id) => (ctx.effectList().find((x) => x.id === id) || {}).name || id,
     effectIds: () => ctx.effectList().map((x) => x.id),
-    timerApi: (op, secs) => ctx.timerApi(op, secs), timerView: () => ctx.timerView(false),
+    timerApi: (op, secs, why) => ctx.timerApi(op, secs, why), timerView: () => ctx.timerView(false),
     streamSince: () => stats.since, record: (ev) => record(ev),
   });
 

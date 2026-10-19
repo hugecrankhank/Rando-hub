@@ -348,6 +348,21 @@ Crowd effects menu.
 4 = 14,400, 0.5 = 1,800. The clock is saved, so if you close Crowd
 Control+ it comes back paused at the same time.
 
+CHECKS AND BOSSES ON THE CLOCK (Subathon tab, "Progress on the clock")
+  Turn it on to have your progress change the clock, for example take
+  1 minute off for every check and 5 minutes off for every boss beaten
+  (or choose "adds time" instead). Click Save.
+  - It counts from when Crowd Control+ first sees the game, so loading
+    a game you're halfway through doesn't take hours off at once. A new
+    seed starts counting again from there.
+  - Bosses: the 10 dungeon bosses, Agahnim and Agahnim 2. A boss beaten
+    on a boss detour doesn't count (the detour is undone afterwards).
+  - Each change shows on the clock overlay (red for time off, with what
+    it was for, like "-5m · beat Armos Knights") and in the Recent list.
+    Bosses can also pop a "BOSS DEFEATED!" alert.
+  - Test 7 checks / Test a boss try it without playing.
+  Crowd effects has to be on in the game (that's how the counts arrive).
+
 
 =========================================================================
 PART 9 - PRACTICE MODE (NO TIKTOK)

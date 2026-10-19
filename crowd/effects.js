@@ -855,7 +855,7 @@
       var b = BOSSES[k];
       if (k === 'ganon' || b.room == null) return true;
       if (k === 'aga1') return ram[0xF3C5] < 3;            // game progress: 3 = Agahnim beaten
-      return !(ram[0xF000 + b.room * 2 + 1] & 0x80);
+      return !(ram[0xF000 + b.room * 2 + 1] & 0x08);     // room flags "dddd bkut": b = boss beaten
     });
     if (!fresh.length) fresh = ids;
     var key = which === 'random' ? fresh[Math.floor(Math.random() * fresh.length)] : which;
@@ -892,7 +892,7 @@
           // Blind the "maiden revealed" flag his fight needs (no maiden following).
           // The save state puts both back afterwards.
           var rb = 0xF000 + d.boss.room * 2 + 1;
-          ram[rb] &= 0x7F;
+          ram[rb] &= ~0x08 & 0xFF;
           if (d.boss.room === 0xAC) { ram[rb] |= 0x20; if (ram[0xF3CC] === 6) ram[0xF3CC] = 0; }
           ram[0xA2] = ram[0xA0]; ram[0xA3] = ram[0xA1];
           ram[0xA0] = d.boss.room; ram[0xA1] = 0;
@@ -983,11 +983,28 @@
   // TotalItemCounter $7EF423 (2 bytes), DeathCounter $7EF449, BonkCounter $7EF420.
   var DUNGEONS = ['Hyrule Castle', 'Hyrule Castle', 'Eastern Palace', 'Desert Palace', "Agahnim's Tower", 'Swamp Palace',
     'Palace of Darkness', 'Misery Mire', 'Skull Woods', 'Ice Palace', 'Tower of Hera', "Thieves' Town", 'Turtle Rock', "Ganon's Tower"];
-  var run = { deaths: -1, checks: 0, bonks: 0, place: '', seed: '', music: '' }, runSent = '', runT = 0;
+  // Bosses beaten, from each boss room's "boss beaten" flag (room flags
+  // "dddd bkut", b = 0x08 in the high byte; the same bit Hutch's tracker
+  // reads), and Agahnim from the game's progress. Never read during a boss
+  // detour (sendRun isn't called then), and the detour's save state puts the
+  // flags back afterwards, so a detour win doesn't count.
+  var BOSS_ROOMS = [['armos', 0xC8], ['lanmolas', 0x33], ['moldorm', 0x07], ['helmasaur', 0x5A], ['arrghus', 0x06],
+    ['mothula', 0x29], ['blind', 0xAC], ['kholdstare', 0xDE], ['vitreous', 0x90], ['trinexx', 0xA4], ['aga2', 0x0D]];
+  var run = { deaths: -1, checks: 0, bonks: 0, place: '', seed: '', music: '', bosses: [] }, runSent = '', runT = 0;
   function readRun(ram) {
     if (ram.length < 0x20000) return;
     var mode = ram[A.MODE];
+    var P0 = root.Snes9xPlayer, seed0 = (P0 && P0.gameName) || '';
+    if (seed0 && run.seed && seed0 !== run.seed) {
+      // another game: its counts start over (the bridge sees the new seed and
+      // doesn't count the drop as anything)
+      run.checks = 0; run.bonks = 0; run.deaths = -1; run.bosses = [];
+    }
     if (PLAY_MODES[mode]) {
+      if (ram[0xF3C5] >= 3 && run.bosses.indexOf('aga1') < 0) run.bosses.push('aga1');
+      BOSS_ROOMS.forEach(function (b) {
+        if ((ram[0xF000 + b[1] * 2 + 1] & 0x08) && run.bosses.indexOf(b[0]) < 0) run.bosses.push(b[0]);
+      });
       var checks = ram[0xF423] | (ram[0xF424] << 8), deaths = ram[0xF449], bonks = ram[0xF420];
       if (checks < 2000 && checks >= run.checks) run.checks = checks;
       if (bonks >= run.bonks && bonks < 10000) run.bonks = bonks;

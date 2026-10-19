@@ -5,6 +5,15 @@ Crowd Control+ is Rando Hub's crowd control: the gift bridge with a
 control panel and stream overlays. Every gift effect, big-donation seed
 roll and the subathon clock work exactly as before.
 
+NEW IN 1.6.0
+------------
+- New effects: Random enemy (one that fits the area), Small magic
+  refill, Warp to a random dungeon, Flute warp (random flute spot),
+  Random warp (either).
+- Several like triggers at once, e.g. +1 heart every 300 likes, small
+  magic every 500, full heal every 2000 (Gifts & effects tab).
+- Boss detour "random boss" only picks bosses you haven't beaten yet.
+
 NEW IN 1.5.0
 ------------
 - LOCAL SIGNER (recommended): no TikFinity needed. Type your TikTok name

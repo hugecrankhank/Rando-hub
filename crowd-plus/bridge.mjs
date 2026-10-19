@@ -55,6 +55,10 @@ function loadConfig() {
   c.port ??= 21214;
   if (c.source === 'tikfinity' && c.port === c.tikfinityPort) c.port = c.tikfinityPort + 1;
   c.gifts ??= {};
+  // "likes": one trigger {every, effect} or several [{every, effect}, …]
+  c.likeTiers = (Array.isArray(c.likes) ? c.likes : c.likes ? [c.likes] : [])
+    .filter((t) => t && +t.every > 0 && t.effect).map((t) => ({ every: Math.round(+t.every), effect: String(t.effect) }))
+    .sort((a, b) => a.every - b.every);
   c.giftsLower = Object.fromEntries(Object.entries(c.gifts).map(([k, v]) => [String(k).toLowerCase(), v]));
   return c;
 }
@@ -155,7 +159,7 @@ function onGameMessage(text) {
     sendDurations();
     broadcast({ type: 'timer', ...timerView() });
     studio.pushState();
-    const named = [...new Set(Object.values(cfg.gifts).concat(cfg.follow, cfg.share, cfg.likes?.effect).filter(Boolean))];
+    const named = [...new Set(Object.values(cfg.gifts).concat(cfg.follow, cfg.share, ...cfg.likeTiers.map((t) => t.effect)).filter(Boolean))];
     for (const id of named) {
       if (knownEffects.has(id) || id === 'mystery_box' || id === 'detour_rescue') continue;
       const fix = resolveEffect(id);
@@ -252,12 +256,15 @@ function giftIcon(name) {
 }
 const extraIcons = new Map();   // gift pictures TikTok sends with the gift (when there's no file in icons/)
 
-let likeBank = 0;
+let likeTotal = 0;   // likes this session (each like trigger fires when it passes a multiple)
 function onLike(user, n, extra = {}) {
   studio.record({ type: 'like', user, nickname: extra.nickname, count: n, test: !!extra.test });
-  const l = cfg.likes; if (!l?.effect || !l.every) return;
-  likeBank += n;
-  while (likeBank >= l.every) { likeBank -= l.every; fire(l.effect, user, `${l.every} likes`); }
+  // every trigger counts on its own: 300 → +1 heart, 500 → magic, 2000 → full heal…
+  const before = likeTotal; likeTotal += n;
+  for (const t of cfg.likeTiers) {
+    const times = Math.min(5, Math.floor(likeTotal / t.every) - Math.floor(before / t.every));
+    for (let i = 0; i < times; i++) fire(t.effect, user, `${t.every} likes`);
+  }
 }
 function onSocial(kind, user, extra = {}) {
   const key = kind + ':' + user, now = Date.now();
@@ -283,7 +290,9 @@ const effectNames = {
   heal_full: 'Full heal', heal_1: '+1 heart', hurt_2: '-2 hearts', hp_1: 'Down to 1 heart',
   magic_full: 'Refill magic', magic_drain: 'Drain magic', rupees_plus: '+50 rupees', rupees_minus: '-50 rupees',
   bombs_plus: '+10 bombs', bombs_none: 'Lose all bombs', arrows_plus: '+10 arrows', arrows_none: 'Lose all arrows',
-  enemy_spawn: 'Extra enemy', insta_kill: 'Instant death', ice: 'Ice physics', cucco_storm: 'Cucco attack', invert: 'Inverted D-pad',
+  enemy_spawn: 'Extra enemy', enemy_random: 'Random enemy', magic_small: 'Small magic refill',
+  warp_dungeon: 'Warp to a random dungeon', warp_flute: 'Flute warp (random spot)', warp_random: 'Random warp (flute spot or dungeon)',
+  insta_kill: 'Instant death', ice: 'Ice physics', cucco_storm: 'Cucco attack', invert: 'Inverted D-pad',
   no_sword: 'No sword', no_item: 'No Y item', swap_by: 'B and Y swapped', one_hit: 'One-heart mode',
   no_magic: 'Magic locked', sprite_roll: 'Random sprite', sprite_fav: 'Random favourite sprite',
   msu_roll: 'Random MSU pack', seed_roll: 'New seed (same settings)', seed_preset: 'Random preset seed', seed_chaos: 'CHAOS seed',
@@ -310,8 +319,8 @@ function tickerData() {
     const secs = id in defaultSecs ? (+(cfg.durations || {})[id] > 0 ? +cfg.durations[id] : defaultSecs[id]) : 0;
     items.push({ gift, label: labels[id] || effectNames[id] || id, secs, icon: iconFor(gift) ? '/icons/' + encodeURIComponent(iconFor(gift)) : null });
   }
-  if (t.showLikes !== false && cfg.likes?.effect && cfg.likes?.every)
-    items.push({ gift: `${cfg.likes.every} likes`, label: labels[cfg.likes.effect] || effectNames[cfg.likes.effect] || cfg.likes.effect, secs: 0, icon: null, emoji: '❤' });
+  if (t.showLikes !== false) for (const l of cfg.likeTiers)
+    items.push({ gift: `${l.every} likes`, label: labels[l.effect] || effectNames[l.effect] || l.effect, secs: 0, icon: null, emoji: '❤' });
   for (const kind of ['follow', 'share']) if (t.showSocial !== false && cfg[kind])
     items.push({ gift: kind === 'follow' ? 'Follow' : 'Share', label: labels[cfg[kind]] || effectNames[cfg[kind]] || cfg[kind], secs: 0, icon: null, emoji: kind === 'follow' ? '➕' : '↗' });
   const tiers = (Array.isArray(cfg.coinTiers) ? cfg.coinTiers : []).filter((x) => x && +x.coins > 0 && x.effect).sort((a, b) => a.coins - b.coins);

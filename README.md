@@ -798,3 +798,13 @@ Rando Hub wouldn't be what it is without these people. Thank you!
 
 No ROMs are included; use your own legally obtained copy. Rando Hub is a fan project
 and is not affiliated with or endorsed by Nintendo.
+
+## License and permission
+
+Copyright (c) 2026 Hank (hugecrankhank). Rando Hub, including Crowd Control+, is
+licensed under the [PolyForm Strict License 1.0.0](LICENSE.md): free to use for
+noncommercial purposes, and (an added permission) on streams and videos, monetized ones
+included. Copying the code, changing it, sharing or re-hosting copies, or other
+commercial use needs written permission: open an issue titled **"Permission request"**
+on this repository. The parts by other people listed in Credits keep their own licenses.
+Details: [NOTICE.md](NOTICE.md).

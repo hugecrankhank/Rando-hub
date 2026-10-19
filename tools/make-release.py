@@ -9,7 +9,7 @@ The zip holds one folder, Rando-Hub-v<version>/, with:
     INSTRUCTIONS.txt, the Start files and serve.mjs   (release/)
     app/                 the whole site, as it's deployed
     Relays (optional)/   the Cloudflare Worker sources (relay/)
-    README.md, CHANGELOG.md
+    README.md, CHANGELOG.md, LICENSE.md, NOTICE.md
 
 Run it after the deploy steps (tools/update-hutch.py, tools/kara-bundle.py,
 tools/fetch-pyodide.sh) so app/ matches the website; the release workflow does.
@@ -23,7 +23,7 @@ REL = os.path.join(ROOT, 'release')
 
 # Not part of the app itself (they're placed elsewhere in the zip, or dev-only)
 APP_SKIP_TOP = {'.git', '.github', '.gitignore', '.nojekyll', 'release', 'tools', 'relay', 'crowd-plus', 'archive',
-                'dist', 'README.md', 'CHANGELOG.md', 'node_modules'}
+                'dist', 'README.md', 'CHANGELOG.md', 'LICENSE.md', 'NOTICE.md', 'node_modules'}
 APP_SKIP_PATHS = {'randomizer/test', 'randomizer/tools'}
 SKIP_NAMES = {'__pycache__', '.DS_Store', 'Thumbs.db', 'timer-state.json', 'node_modules'}
 
@@ -88,7 +88,7 @@ def main():
             p = os.path.join(REL, f)
             if os.path.isfile(p):
                 add(z, p, f, text_sub=f.endswith('.txt'), exe=f.endswith(('.command', '.sh')))
-        for f in ('README.md', 'CHANGELOG.md'):
+        for f in ('README.md', 'CHANGELOG.md', 'LICENSE.md', 'NOTICE.md'):
             if os.path.isfile(os.path.join(ROOT, f)):
                 add(z, os.path.join(ROOT, f), f)
         # the app
@@ -116,6 +116,11 @@ def main():
                 if r == 'EFFECTS-OVERVIEW.md':   # always the current list, never a stale copy
                     src = os.path.join(ROOT, 'crowd', 'README.md')
                 z.writestr(info, open(src, 'rb').read()); n2 += 1
+            for f in ('LICENSE.md', 'NOTICE.md'):   # the same license covers Crowd Control+
+                info = zipfile.ZipInfo('Crowd Control+/' + f, date_time=stamp)
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.external_attr = 0o644 << 16
+                z.writestr(info, open(os.path.join(ROOT, f), 'rb').read()); n2 += 1
         print(f'{out2}: {n2} files, {os.path.getsize(out2) / 1e6:.1f} MB')
     if missing:
         print('Note: built without ' + ', '.join(missing))

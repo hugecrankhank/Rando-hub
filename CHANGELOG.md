@@ -5,6 +5,20 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.4.0 (2026-10-18)
+
+- **Crowd Control+ is the only crowd control.** The Rando Hub zip no longer has a "Crowd
+  Control" folder; crowd control is the second download, `Crowd-Control-Plus-vX.zip`.
+  The old panel-less bridge is archived in `archive/crowd-control-standard` (and in
+  every release up to 1.3.7). Its `mapping.json` works as-is in Crowd Control+.
+  README, INSTRUCTIONS and release notes updated to match.
+- **Test buttons in both places:**
+  - Control panel → Gifts & effects → **Test any effect**: one button per effect the game
+    has, plus the mystery box and the boss-detour rescue.
+  - Game → ⋯ menu → Crowd effects: **Test one boss** (any of the 13), and while connected
+    to Crowd Control+, **Fake gift** (alert + effect) and **Mystery box**.
+- Boss tests pressed during a detour now wait their turn instead of being dropped.
+
 ## 1.3.7 (2026-10-18)
 
 - Boss detour to Ganon: fixed getting stuck in a black room until "couldn't reach the boss".

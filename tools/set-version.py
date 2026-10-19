@@ -24,7 +24,7 @@ if not (n1 and n2 and n3):
     sys.exit('Could not find every version spot in index.html')
 open(p, 'w', encoding='utf-8').write(s)
 
-p = os.path.join(ROOT, 'crowd', 'bridge', 'package.json')
+p = os.path.join(ROOT, 'crowd-plus', 'package.json')
 s = open(p, encoding='utf-8').read()
 s = re.sub(r'"version": "[^"]*"', f'"version": "{v}"', s, count=1)
 open(p, 'w', encoding='utf-8').write(s)

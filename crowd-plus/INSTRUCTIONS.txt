@@ -633,6 +633,18 @@ PREDICTIONS
   before it locks. When it's over, press "It happened" or "It didn't";
   the people who called it get a shout-out on stream. Just for fun.
 
+GT BIG KEY (Live games tab)
+  "Which Ganon's Tower chest has the big key?" Press Start guessing;
+  chat types !gt 1 to !gt 26 (one guess each; a new one replaces the
+  old). Guesses close when you open the first GT chest (or press Close
+  guesses). The game counts the GT chests you open; when the big key
+  turns up, that chest's number wins: exact guesses, or the closest if
+  nobody's exact. Add the "GT big key" overlay to show the guesses and
+  the winners. Needs Crowd effects on in the game. Bob's Torch isn't
+  counted (26 chests). Not for seeds with shuffled big keys (keysanity).
+  If the game couldn't count it (the game was loaded with the key
+  already found), type the chest number and press Set.
+
 Votes and predictions only count chat messages that are exactly the
 number or word (1, !vote 2, !yes ...), so normal chat isn't affected.
 

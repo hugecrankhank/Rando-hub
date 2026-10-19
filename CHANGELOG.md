@@ -5,6 +5,17 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.9.0 (2026-10-19)
+
+Crowd Control+:
+- **GT big key guessing game** (Live games tab): chat guesses which Ganon's Tower chest
+  has the big key (`!gt 1`–`!gt 26`, one guess each). The game counts the GT chests
+  opened (26 chests, not Bob's Torch; the same flags Hutch's tracker reads) and reports
+  the count when the big key arrives, so exact guesses win, or the closest. Guesses
+  close at the first GT chest (or by hand); the number can be set by hand if the game
+  couldn't count it. New "GT big key" overlay (guesses per chest, chests opened,
+  winners) and an optional "BIG KEY FOUND!" alert. Test button.
+
 ## 1.8.0 (2026-10-19)
 
 Crowd Control+:

@@ -1,6 +1,6 @@
 {
  "edition": "full",
- "version": "ae9416f1e010",
+ "version": "1aefad0588b9",
  "cache": "rando-hub-v1",
  "files": [
   "./",
@@ -22,6 +22,7 @@
   "offline.js",
   "phone.js",
   "popout.html",
+  "stream.html",
   "portal.html",
   "portal.js",
   "randomizer/app.js",

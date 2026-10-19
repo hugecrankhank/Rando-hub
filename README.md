@@ -302,6 +302,14 @@ weekly; `--check` shows what would change.
   the window with its first piece.
 - Each window remembers its size, position and options, and reconnects by itself
   when the main window reloads (a new ROM).
+- **Stream windows** opens two windows set up for capture in one click: items +
+  dungeons in one, both worlds side by side in the other (black background, fitted,
+  no menu bars). If the browser only allows one new window per click, click again
+  for the second. Click once more to put them back.
+- **Stream** opens one window with everything (items and dungeons on top, both
+  worlds below) for a single capture. Its ☰ at the top right sets the maps below or
+  beside the items and one background for both; drag the line between them to
+  resize. Each half has its own ☰ at its top left for item rows, Fit and Clean.
 - **Broadcast** and **Timer** open Hutch's own broadcast view (a stream overlay of
   items and dungeons) and timer, connected to the game the same way.
 - **Game only** hides everything but the game, edge to edge, for capture. Esc (or

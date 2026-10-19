@@ -1,9 +1,17 @@
 CROWD CONTROL+  -  WHAT'S NEW
 =============================
 
-Crowd Control+ is the regular Rando Hub Crowd Control with a control
-panel and stream overlays added. Every gift effect, big-donation seed
+Crowd Control+ is Rando Hub's crowd control: the gift bridge with a
+control panel and stream overlays. Every gift effect, big-donation seed
 roll and the subathon clock work exactly as before.
+
+NEW IN 1.4.0
+------------
+- Crowd Control+ is now Rando Hub's only crowd control. The old
+  panel-less "Crowd Control" folder is retired (see "Moving over" below).
+- Test buttons in both places: "Test any effect" on the Gifts & effects
+  tab (every effect, mystery box, rescue), and in the game's ... menu
+  "Test one boss", "Fake gift" and "Mystery box" next to the effect tests.
 
 NEW IN 1.2.0
 ------------
@@ -51,9 +59,9 @@ NEW IN 1.0
    red instead of gold.
 
 
-MOVING OVER FROM THE REGULAR CROWD CONTROL
-------------------------------------------
-1. Close the regular bridge's black window. (Only run one at a time.)
+MOVING OVER FROM THE OLD CROWD CONTROL (RETIRED IN 1.4.0)
+---------------------------------------------------------
+1. Close the old bridge's black window for good.
 2. Extract Crowd Control+ to its own folder.
 3. Copy your old mapping.json into it (say Yes to replace), so your gift
    setup comes along. timer-state.json can be copied the same way to

@@ -142,6 +142,12 @@
     <div id="unmapped"></div>
   </div>
 
+  <h2>TEST ANY EFFECT</h2>
+  <div class="card">
+    <p class="hint">Runs it in the game right now, as if a viewer sent it (the same tests are in the game's ⋯ menu → Crowd effects). The game must be connected and Link in normal play.</p>
+    <div id="fx-tests" class="row" style="flex-wrap:wrap;gap:6px"></div>
+  </div>
+
   <h2>BIG DONATIONS</h2>
   <p class="hint">A single donation worth at least this many coins (gift value x streak) does this instead of the gift's own effect. The highest one reached wins.</p>
   <div class="card"><table><thead><tr><th>Coins</th><th>Effect</th><th>Name on the gift list</th><th></th></tr></thead><tbody id="tier-rows"></tbody></table>
@@ -844,6 +850,16 @@ CC.on('live', (d) => {
   paintLive();
 });
 let pvPainted = false;
+let fxTestsKey = '';
+function paintFxTests() {
+  const list = (S.effects || []).slice().sort((a, b) => String(a.name).localeCompare(String(b.name)));
+  const key = list.map((e) => e.id + e.name).join('|');
+  if (key === fxTestsKey) return; fxTestsKey = key;
+  const el = $('fx-tests');
+  el.innerHTML = list.length ? list.map((e) => '<button class="small" data-fxtest="' + esc(e.id) + '" title="' + esc(e.id) + '">' + esc(e.name) + '</button>').join('')
+    : '<span class="hint">Open the game and turn on Crowd effects to list them.</span>';
+  el.querySelectorAll('[data-fxtest]').forEach((b) => b.onclick = () => call('test-effect', { effect: b.dataset.fxtest, user: ($('t-user') && $('t-user').value) || 'TestViewer' }, 'Sent ' + effName(b.dataset.fxtest) + ' to the game'));
+}
 
 // ── wiring ──
 let overlaysPainted = false;
@@ -853,7 +869,7 @@ CC.on('state', (d) => {
   if (!sDirty || !draft) { draft = JSON.parse(JSON.stringify(S.settings)); paintSettingsForms(); voices(); }
   if (!gDirty || !gdraft) { if (!gdraft || !gDirty) newGDraft(); paintGifts(); }
   if (!overlaysPainted) { overlaysPainted = true; paintOverlays(); }
-  paintLive();
+  paintLive(); paintFxTests();
   if (!pvPainted) { pvPainted = true; paintPvOpts(); }
 });
 CC.on('event', (d) => {

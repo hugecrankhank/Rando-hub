@@ -129,30 +129,36 @@ donations. There's also a **subathon clock** and a **scrolling gift list** for
 OBS / TikTok LIVE Studio. The ROM is never changed; any seed works.
 
 ```
-TikTok LIVE ──► TikFinity ──ws://localhost:21213──► crowd bridge ──ws://localhost:21214──► Rando Hub ──► Snes9x
+TikTok LIVE ──► TikFinity ──ws://localhost:21213──► Crowd Control+ ──ws://localhost:21214──► Rando Hub ──► Snes9x
+                                                         │
+                                                         └──► control panel + stream overlays (http://localhost:21214)
 ```
 
-Want alerts, goal bars and a control panel too? Use **Crowd Control+** (the second
-download on the [Releases page](https://github.com/hugecrankhank/Rando-hub/releases/latest));
-it does everything below plus a full streaming studio.
+Crowd control is **Crowd Control+**, the second download on the
+[Releases page](https://github.com/hugecrankhank/Rando-hub/releases/latest): the gift
+bridge plus a control panel and stream overlays (gift alerts with sounds, goal bars,
+top gifters, chat votes, team battles, mystery box, boss detours, read-aloud and more).
 
 **Setup (about 15 minutes, once):**
 
-1. Download the [latest release zip](https://github.com/hugecrankhank/Rando-hub/releases/latest)
-   and unzip it. Everything is in its **Crowd Control** folder (also in this
-   repository under [`crowd/bridge`](crowd/bridge)).
+1. Download **`Crowd-Control-Plus-v<version>.zip`** from the
+   [latest release](https://github.com/hugecrankhank/Rando-hub/releases/latest) and unzip it.
 2. Install [Node.js](https://nodejs.org) (LTS) and [TikFinity](https://tikfinity.zerody.one)
    (free), and log in to TikFinity with your TikTok account.
-3. Double-click **`start-bridge.bat`** (Mac/Linux: `node bridge.mjs`). It should
-   say *connected to TikFinity*.
+3. Double-click **`Start Crowd Control+.bat`** (Mac: the `.command` file). The control
+   panel opens in your browser at `http://localhost:21214/studio`.
 4. In Rando Hub on the **same PC**: **⋯ → Crowd effects** → turn on, address
    `ws://localhost:21214`. Allow local-network access if the browser asks.
-5. Test every effect with the buttons in that menu, then go live.
+5. Test effects from either place (the game's **⋯ → Crowd effects** or the control
+   panel's **Gifts & effects → Test any effect**), then go live.
 
-Which gift does what is set in `mapping.json` (it reloads by itself when saved).
-The beginner-friendly guide, with every gift, effect, the subathon clock and
-troubleshooting, is [`crowd/bridge/INSTRUCTIONS.txt`](crowd/bridge/INSTRUCTIONS.txt);
-the technical overview is [`crowd/README.md`](crowd/README.md).
+Gifts are set up in the control panel (no file editing). The beginner-friendly guide is
+[`crowd-plus/INSTRUCTIONS.txt`](crowd-plus/INSTRUCTIONS.txt); the technical overview of
+the effects is [`crowd/README.md`](crowd/README.md).
+
+The original panel-less Crowd Control is retired (it's kept in
+[`archive/crowd-control-standard`](archive/crowd-control-standard), and in every release up
+to v1.3.7). Its `mapping.json` works as-is in Crowd Control+.
 
 ## Downloads and versions
 
@@ -169,14 +175,13 @@ Rando-Hub-v1.0.0/
 ├── start-rando-hub.sh            (Linux)
 ├── serve.mjs                     tiny local web server the Start files use
 ├── app/                          the whole app, exactly as released
-├── Crowd Control/                bridge, mapping.json, gift icons, INSTRUCTIONS.txt
 ├── Relays (optional)/            Cloudflare Worker sources for your own relays
 ├── README.md
 └── CHANGELOG.md
 ```
 
-Streamers can also grab the second download, **`Crowd-Control-Plus-v<version>.zip`**:
-the crowd control bridge plus a control panel (`http://localhost:21214/studio`) and
+Streamers also grab the second download, **`Crowd-Control-Plus-v<version>.zip`**
+(crowd control): the gift bridge plus a control panel (`http://localhost:21214/studio`) and
 OBS / TikTok LIVE Studio overlays: gift alerts with sounds, goal bars, top gifters,
 recent events and chat command replies, plus reading chat aloud, chat votes, team
 battles, a mystery box, a combo meter, predictions, run stats, death tax, clip
@@ -543,7 +548,7 @@ GitHub Actions**.
 
 **Hosting somewhere other than `hugecrankhank.github.io`:** add your site's
 address to `ALLOWED` in both relay workers (and deploy your own relays, below),
-and to `allowedOrigins` in `crowd/bridge/mapping.json`. Kara's server only
+and to `allowedOrigins` in `crowd-plus/mapping.json`. Kara's server only
 answers sites she has allowed, so elsewhere her seeds are made in the browser.
 
 ### The seed relays
@@ -595,7 +600,9 @@ emu/                    Snes9x compiled to WebAssembly and its player, input, vi
 bridge/                 memory bridge to the tracker (sni-bridge.js) and the fake-SNI shim
 tracker/                Hutch's tracker (refreshed from his repository on every deploy)
 randomizer/             alttpr.com generator (JS port), Kara's branch, AVIANART, presets, sprites, MSU
-crowd/                  TikTok crowd control: effects.js (in the app) and bridge/ (runs on your PC)
+crowd/                  crowd control's game side: effects.js (in the app)
+crowd-plus/             Crowd Control+ (runs on your PC): gift bridge, control panel, stream overlays
+archive/                retired code kept for reference (the original panel-less crowd control)
 relay/                  Cloudflare Worker sources for the alttpr.com and AVIANART relays
 release/                what goes in the release zip besides the app (INSTRUCTIONS.txt, Start files)
 tools/                  deploy and release scripts
@@ -737,7 +744,7 @@ AlttpBridge.peek(0x7EF340, 32)   // dump inventory bytes ($7EF340+)
   AVIANART add entrance, door and overworld shuffles; for glitched logic, generate
   elsewhere and use **Load a seed** or **Load ROM…**.
 - **Changing ROMs reloads the page.** Your game is stashed first, so nothing is lost.
-- **Crowd control needs a PC** running the bridge (or an `https` tunnel to it for
+- **Crowd control needs a PC** running Crowd Control+ (or an `https` tunnel to it for
   phone play; see `crowd/README.md`). It changes the game mid-run, so it's not for races.
 - Saves live in the browser's storage on the site you play from (the website and a
   zip copy are separate). On iPhone/iPad, install it to the Home Screen to keep them safe.

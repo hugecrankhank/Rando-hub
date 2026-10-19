@@ -1,7 +1,7 @@
 /*
  * Crowd effects for the Snes9x player: lets TikTok LIVE viewers change the
  * game. Gifts, likes, follows and shares arrive from the TikTok bridge
- * (crowd/bridge/bridge.mjs, run on the streaming PC) over a WebSocket; each
+ * (Crowd Control+, crowd-plus/bridge.mjs, run on the streaming PC) over a WebSocket; each
  * one names an effect from the list below, which is queued and applied when
  * Link is in normal play (not in a menu, text box or transition).
  *
@@ -508,6 +508,7 @@
   var GAP_FRAMES = 45;         // ~0.75 s between effects, so each one is seen
   var MAX_QUEUE = 60;
   var waitT = 0;
+  var bossPick = 'ganon';
 
   // mapping.json can change how long timed effects last ("durations").
   var durations = {};
@@ -822,9 +823,9 @@
   // or CrowdEffects.detourTo('blind') in the console). Gifts still pick at random.
   function testBoss(key, user) {
     if (!BOSSES[key]) { feed('Unknown boss: ' + key, 'info'); return false; }
-    if (detour) { feed('Already on a boss detour (' + detour.boss.name + ')', 'info'); return false; }
-    EFFECTS._detour_test = { name: 'Boss detour: ' + BOSSES[key].name, good: false, detour: key };
-    return trigger('_detour_test', user || 'test', 'test');
+    var id = '_detour_' + key;   // one per boss, so queued tests keep their boss
+    EFFECTS[id] = { name: 'Boss detour: ' + BOSSES[key].name, good: false, detour: key };
+    return trigger(id, user || 'test', 'test');
   }
   function cancelDetour() { var c = core(); if (detour && c) endDetour(c, 'lost', 'DETOUR CANCELLED'); }
   var DETOUR_CSS =
@@ -1054,6 +1055,13 @@
         ' · ' + queue.length + ' queued' + (timed.length ? ' · active: ' + esc(timed.join(', ')) : '') + '</p>' +
       '<p class="hint">Test an effect (it runs when you return to the game):</p>' +
       '<div class="acts">' + tests + '</div>' +
+      '<div class="row" style="margin-top:6px"><span>Test one boss</span><span><select data-ext="cc-boss-pick">' +
+        Object.keys(BOSSES).map(function (k) { return '<option value="' + k + '"' + (k === bossPick ? ' selected' : '') + '>' + esc(BOSSES[k].name) + '</option>'; }).join('') +
+        '</select> <button type="button" data-ext="cc-boss-go">Go</button></span></div>' +
+      (status === 'connected'
+        ? '<div class="acts" style="margin-top:6px"><button type="button" data-ext="cc-plus" data-what="gift">Fake gift (alert + effect)</button>' +
+          '<button type="button" data-ext="cc-plus" data-what="mystery_box">Mystery box</button></div>'
+        : '<p class="hint">Connect to Crowd Control+ for the mystery box and fake-gift tests.</p>') +
       '<div class="acts" style="margin-top:6px"><button type="button" data-ext="cc-clear">Clear queue and timers</button></div>';
   }
   function menuClick(b, rr) {
@@ -1063,6 +1071,8 @@
     else if (a === 'cc-clear') { endAll(); queue.length = 0; paused = {}; cancelReroll(); }
     else if (a === 'cc-cancel-reroll') cancelReroll();
     else if (a === 'cc-end-detour') cancelDetour();
+    else if (a === 'cc-boss-go') { note('test button: boss ' + bossPick); testBoss(bossPick, 'test'); }
+    else if (a === 'cc-plus') { note('test via Crowd Control+: ' + b.dataset.what); send({ type: 'test', what: b.dataset.what }); feed('Sent to Crowd Control+: ' + (b.dataset.what === 'gift' ? 'fake gift' : 'mystery box'), 'info'); }
     rr();
   }
   function menuInput(el) {
@@ -1070,6 +1080,7 @@
     if (a === 'cc-enabled') { cfg.enabled = el.checked; saveCfg(); connect(); }
     else if (a === 'cc-feed') { cfg.feed = el.checked; saveCfg(); }
     else if (a === 'cc-alerts') { cfg.alerts = el.checked; saveCfg(); }
+    else if (a === 'cc-boss-pick') { bossPick = el.value; }
     else if (a === 'cc-show-timer') { cfg.showTimer = el.checked; saveCfg(); if (!el.checked && clockEl) { clockEl.remove(); clockEl = null; } }
     else if (a === 'cc-reroll-overlay') { cfg.rerollOverlay = el.checked; saveCfg(); if (!el.checked && bannerEl) { bannerEl.remove(); bannerEl = null; } }
     else if (a === 'cc-reroll') { cfg.allowReroll = el.checked; saveCfg(); if (!el.checked) cancelReroll(); rerender && rerender(); }

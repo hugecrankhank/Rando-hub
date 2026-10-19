@@ -164,6 +164,13 @@ function onGameMessage(text) {
     if (m.type === 'death') log(`☠ Link died (death #${m.deaths})`);
     if (m.type === 'music') log(`♪ music: ${m.pack || "the game's own"}`);
     try { studio.onGame(m); } catch (e) { log(`! control panel error (${m.type}): ${e && e.message}`); }
+  } else if (m.type === 'test') {
+    // test buttons in the game's menu that need Crowd Control+ (alerts, mystery box)
+    if (m.what === 'mystery_box') { log('  test from the game: mystery box'); fire('mystery_box', 'TestViewer', 'test'); }
+    else if (m.what === 'gift') {
+      const names = Object.keys(cfg.gifts || {}); const g = names[Math.floor(Math.random() * names.length)] || 'Rose';
+      log(`  test from the game: fake gift (${g})`); onGift('TestViewer', g, 0, 1, 0, { test: true, runEffect: true });
+    }
   } else if (m.type === 'applied') {
     log(`  ✓ applied ${m.effect}${m.user ? ' for ' + m.user : ''}`);
   }

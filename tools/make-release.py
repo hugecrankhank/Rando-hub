@@ -8,7 +8,6 @@ dist/Crowd-Control-Plus-v<version>.zip (crowd-plus/, if present)
 The zip holds one folder, Rando-Hub-v<version>/, with:
     INSTRUCTIONS.txt, the Start files and serve.mjs   (release/)
     app/                 the whole site, as it's deployed
-    Crowd Control/       crowd/bridge plus the effects overview
     Relays (optional)/   the Cloudflare Worker sources (relay/)
     README.md, CHANGELOG.md
 
@@ -23,9 +22,9 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 REL = os.path.join(ROOT, 'release')
 
 # Not part of the app itself (they're placed elsewhere in the zip, or dev-only)
-APP_SKIP_TOP = {'.git', '.github', '.gitignore', '.nojekyll', 'release', 'tools', 'relay', 'crowd-plus',
+APP_SKIP_TOP = {'.git', '.github', '.gitignore', '.nojekyll', 'release', 'tools', 'relay', 'crowd-plus', 'archive',
                 'dist', 'README.md', 'CHANGELOG.md', 'node_modules'}
-APP_SKIP_PATHS = {'crowd/bridge', 'randomizer/test', 'randomizer/tools'}
+APP_SKIP_PATHS = {'randomizer/test', 'randomizer/tools'}
 SKIP_NAMES = {'__pycache__', '.DS_Store', 'Thumbs.db', 'timer-state.json', 'node_modules'}
 
 
@@ -95,10 +94,7 @@ def main():
         # the app
         for src, r in walk(ROOT, app_skip):
             add(z, src, 'app/' + r)
-        # crowd control
-        for src, r in walk(os.path.join(ROOT, 'crowd', 'bridge')):
-            add(z, src, 'Crowd Control/' + r, exe=r.endswith('.sh'))
-        add(z, os.path.join(ROOT, 'crowd', 'README.md'), 'Crowd Control/EFFECTS-OVERVIEW.md')
+        # crowd control is the second download (Crowd Control+, below)
         # relays
         for src, r in walk(os.path.join(ROOT, 'relay')):
             add(z, src, 'Relays (optional)/' + r)

@@ -5,39 +5,44 @@ rupees, bombs, arrows, inverted controls, no sword and more. The ROM is never
 changed; any seed works.
 
 ```
-TikTok LIVE ──► TikFinity ──ws://localhost:21213──► bridge.mjs ──ws://localhost:21214──► game page ──► Snes9x RAM / buttons
+TikTok LIVE ──► TikFinity ──ws://localhost:21213──► Crowd Control+ ──ws://localhost:21214──► game page ──► Snes9x RAM / buttons
 ```
 
 - `effects.js` runs in the game page. It queues effects and applies them only
   in normal play (not in menus, text boxes or screen transitions), about
-  0.75 s apart, and shows a small feed on the game picture.
-- `bridge/bridge.mjs` runs on the PC you stream from. It hears your LIVE
-  through TikFinity (free) and forwards events using `bridge/mapping.json`.
+  0.75 s apart, and shows a small feed and gift cards on the game picture.
+- **Crowd Control+** (`crowd-plus/`, its own download) runs on the PC you stream
+  from. It hears your LIVE through TikFinity (free), turns gifts into effects
+  using `crowd-plus/mapping.json` (edited from its control panel), and runs the
+  control panel and stream overlays.
+
+The original panel-less bridge is retired and kept in `archive/crowd-control-standard`.
 
 ## Setup
 
 1. Install Node.js 20 or newer, and **TikFinity** (free, https://tikfinity.zerody.one).
 2. Open TikFinity, log in with your TikTok account, and leave it running. Its
    Events API / WebSocket port should be 21213 (the default).
-3. In `crowd/bridge`: double-click `start-bridge.bat` (or run `node bridge.mjs`).
-   No `npm install` is needed in TikFinity mode. Full steps: `bridge/INSTRUCTIONS.txt`.
-   (Windows PowerShell: use `npm.cmd install` / `npm.cmd start` if `npm` is blocked.)
-   It should print *connected to TikFinity*.
+3. Double-click `Start Crowd Control+.bat` in the Crowd Control+ folder (or run
+   `node bridge.mjs` there). The control panel opens at http://localhost:21214/studio.
+   Full steps: `crowd-plus/INSTRUCTIONS.txt`.
 4. In the game on the **same PC**: ⋯ menu → **Crowd effects** → turn on, with
    the address `ws://localhost:21214`. The status line should say
    *connected*. If the browser asks to allow access to devices on your local
    network, allow it.
-5. Go live. Map gifts to effects in `mapping.json`.
+5. Set gifts up on the control panel's **Gifts & effects** tab, then go live.
 
-Every gift that arrives is printed in the bridge window with its exact name,
-even unmapped ones, so you can copy names into `mapping.json`. The file
-reloads by itself when you save it.
+Every gift that arrives shows in the control panel's log with its exact name,
+even unmapped ones, with a one-click "add".
 
 ## Testing without going live
 
-- `npm run test-mode`, then type `gift Rose 3`, `like 600`, `follow`, or an
-  effect id like `invert`.
-- Or use the test buttons in ⋯ menu → Crowd effects (no bridge needed).
+- `Test mode (no TikTok).bat`, then type `gift Rose 3`, `like 600`, `follow`, or an
+  effect id like `invert` in the black window.
+- The game's ⋯ menu → Crowd effects has a test button for every effect (no
+  Crowd Control+ needed), plus "Test one boss".
+- The control panel has the same: **Gifts & effects → Test any effect**, and
+  **Live games → Test one boss**.
 
 ## Effects
 
@@ -127,7 +132,7 @@ as an OBS source at `/timer` (`?size=`, `?bg=0`, `?label=0`).
 While the bridge runs, `http://localhost:21214/ticker` is a scrolling bar of
 every mapped gift and its effect, for an OBS browser source or a TikTok LIVE
 Studio link source. `?height=`, `?speed=` and `?bg=0` adjust it. Gift
-pictures come from `bridge/icons/<Gift name>.png`.
+pictures come from `crowd-plus/icons/<Gift name>.png`.
 
 ## mapping.json
 

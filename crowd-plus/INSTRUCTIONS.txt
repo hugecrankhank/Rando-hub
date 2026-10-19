@@ -10,7 +10,7 @@ TikTok LIVE. When viewers send gifts, like, follow or share, things happen
 in your game: extra hearts, lost rupees, inverted controls, slippery ice,
 angry cuccos, extra enemies, even a brand-new seed.
 
-Crowd Control+ is everything the regular Crowd Control does, plus:
+Crowd Control+ is Rando Hub's crowd control: the gift bridge, plus:
 
   CONTROL PANEL   A page in your browser where you set everything up with
                   menus and buttons instead of editing files: which gift
@@ -91,10 +91,10 @@ STEP 1. Put this folder somewhere easy
   Right-click the .zip -> Extract All -> choose your Desktop.
   Run things from the extracted folder, never from inside the .zip.
 
-  Already using the regular Crowd Control? Keep it as it is; this is a
-  separate folder. Only run ONE of them at a time (they use the same
-  port). To bring your gift setup over, copy your old mapping.json into
-  this folder and say Yes to replace.
+  Used the old Crowd Control (the "Crowd Control" folder in Rando Hub
+  zips up to v1.3.7)? It's retired; this replaces it. Close its black
+  window for good, and copy your old mapping.json into this folder (say
+  Yes to replace) to keep your gift setup.
 
 STEP 2. Install Node.js (it runs Crowd Control+)
   Go to https://nodejs.org, download the "LTS" version, run the installer
@@ -174,8 +174,14 @@ GIFTS & EFFECTS
   from the menu, press Test to try it in the game, x to remove a gift,
   or type a new gift name and press Add gift. Gifts that show up on
   stream but aren't set up appear at the bottom with a + button.
+  "Test any effect" has a button for every effect the game has (plus the
+  mystery box and the boss-detour rescue).
   Also here: big-donation levels (new seeds by coins), likes / follows /
   shares, and how long timed effects last.
+
+  The same tests are in the game: ... menu -> Crowd effects. There you
+  also get "Test one boss", and, while connected, "Fake gift" (alert +
+  effect) and "Mystery box". Use whichever is handier.
   Press "Save gift setup" when done. It works right away, no restart.
 
 ALERTS

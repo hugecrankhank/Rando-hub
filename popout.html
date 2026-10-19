@@ -97,6 +97,9 @@
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var id = new URLSearchParams(location.search).get('id') || 'items';
+  // Inside the Stream window (stream.html), one of its two halves.
+  var embed = new URLSearchParams(location.search).get('embed') === '1' && window.parent !== window;
+  function shell() { try { return embed ? window.parent.UnifiedStream : null; } catch (e) { return null; } }
   var PREF_KEY = 'unified-kara-pop-' + id;
   var GEOM_KEY = 'unified-kara-geom-' + id;
   var pf = $('pf');
@@ -155,7 +158,10 @@
   });
 
   // ── the main window ───────────────────────────────────────────────────────
-  function main() { try { var o = window.opener; return o && !o.closed ? o : null; } catch (e) { return null; } }
+  function main() {
+    try { var o = window.opener || (embed && window.parent.opener); return o && !o.closed ? o : null; }
+    catch (e) { return null; }
+  }
   function api() { var o = main(); try { return o && o.UnifiedDesktop; } catch (e) { return null; } }
   function message(text) { var m = $('msg'); m.hidden = !text; if (text) m.textContent = text; }
 
@@ -166,13 +172,17 @@
     var a = api(), r;
     if (!a) {
       lost++;
-      if (!main()) message('The game window was closed. Open Rando Hub again and pop pieces out from there.');
+      if (!main()) message(embed ? 'The game window was closed. Open Rando Hub again and press Stream there.' : 'The game window was closed. Open Rando Hub again and pop pieces out from there.');
       else if (lost > 3) message('Waiting for the game window…');
       return;
     }
     try { r = a.claim(id, window); } catch (e) { return; }
-    if (r === null) { window.close(); return; }      // nothing here any more
+    if (r === null) {                                   // nothing here any more
+      if (embed) { var sh = shell(); if (sh) { try { sh.empty(id); } catch (e) {} } return; }
+      window.close(); return;
+    }
     if (!r) return;
+    if (embed) { var sh2 = shell(); if (sh2) { try { sh2.filled(id); } catch (e) {} } }
     lost = 0;
     if (r.key !== key) {
       if (key !== null) reset();                       // the main window reloaded
@@ -342,7 +352,7 @@
 
   // ── remember where this window is ─────────────────────────────────────────
   var lastGeom = '';
-  setInterval(function () {
+  if (!embed) setInterval(function () {
     var g = { x: window.screenX, y: window.screenY, w: window.innerWidth, h: window.innerHeight };
     var s = JSON.stringify(g);
     if (s !== lastGeom && g.w > 0 && g.h > 0) { lastGeom = s; try { localStorage.setItem(GEOM_KEY, s); } catch (e) {} }
@@ -353,6 +363,13 @@
     reset: reset,
     changed: changed,
     refit: fitSoon,
+    // (the Stream window sets the background of both its halves at once)
+    setPref: function (k, v) {
+      prefs[k] = v; savePrefs();
+      if (k === 'bg') $('o-bg').value = v;
+      restyle(); fitSoon();
+    },
+    prefs: function () { return prefs; },
   };
 })();
 </script>

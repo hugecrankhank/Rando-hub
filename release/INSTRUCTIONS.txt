@@ -131,7 +131,11 @@ PART 4 - HOW THE APP WORKS (THE SHORT VERSION)
                            buttons below (sideways: game left, tracker right)
                  Tablet / Stacked   for iPads and tablets
                  Desktop   tracker pieces can pop out into their own
-                           windows (handy for streaming)
+                           windows (handy for streaming). Two ready-made
+                           stream setups: "Stream windows" opens two
+                           windows (items + dungeons, and both maps);
+                           "Stream" opens one window with all of it,
+                           for a single capture in OBS.
 
   Extras       Reroll (new seed, same settings), Link sprites from the
                alttpr.com library, MSU-1 music packs, Resume last game,

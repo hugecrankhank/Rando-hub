@@ -5,6 +5,17 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.7.0 (2026-10-18)
+
+Stream layouts for the tracker (Desktop layout), two ways:
+- **Stream windows:** one click opens two windows set up for capture: items + dungeons
+  in one, the Light and Dark World side by side in the other. Black background,
+  fitted to the window, menu bars hidden (all changeable in each window's options).
+  Click again to put them back.
+- **Stream:** one window with everything (items and dungeons on top, both worlds
+  below) for a single OBS capture. Maps below or beside the items, a divider you can
+  drag, one background for both.
+
 ## 1.6.0 (2026-10-18)
 
 New crowd control, from playtester requests:

@@ -49,7 +49,20 @@
   var STATE_KEY = 'unified-kara-windows';  // { place: {piece: id}, wins: {id: tracker} }
   var GEOM_KEY = 'unified-kara-geom-';     // + window id: size and place
   var WIDTH_KEY = 'unified-kara-dock-w';   // width of the tracker column
-  var DEFAULT_SIZE = { items: { w: 640, h: 200 }, dungeons: { w: 760, h: 150 }, light: { w: 480, h: 500 }, dark: { w: 480, h: 500 } };
+  var DEFAULT_SIZE = { items: { w: 640, h: 200 }, dungeons: { w: 760, h: 150 }, light: { w: 480, h: 500 }, dark: { w: 480, h: 500 },
+    'pair-items': { w: 760, h: 340 }, 'pair-maps': { w: 1000, h: 510 }, stream: { w: 1000, h: 860 } };
+
+  // Ready-made stream layouts (like the broadcast setups streamers use):
+  //   pair    two windows: items + dungeons, and both worlds side by side
+  //   stream  one window with all of it, for a single capture (stream.html
+  //           holds two pop-out pages, one per tracker)
+  var LAYOUTS = {
+    pair: [{ id: 'pair-items', tracker: 'items', pieces: ['items', 'dungeons'] },
+           { id: 'pair-maps', tracker: 'map', pieces: ['light', 'dark'] }],
+    stream: [{ id: 'stream-items', tracker: 'items', pieces: ['items', 'dungeons'] },
+             { id: 'stream-maps', tracker: 'map', pieces: ['light', 'dark'] }],
+  };
+  var STREAM_PREFS = { arrange: 'side', rows: 'auto', bg: '#000000', fit: true, clean: true, pinned: false };
 
   // A new id for every load of this page; pop-outs use it to notice a reload.
   var pageId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -208,6 +221,73 @@
     return w;
   }
 
+  // A window's options start out set for a stream capture (black, fitted,
+  // no menu bars), unless it has been set up before.
+  function preset(id) {
+    try {
+      if (!localStorage.getItem('unified-kara-pop-' + id)) localStorage.setItem('unified-kara-pop-' + id, JSON.stringify(STREAM_PREFS));
+    } catch (e) {}
+  }
+  function layoutOpen(name) {
+    return LAYOUTS[name].some(function (L) { return !!wins[L.id]; });
+  }
+  function closeLayout(name) {
+    LAYOUTS[name].forEach(function (L) { piecesIn(L.id).forEach(function (p) { delete place[p]; }); });
+    closeEmpty(); save(); sync();
+  }
+  function assign(L, w) {
+    wins[L.id] = { tracker: L.tracker, win: w, gone: 0, wait: w ? 0 : Date.now() + 15000 };
+    L.pieces.forEach(function (p) { place[p] = L.id; });
+  }
+  // Two windows from one click. Some browsers allow only one new window per
+  // click: then the second opens on the next click of the same button.
+  var pairPending = null;
+  function openPair() {
+    if (!active) return;
+    if (pairPending) {
+      var L2 = pairPending, w2 = window.open('popout.html?id=' + L2.id, 'alttpr-desktop-' + L2.id, geom(L2.id));
+      if (!w2) { blocked(); return; }
+      pairPending = null; assign(L2, w2); closeEmpty(); save(); paint(); sync();
+      return;
+    }
+    if (layoutOpen('pair')) return closeLayout('pair');
+    var got = 0;
+    LAYOUTS.pair.forEach(function (L) {
+      preset(L.id);
+      var w = window.open('popout.html?id=' + L.id, 'alttpr-desktop-' + L.id, geom(L.id));
+      if (!w) { if (got) pairPending = L; return; }
+      got++; assign(L, w);
+    });
+    if (!got) { blocked(); return; }
+    closeEmpty(); save(); paint(); sync();
+    if (pairPending) pairNote();
+  }
+  function pairNote() {
+    var n = $('popup-note');
+    if (!n) return;
+    if (n.__text === undefined) n.__text = n.textContent;
+    n.textContent = 'Your browser opened one window. Click Stream windows again for the second one (or allow pop-ups for this site so both open at once).';
+    n.hidden = false;
+    clearTimeout(n.__t);
+    n.__t = setTimeout(function () { n.hidden = true; }, 9000);
+  }
+  var streamWin = null;
+  function openStream() {
+    if (!active) return;
+    if (layoutOpen('stream')) {
+      closeLayout('stream');
+      if (streamWin && !closed(streamWin)) { try { streamWin.close(); } catch (e) {} }
+      return;
+    }
+    LAYOUTS.stream.forEach(function (L) { preset(L.id); });
+    var w = window.open('stream.html', 'alttpr-stream', geom('stream'));
+    if (!w) { blocked(); return; }
+    streamWin = w;
+    LAYOUTS.stream.forEach(function (L) { assign(L, null); });   // its frames claim them
+    closeEmpty(); save(); paint(); sync();
+    try { w.focus(); } catch (e) {}
+  }
+
   function dock(p) {
     if (!place[p]) return;
     delete place[p];
@@ -275,6 +355,8 @@
   function blocked() {
     var n = $('popup-note');
     if (!n) return;
+    if (n.__text === undefined) n.__text = n.textContent;
+    n.textContent = n.__text;
     n.hidden = false;
     clearTimeout(n.__t);
     n.__t = setTimeout(function () { n.hidden = true; }, 9000);
@@ -367,6 +449,9 @@
       btn.title = isOut(p) ? PIECES[p].label + ' is in its own window. Click to put it back here.'
                            : 'Open ' + PIECES[p].label + ' in its own window';
     });
+    var sp = $('open-stream-pair'), so = $('open-stream');
+    if (sp) sp.classList.toggle('on', active && layoutOpen('pair'));
+    if (so) so.classList.toggle('on', active && layoutOpen('stream'));
     var ia = active && !docked('items'), ma = active && !docked('map');
     b.classList.toggle('items-away', ia);
     b.classList.toggle('map-away', ma);
@@ -463,6 +548,8 @@
     var g = $('game-only-btn'); if (g) g.addEventListener('click', function () { gameOnly(true); });
     var x = $('exit-game-only'); if (x) x.addEventListener('click', function () { gameOnly(false); });
     var bc = $('open-broadcast'); if (bc) bc.addEventListener('click', function () { openExtra('broadcast'); });
+    var sp = $('open-stream-pair'); if (sp) sp.addEventListener('click', openPair);
+    var so = $('open-stream'); if (so) so.addEventListener('click', openStream);
     var tm = $('open-timer'); if (tm) tm.addEventListener('click', function () { openExtra('timer'); });
     initSplit();
     paint();
@@ -503,5 +590,7 @@
     sync: sync,
     gameOnly: gameOnly,
     openExtra: openExtra,
+    openPair: openPair,
+    openStream: openStream,
   };
 })();

@@ -1,5 +1,6 @@
 {
-  "source": "tikfinity",
+  "source": "local",
+  "username": "",
   "maxPerGift": 5,
 
   "gifts": {

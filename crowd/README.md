@@ -5,14 +5,16 @@ rupees, bombs, arrows, inverted controls, no sword and more. The ROM is never
 changed; any seed works.
 
 ```
-TikTok LIVE ──► TikFinity ──ws://localhost:21213──► Crowd Control+ ──ws://localhost:21214──► game page ──► Snes9x RAM / buttons
+TikTok LIVE ──► your LIVE page (Chrome/Edge) ──► Crowd Control+ ──ws://localhost:21214──► game page ──► Snes9x RAM / buttons
 ```
 
 - `effects.js` runs in the game page. It queues effects and applies them only
   in normal play (not in menus, text boxes or screen transitions), about
   0.75 s apart, and shows a small feed and gift cards on the game picture.
 - **Crowd Control+** (`crowd-plus/`, its own download) runs on the PC you stream
-  from. It hears your LIVE through TikFinity (free), turns gifts into effects
+  from. It hears your LIVE through the **local signer** (recommended: your own LIVE
+  page in a Chrome/Edge window it opens, read over Chrome's debugging connection,
+  `crowd-plus/localsigner.mjs`) or, as a backup, TikFinity (free app), turns gifts into effects
   using `crowd-plus/mapping.json` (edited from its control panel), and runs the
   control panel and stream overlays.
 
@@ -20,11 +22,11 @@ The original panel-less bridge is retired and kept in `archive/crowd-control-sta
 
 ## Setup
 
-1. Install Node.js 20 or newer, and **TikFinity** (free, https://tikfinity.zerody.one).
-2. Open TikFinity, log in with your TikTok account, and leave it running. Its
-   Events API / WebSocket port should be 21213 (the default).
+1. Install Node.js 20 or newer. Have Chrome or Edge installed.
+2. (Backup only) TikFinity (free, https://tikfinity.zerody.one), logged in, port 21213.
 3. Double-click `Start Crowd Control+.bat` in the Crowd Control+ folder (or run
    `node bridge.mjs` there). The control panel opens at http://localhost:21214/studio.
+   On its Dashboard, type your TikTok name and click Connect (local signer).
    Full steps: `crowd-plus/INSTRUCTIONS.txt`.
 4. In the game on the **same PC**: ⋯ menu → **Crowd effects** → turn on, with
    the address `ws://localhost:21214`. The status line should say

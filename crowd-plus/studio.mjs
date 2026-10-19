@@ -312,6 +312,8 @@ export function createStudio(ctx) {
         ctx.saveCfg(patch); log('gift setup saved from the panel'); return;
       }
       case 'test-effect': ctx.fire(String(a.effect || ''), a.user || 'test', 'test'); return;
+      case 'connect': ctx.connectSource && ctx.connectSource(String(a.source || ''), typeof a.username === 'string' ? a.username.slice(0, 40) : undefined); return;
+      case 'open-live': ctx.openLive && ctx.openLive(); return;
       case 'test-boss': if (ctx.testBoss) ctx.testBoss(String(a.boss || ''), a.user || 'test'); return;
       case 'simulate': {
         const u = a.user || 'TestViewer';

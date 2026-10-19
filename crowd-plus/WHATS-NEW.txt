@@ -5,6 +5,16 @@ Crowd Control+ is Rando Hub's crowd control: the gift bridge with a
 control panel and stream overlays. Every gift effect, big-donation seed
 roll and the subathon clock work exactly as before.
 
+NEW IN 1.5.0
+------------
+- LOCAL SIGNER (recommended): no TikFinity needed. Type your TikTok name
+  on the Dashboard and click Connect. Crowd Control+ opens your LIVE page
+  in its own Chrome / Edge window (log in once, keep it open, it's muted)
+  and reads gifts, likes, follows, shares and chat from it. Free, no keys.
+- TikFinity stays as a one-click backup if a TikTok update breaks the
+  local signer: Dashboard -> TikTok connection -> "TikFinity (backup)".
+- Old mapping.json files keep using TikFinity until you switch.
+
 NEW IN 1.4.0
 ------------
 - Crowd Control+ is now Rando Hub's only crowd control. The old

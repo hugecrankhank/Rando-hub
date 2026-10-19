@@ -5,6 +5,14 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.7.1 (2026-10-19)
+
+- **License:** Rando Hub and Crowd Control+ are now under the PolyForm Strict License
+  1.0.0 (`LICENSE.md`), with added permission to use them on streams and videos,
+  monetized ones included (`NOTICE.md`). Anything beyond that (copying code, changes,
+  re-hosting, commercial use) needs permission: open a "Permission request" issue.
+  Other people's parts keep their own licenses. Both zips now include the license.
+
 ## 1.7.0 (2026-10-18)
 
 Stream layouts for the tracker (Desktop layout), two ways:

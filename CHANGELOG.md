@@ -13,6 +13,13 @@ played again later.
   the icon when you Add to Home Screen, so an icon already there changes once it's removed and
   added again.
 - **No "Light World" / "Dark World" names over Mudora's maps** any more, on any device.
+- **Zelda 1's overworld map works like Mudora's:** drawn from the ROM at full detail (sharp
+  pixels when zoomed in), zoom with the wheel or a pinch, drag to move, double-tap or ⟲ for the
+  whole map. Every check is a pin on its own square, read from the ROM: the cave mouth, bombable
+  wall, burnable bush, pushed rock or armos that opens it, the secret armos stairs and the armos
+  item, and the Level 7 lake's stairs. Link is a blinking dot where he stands, and zoomed in the
+  view follows him to a new screen. On phones the map takes the panel's height. Tap a pin (or a
+  screen) for the same menu as before. (On the website; the 1.10.2 download was made before it.)
 
 ## 1.10.1 (2026-10-25)
 

@@ -5,6 +5,14 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.10.1 (2026-10-25)
+
+- **Zelda 1 and The Guardian Legend live in Rando Hub now** (`z1r/`, `glr/`, each a complete
+  app with its README). The separate repositories they started in were for beta testing and
+  are archived, so deploys no longer copy them in.
+- **"◂ Zelda 3" is now just "Zelda 3"** in Zelda 1 and GLR: with three games, the buttons are
+  plain names.
+
 ## 1.10.0 (2026-10-25)
 
 Everything from the beta since 1.9.0 (its full notes are in the

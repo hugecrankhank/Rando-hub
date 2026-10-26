@@ -72,6 +72,7 @@ function log(...m) { console.log(new Date().toLocaleTimeString(), ...m); }
 // ── tiny WebSocket server (text frames only, which is all we need) ─────────
 const clients = new Set();
 let knownEffects = null;   // ids the game reported in its hello
+let gameName = '';         // 'Zelda 3' or 'Zelda 1', from that hello
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
@@ -154,19 +155,24 @@ process.on('unhandledRejection', (e) => { try { log(`! error, still running: ${e
 function onGameMessage(text) {
   let m; try { m = JSON.parse(text); } catch { return; }
   if (m.type === 'hello') {
+    const app = m.app === 'z1r' ? 'Zelda 1' : 'Zelda 3';
+    if (gameName && gameName !== app) log(`🎮 game switched to ${app}: the ticker now lists ${app}'s effects`);
+    gameName = app;
     knownEffects = new Set((m.effects || []).map((e) => e.id));
     for (const e of m.effects || []) if (e.name) effectNames[e.id] = e.name;
     sendDurations();
     broadcast({ type: 'timer', ...timerView() });
     studio.pushState();
-    const named = [...new Set(Object.values(cfg.gifts).concat(cfg.follow, cfg.share, ...cfg.likeTiers.map((t) => t.effect)).filter(Boolean))];
+    const named = [...new Set(Object.values(cfg.gifts).concat(cfg.follow, cfg.share, cfg.superfan, cfg.community, ...cfg.likeTiers.map((t) => t.effect)).filter(Boolean))];
     for (const id of named) {
       if (knownEffects.has(id) || id === 'mystery_box' || id === 'detour_rescue') continue;
       const fix = resolveEffect(id);
       log(fix ? `mapping.json: "${id}" isn't an effect name, using "${fix}" (fix the spelling to silence this)`
               : `mapping.json: "${id}" isn't an effect the game has. Type "list" in --test mode to see them all.`);
     }
-  } else if (m.type === 'run' || m.type === 'death' || m.type === 'music' || m.type === 'detour') {
+  } else if (m.type === 'run' || m.type === 'death' || m.type === 'music' || m.type === 'detour' || m.type === 'seed' || m.type === 'reveal') {
+    if (m.type === 'reveal') log(`🔮 revealed: ${m.item} at ${m.loc}${m.user ? ' (' + m.user + ')' : ''}`);
+    if (m.type === 'seed' && m.seed) log(`🎲 seed: ${m.seed.what || m.seed.name}${m.seed.how ? ' (' + m.seed.how + (m.seed.by ? ', ' + m.seed.by : '') + ')' : ''}`);
     if (m.type === 'detour') log(m.phase === 'start' ? `⚔ boss detour: ${m.boss}${m.user ? ' (sent by ' + m.user + ')' : ''}` : `⚔ boss detour over: ${m.result}`);
     if (m.type === 'death') log(`☠ Link died (death #${m.deaths})`);
     if (m.type === 'music') log(`♪ music: ${m.pack || "the game's own"}`);
@@ -259,6 +265,7 @@ const extraIcons = new Map();   // gift pictures TikTok sends with the gift (whe
 let likeTotal = 0;   // likes this session (each like trigger fires when it passes a multiple)
 function onLike(user, n, extra = {}) {
   studio.record({ type: 'like', user, nickname: extra.nickname, count: n, test: !!extra.test });
+  if (!extra.test || extra.runEffect) timerAddLikes(user, n);
   // every trigger counts on its own: 300 → +1 heart, 500 → magic, 2000 → full heal…
   const before = likeTotal; likeTotal += n;
   for (const t of cfg.likeTiers) {
@@ -266,18 +273,22 @@ function onLike(user, n, extra = {}) {
     for (let i = 0; i < times; i++) fire(t.effect, user, `${t.every} likes`);
   }
 }
+// follow, share, superfan (a new Super Fan), community (a new community / fan club member)
+const SOCIAL_LABEL = { follow: 'Followed', share: 'Shared', superfan: 'Super Fan', community: 'Joined the community' };
 function onSocial(kind, user, extra = {}) {
   const key = kind + ':' + user, now = Date.now();
   if (now - (cooldown.get(key) || 0) < 10 * 60 * 1000) return;   // once per viewer per 10 min
   cooldown.set(key, now);
   log(`${kind}: ${user}`);
+  if (!extra.test || extra.runEffect) timerAddFor(kind, user);
   const effect = cfg[kind];
-  const done = effect && (!extra.test || extra.runEffect) ? fire(effect, user, kind === 'follow' ? 'Followed' : 'Shared') : effect || null;
+  const done = effect && (!extra.test || extra.runEffect) ? fire(effect, user, SOCIAL_LABEL[kind] || kind) : effect || null;
   studio.record({ type: kind, user, nickname: extra.nickname, avatar: extra.avatar, effect: done, effectName: done ? (effectNames[done] || done) : '', test: !!extra.test });
 }
 function onChat(user, text, extra = {}) {
   const e = studio.record({ type: 'chat', user, nickname: extra.nickname, avatar: extra.avatar, text, test: !!extra.test });
   if (e.command) log(`chat command ${e.command.cmd} from ${user}`);
+  if (!extra.test || extra.runEffect) timerAddChat(user);
 }
 
 // ── durations and the scrolling gift list ──────────────────────────────────
@@ -290,20 +301,29 @@ const effectNames = {
   heal_full: 'Full heal', heal_1: '+1 heart', hurt_2: '-2 hearts', hp_1: 'Down to 1 heart',
   magic_full: 'Refill magic', magic_drain: 'Drain magic', rupees_plus: '+50 rupees', rupees_minus: '-50 rupees',
   bombs_plus: '+10 bombs', bombs_none: 'Lose all bombs', arrows_plus: '+10 arrows', arrows_none: 'Lose all arrows',
-  enemy_spawn: 'Extra enemy', enemy_random: 'Random enemy', magic_small: 'Small magic refill',
+  enemy_spawn: 'Extra enemy', enemy_random: 'Random enemy', enemy_any: 'Any enemy (loads its graphics)', magic_small: 'Small magic refill',
   warp_dungeon: 'Warp to a random dungeon', warp_flute: 'Flute warp (random spot)', warp_random: 'Random warp (flute spot or dungeon)',
   insta_kill: 'Instant death', ice: 'Ice physics', cucco_storm: 'Cucco attack', invert: 'Inverted D-pad',
-  no_sword: 'No sword', no_item: 'No Y item', swap_by: 'B and Y swapped', one_hit: 'One-heart mode',
-  no_magic: 'Magic locked', sprite_roll: 'Random sprite', sprite_fav: 'Random favourite sprite',
+  no_sword: 'No sword', no_item: 'No Y item', swap_by: 'B and Y swapped', one_hit: 'One-hit KO',
+  no_magic: 'Magic locked', shield_off: 'Shield gone', shield_steal: 'Shield stolen', shield_down: 'Shield downgrade', shield_up: 'Shield upgrade',
+  sword_off: 'Sword gone', sword_down: 'Sword downgrade', sword_up: 'Sword upgrade', sword_steal: 'Sword stolen', item_off: 'Item gone (random item)', tunic_up: 'Tunic upgrade', tunic_down: 'Tunic downgrade', heart_add: '+1 heart container', heart_remove: '-1 heart container',
+  sprite_roll: 'Random sprite', sprite_fav: 'Random favourite sprite',
   msu_roll: 'Random MSU pack', seed_roll: 'New seed (same settings)', seed_preset: 'Random preset seed', seed_chaos: 'CHAOS seed',
   mirror: 'Mirror mode', upside_down: 'Upside down', wobble: 'Drunk wobble', tiny: 'Tiny screen', crt: 'Retro CRT',
   speed_up: 'Speed up (1.5x)', slow_mo: 'Slow motion', freeze: 'Freeze!', fairy: 'Fairy in a bottle', bee_bottle: 'Bee in a bottle',
   pink_link: 'Pink Link', music_roulette: 'Music roulette', mystery_box: 'Mystery box (random effect)',
+  spooky_night: 'Spooky night', ghost_link: 'Ghost Link', pumpkin_link: 'Pumpkin Link', haunted_lights: 'Haunted lights',
+  blood_drip: 'Blood drip', spider_web: 'Spiderwebs', monster_mash: 'Monster mash (enemies → bats / mummies)',
+  reveal_item: 'Reveal a go-mode item', lights_on: 'Lights on!', lights_out: 'Lights out!', spooky_monster: 'Spooky monster', haunting: 'Haunting! (3 spooky monsters)', trick_or_treat: 'Trick or treat!', spooky_sprite: 'Spooky sprite',
   boss_ganon: 'Boss detour: Ganon', boss_aga: 'Boss detour: Agahnim', boss_random: 'Boss detour: random boss', detour_rescue: 'Rescue Link from a boss detour',
 };
-const defaultSecs = { ice: 20, cucco_storm: 30, invert: 20, no_sword: 20, no_item: 20, swap_by: 20, one_hit: 30, no_magic: 30,
+// Effects that can hurt a run for good: the panel asks before one goes on a gift.
+const effectWarnings = {
+  sword_steal: 'Sword stolen can make the seed unbeatable. If every sword has already been found, there is none left to get it back, and Agahnim\'s barrier and Ganon both need a sword. The next sword found also only gives the Fighter\'s Sword.',
+};
+const defaultSecs = { ice: 20, cucco_storm: 30, invert: 20, no_sword: 20, no_item: 20, swap_by: 20, one_hit: 30, no_magic: 30, shield_off: 30, sword_off: 30, sword_down: 30, item_off: 30,
   mirror: 20, upside_down: 15, wobble: 20, tiny: 20, crt: 30, speed_up: 20, slow_mo: 15, freeze: 3, pink_link: 60,
-  boss_ganon: 60, boss_aga: 60, boss_random: 60 };
+  boss_ganon: 60, boss_aga: 60, boss_random: 60, spooky_night: 45, ghost_link: 60, pumpkin_link: 60, haunted_lights: 20, lights_on: 60, lights_out: 30, blood_drip: 20, spider_web: 30 };
 
 function tickerData() {
   const t = cfg.ticker || {};
@@ -313,19 +333,32 @@ function tickerData() {
     const want = gift.toLowerCase();
     return icons.find((f) => f.replace(/\.[^.]+$/, '').toLowerCase() === want) || null;
   };
+  // Only what the game that's connected now can do (Zelda 3 and Zelda 1 have
+  // different effects), named the way that game names them: when a reroll
+  // switches games, the new game's hello changes the list within a few seconds.
+  const can = (id) => {
+    if (!knownEffects || id === 'mystery_box') return true;
+    if (id === 'detour_rescue') return knownEffects.has('boss_random') || knownEffects.has('boss_ganon');
+    return knownEffects.has(id);
+  };
   const items = [];
+  // gifts the streamer unticked "On ticker" for (Gifts & effects tab) still work, they just don't scroll by
+  const hidden = new Set((Array.isArray(t.hidden) ? t.hidden : []).map((n) => String(n).toLowerCase()));
   for (const [gift, raw] of Object.entries(cfg.gifts || {})) {
     const id = resolveEffect(raw) || raw;
+    if (!can(id) || hidden.has(gift.toLowerCase())) continue;
     const secs = id in defaultSecs ? (+(cfg.durations || {})[id] > 0 ? +cfg.durations[id] : defaultSecs[id]) : 0;
     items.push({ gift, label: labels[id] || effectNames[id] || id, secs, icon: iconFor(gift) ? '/icons/' + encodeURIComponent(iconFor(gift)) : null });
   }
-  if (t.showLikes !== false) for (const l of cfg.likeTiers)
+  if (t.showLikes !== false) for (const l of cfg.likeTiers) if (can(resolveEffect(l.effect) || l.effect))
     items.push({ gift: `${l.every} likes`, label: labels[l.effect] || effectNames[l.effect] || l.effect, secs: 0, icon: null, emoji: '❤' });
-  for (const kind of ['follow', 'share']) if (t.showSocial !== false && cfg[kind])
-    items.push({ gift: kind === 'follow' ? 'Follow' : 'Share', label: labels[cfg[kind]] || effectNames[cfg[kind]] || cfg[kind], secs: 0, icon: null, emoji: kind === 'follow' ? '➕' : '↗' });
+  const SOCIAL_TICK = { follow: ['Follow', '➕'], share: ['Share', '↗'], superfan: ['Super Fan', '⭐'], community: ['New community member', '🤝'] };
+  for (const kind of Object.keys(SOCIAL_TICK)) if (t.showSocial !== false && cfg[kind] && can(resolveEffect(cfg[kind]) || cfg[kind]))
+    items.push({ gift: SOCIAL_TICK[kind][0], label: labels[cfg[kind]] || effectNames[cfg[kind]] || cfg[kind], secs: 0, icon: null, emoji: SOCIAL_TICK[kind][1] });
   const tiers = (Array.isArray(cfg.coinTiers) ? cfg.coinTiers : []).filter((x) => x && +x.coins > 0 && x.effect).sort((a, b) => a.coins - b.coins);
-  for (const x of tiers) {
+  if (t.showTiers !== false) for (const x of tiers) {
     const id = resolveEffect(x.effect) || x.effect;
+    if (!can(id)) continue;
     items.push({ gift: `${Number(x.coins).toLocaleString('en-US')}+ coins`, label: x.label || labels[id] || effectNames[id] || id, secs: 0, icon: null, emoji: '🪙' });
   }
   const tm = cfg.timer || {};
@@ -333,60 +366,86 @@ function tickerData() {
     const [g, l] = rateText().split(' = ');
     items.push({ gift: g, label: l + ' on the clock', secs: 0, icon: null, emoji: '⏱' });
   }
-  return { title: t.title ?? 'GIFT EFFECTS', speed: t.speed || 70, items };
+  return { title: t.title ?? 'GIFT EFFECTS', speed: t.speed || 70, rows: Math.max(1, Math.min(4, +t.rows || 1)), items };
 }
 
 const TICKER_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>Gift effects</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
-  /* For OBS / TikTok LIVE Studio browser sources. ?height=80 sets the bar
+  /* For OBS / TikTok LIVE Studio browser sources. ?height=80 sets each row's
      height, ?bg=0 makes the bar background transparent, ?speed=90 overrides
-     the scroll speed (pixels per second). */
+     the scroll speed (pixels per second), ?rows=2 overrides the rows set on
+     the Gifts tab. Each row is 72 px high by default: make the source as tall. */
   html, body { margin: 0; background: transparent; overflow: hidden; }
-  body { font: 700 calc(var(--h) * .36)/1 system-ui, "Segoe UI", sans-serif; color: #fff; --h: 72px; }
-  .bar { display: flex; align-items: center; height: var(--h); background: rgba(8,10,14,.88); border-top: 2px solid #e63946; border-bottom: 2px solid #e63946; box-sizing: border-box; }
+  body { font: 700 calc(var(--h) * .36)/1 system-ui, "Segoe UI", sans-serif; color: #fff; --h: 72px; --rows: 1; }
+  .bar { display: flex; align-items: stretch; height: calc(var(--h) * var(--rows)); background: rgba(8,10,14,.88); border-top: 2px solid #e63946; border-bottom: 2px solid #e63946; box-sizing: border-box; }
   .bar.clear { background: transparent; border-color: transparent; }
-  .title { flex: none; height: 100%; display: flex; align-items: center; padding: 0 .7em; background: #e63946; color: #fff; letter-spacing: .06em; font-size: .8em; z-index: 1; }
-  .view { flex: 1; overflow: hidden; height: 100%; }
+  .title { flex: none; display: flex; align-items: center; padding: 0 .7em; background: #e63946; color: #fff; letter-spacing: .06em; font-size: .8em; z-index: 1; }
+  .view { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+  .lane { flex: 1; overflow: hidden; position: relative; }
+  .lane + .lane { border-top: 1px solid rgba(230,57,70,.35); }
   .track { display: flex; width: max-content; height: 100%; align-items: center; will-change: transform; }
   .item { display: flex; align-items: center; gap: .35em; padding: 0 1.1em; white-space: nowrap; text-shadow: 0 2px 3px #000; }
-  .item img { height: calc(var(--h) * .78); width: auto; }
+  .item img { height: calc(var(--h) * .74); width: auto; }
   .item .em { font-size: 1.3em; }
   .item .eq { color: #e63946; }
   .item .secs { color: #9fb3c8; font-size: .75em; font-weight: 600; }
   .dot { color: #e63946; opacity: .6; }
   .off { color: #9fb3c8; padding: 0 1em; font-size: .7em; }
 </style></head><body>
-<div class="bar" id="bar"><div class="title" id="title"></div><div class="view"><div class="track" id="track"></div></div></div>
+<div class="bar" id="bar"><div class="title" id="title"></div><div class="view" id="view"></div></div>
 <script>
 const q = new URLSearchParams(location.search);
-if (q.get('height')) document.body.style.setProperty('--h', (+q.get('height') || 72) + 'px');
+const rowH = +q.get('height') || 72;
+document.body.style.setProperty('--h', rowH + 'px');
 if (q.get('bg') === '0') document.getElementById('bar').classList.add('clear');
-const track = document.getElementById('track'), titleEl = document.getElementById('title');
-let last = '', x = 0, speed = 70, half = 0, prev = performance.now();
+const view = document.getElementById('view'), titleEl = document.getElementById('title');
+let last = '', speed = 70, lanes = [], prev = performance.now();
 function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function itemHtml(i) {
+  return '<span class="item">' + (i.icon ? '<img src="' + i.icon + '" alt="">' : '<span class="em">' + esc(i.emoji || '🎁') + '</span>') +
+    esc(i.gift) + ' <span class="eq">=</span> ' + esc(i.label) + (i.secs ? ' <span class="secs">' + i.secs + 's</span>' : '') +
+    '</span><span class="dot">◆</span>';
+}
 function build(d) {
   speed = +q.get('speed') || d.speed || 70;
+  const rows = Math.max(1, Math.min(4, +q.get('rows') || d.rows || 1));
+  document.body.style.setProperty('--rows', rows);
   titleEl.textContent = d.title || ''; titleEl.style.display = d.title ? '' : 'none';
-  const one = d.items.map((i) => '<span class="item">' +
-    (i.icon ? '<img src="' + i.icon + '" alt="">' : '<span class="em">' + esc(i.emoji || '🎁') + '</span>') +
-    esc(i.gift) + ' <span class="eq">=</span> ' + esc(i.label) + (i.secs ? ' <span class="secs">' + i.secs + 's</span>' : '') +
-    '</span><span class="dot">◆</span>').join('');
-  // two copies side by side, so the loop is seamless
-  track.innerHTML = one + one;
-  requestAnimationFrame(() => { half = track.scrollWidth / 2; });
+  // the gifts dealt out across the rows in order: 1st row gets 1, 1+rows, ...
+  const per = Array.from({ length: rows }, () => []);
+  d.items.forEach((it, n) => per[n % rows].push(it));
+  view.innerHTML = '';
+  lanes = per.filter((l) => l.length).map((list, r) => {
+    const lane = document.createElement('div'); lane.className = 'lane';
+    const track = document.createElement('div'); track.className = 'track';
+    lane.appendChild(track); view.appendChild(lane);
+    const one = list.map(itemHtml).join('');
+    track.innerHTML = one;
+    const L = { track, one, x: 0, half: 0 };
+    requestAnimationFrame(() => {
+      // enough copies that the row is never empty, doubled so the loop is seamless
+      const w = track.scrollWidth || 1, n = Math.max(1, Math.ceil(view.clientWidth / w));
+      track.innerHTML = one.repeat(n * 2);
+      L.half = w * n;
+      L.x = -(L.half * r / Math.max(1, rows)) % L.half;   // rows don't all start at the same place
+    });
+    return L;
+  });
 }
 async function poll() {
   try {
     const r = await fetch('/ticker.json', { cache: 'no-store' });
     const t = await r.text();
     if (t !== last) { last = t; build(JSON.parse(t)); }
-  } catch (e) { if (!last) track.innerHTML = '<span class="off">Waiting for the bridge…</span>'; }
+  } catch (e) { if (!last) view.innerHTML = '<span class="off">Waiting for the bridge…</span>'; }
   setTimeout(poll, 4000);
 }
 function step(now) {
   const dt = Math.min(0.1, (now - prev) / 1000); prev = now;
-  if (half > 0) { x -= speed * dt; if (-x >= half) x += half; track.style.transform = 'translateX(' + x.toFixed(1) + 'px)'; }
+  for (const L of lanes) {
+    if (L.half > 0) { L.x -= speed * dt; if (-L.x >= L.half) L.x += L.half; L.track.style.transform = 'translateX(' + L.x.toFixed(1) + 'px)'; }
+  }
   requestAnimationFrame(step);
 }
 poll(); requestAnimationFrame(step);
@@ -456,6 +515,46 @@ function rateText() {
   if (c < 1) { const s = Math.round(1 / c * 100) / 100; return `Every coin = +${s} seconds`; }
   return `Every ${Math.round(c * 100) / 100} coins = +1 second`;
 }
+// mapping.json "timer": time for likes, follows, shares, Super Fans and new
+// community members, in seconds ("likeSeconds" is per like and can be as
+// small as 0.01; likes add up until they make a whole second).
+const SOCIAL_SECS = { follow: 'followSeconds', share: 'shareSeconds', superfan: 'superfanSeconds', community: 'communitySeconds' };
+function timerOpen() { const tm = cfg.timer || {}; return tm.enabled !== false && timer.active && !timer.ended; }
+function timerAddFor(kind, user) {
+  const secs = Math.round((+(cfg.timer || {})[SOCIAL_SECS[kind]] || 0) * 100) / 100;
+  if (!secs || secs < 0 || !timerOpen()) return;
+  timerAdd(secs, user, SOCIAL_LABEL[kind] || kind);
+  log(`  ⏱ +${fmtTime(secs)} from ${user} (${SOCIAL_LABEL[kind] || kind}), clock: ${fmtTime(timerLeft())}`);
+}
+// Comments: "chatSeconds" each, and "chatCooldown" seconds before the same
+// viewer's next comment counts again (0 = every comment), so a spammer can't
+// run the clock up on their own. Small amounts add up like likes do.
+const chatLast = new Map();
+let chatFrac = 0;
+function timerAddChat(user) {
+  const tm = cfg.timer || {}, per = +tm.chatSeconds || 0;
+  if (per <= 0 || !timerOpen()) return;
+  const wait = Math.max(0, +tm.chatCooldown || 0) * 1000, now = Date.now();
+  if (wait && now - (chatLast.get(user) || 0) < wait) return;
+  chatLast.set(user, now);
+  if (chatLast.size > 5000) chatLast.clear();
+  chatFrac += per;
+  const whole = Math.floor(chatFrac + 1e-9);
+  if (whole >= 1) { chatFrac -= whole; timerAdd(whole, user, 'comment'); }
+}
+let likeFrac = 0, likeBy = '';
+function timerAddLikes(user, n) {
+  const per = +(cfg.timer || {}).likeSeconds || 0;
+  if (per <= 0 || !n || !timerOpen()) return;
+  likeFrac += n * per; likeBy = user;
+  const whole = Math.floor(likeFrac + 1e-9);
+  if (whole >= 1) {
+    likeFrac -= whole;
+    timerAdd(whole, likeBy, 'likes');
+    log(`  ⏱ +${fmtTime(whole)} from likes (clock: ${fmtTime(timerLeft())})`);
+  }
+}
+
 let timerFrac = 0;
 function timerAddCoins(user, coins) {
   const tm = cfg.timer || {};
@@ -730,12 +829,23 @@ function startLocal() {
         if (ev.gift && ev.picture) extraIcons.set(ev.gift.toLowerCase(), ev.picture);
         onGift(ev.user, ev.gift, ev.giftId, ev.count, ev.diamonds, who);
       } else if (ev.kind === 'like') onLike(ev.user, ev.count, who);
-      else if (ev.kind === 'follow' || ev.kind === 'share') onSocial(ev.kind, ev.user, who);
+      else if (ev.kind === 'follow' || ev.kind === 'share' || ev.kind === 'superfan' || ev.kind === 'community') onSocial(ev.kind, ev.user, who);
       else if (ev.kind === 'chat') onChat(ev.user, ev.text || '', who);
+      else if (ev.kind === 'other') noteUnknown(ev.method, ev.key);
       else if (ev.kind === 'end') { liveText = 'TikTok LIVE ended'; broadcast({ type: 'status', text: liveText }); log(liveText); }
     },
   });
   return src;
+}
+
+// TikTok messages with a label we don't use yet, logged once each: if TikTok
+// names Super Fans or community joins differently, the log shows what to match.
+const unknownSeen = new Set();
+function noteUnknown(method, key) {
+  const k = method + '|' + key;
+  if (unknownSeen.has(k) || unknownSeen.size > 200) return;
+  unknownSeen.add(k);
+  log(`  (TikTok event not used: ${method}${key ? ' / ' + key : ''})`);
 }
 
 // Start (or switch to) the source in mapping.json; the control panel calls this too.
@@ -792,6 +902,8 @@ function onTikFinity(text) {
   } else if (ev === 'like') onLike(user, d.likeCount || 1, who);
   else if (ev === 'follow') onSocial('follow', user, who);
   else if (ev === 'share') onSocial('share', user, who);
+  else if (/subscri|super_?fan/.test(ev)) onSocial('superfan', user, who);
+  else if (/fan_?club|fanteam|team_?join|join_?team|community/.test(ev)) onSocial('community', user, who);
   else if (ev === 'chat') onChat(user, d.comment || '', who);
   else if (ev === 'social') {
     const kind = String(d.displayType || d.label || '').toLowerCase();
@@ -846,6 +958,8 @@ async function startTikTok() {
   conn.on('like', (d) => onLike(d.user?.uniqueId || 'someone', d.likeCount || 1, who(d)));
   conn.on('follow', (d) => onSocial('follow', d.user?.uniqueId || 'someone', who(d)));
   conn.on('share', (d) => onSocial('share', d.user?.uniqueId || 'someone', who(d)));
+  conn.on('subscribe', (d) => onSocial('superfan', d.user?.uniqueId || 'someone', who(d)));
+  conn.on('superFan', (d) => onSocial('superfan', d.user?.uniqueId || 'someone', who(d)));
   conn.on('chat', (d) => onChat(d.user?.uniqueId || 'someone', d.comment || '', who(d)));
   conn.on('disconnected', () => { liveText = 'TikTok disconnected'; broadcast({ type: 'status', text: liveText }); log(liveText + ', retrying in 30s'); setTimeout(go, 30000); });
   conn.on('streamEnd', () => { liveText = 'TikTok LIVE ended'; broadcast({ type: 'status', text: liveText }); log(liveText); });
@@ -888,7 +1002,7 @@ function startTest() {
       onGift('tester', rest.join(' '), 0, count);
     } else if (cmd === 'coins') onGift('tester', '(test donation)', 0, 1, +(rest[0] || 0));
     else if (cmd === 'like') onLike('tester', +(rest[0] || 1));
-    else if (cmd === 'follow' || cmd === 'share') { cooldown.clear(); onSocial(cmd, 'tester'); }
+    else if (cmd === 'follow' || cmd === 'share' || cmd === 'superfan' || cmd === 'community') { cooldown.clear(); onSocial(cmd, 'tester'); }
     else if (cmd === 'chat') onChat('tester', rest.join(' '));
     else if (cmd === 'list') log(knownEffects ? [...knownEffects].join(', ') : 'connect the game first to see its effects');
     else fire(cmd, 'tester', '');
@@ -913,14 +1027,14 @@ const studio = createStudio({
   },
   simulateGift: (user, name, count, coins, runEffect) => onGift(user, name, 0, count, coins / Math.max(1, count), { test: true, runEffect }),
   simulate: (kind, user, a) => {
-    if (kind === 'like') onLike(user, Math.max(1, +a.count || 50), { test: true });
-    else if (kind === 'follow' || kind === 'share') { cooldown.delete(kind + ':' + user); onSocial(kind, user, { test: true, runEffect: !!a.runEffect }); }
-    else if (kind === 'chat') onChat(user, String(a.text || 'hello!'), { test: true });
+    if (kind === 'like') onLike(user, Math.max(1, +a.count || 50), { test: true, runEffect: !!a.runEffect });
+    else if (kind === 'follow' || kind === 'share' || kind === 'superfan' || kind === 'community') { cooldown.delete(kind + ':' + user); onSocial(kind, user, { test: true, runEffect: !!a.runEffect }); }
+    else if (kind === 'chat') onChat(user, String(a.text || 'hello!'), { test: true, runEffect: !!a.runEffect });
   },
   effectList: () => {
     const virtual = ['mystery_box', 'detour_rescue'];
     const ids = (knownEffects ? [...knownEffects] : Object.keys(effectNames).filter((x) => !virtual.includes(x))).concat(virtual);
-    return ids.map((id) => ({ id, name: effectNames[id] || id, secs: id in defaultSecs ? (+(cfg.durations || {})[id] > 0 ? +cfg.durations[id] : defaultSecs[id]) : 0 }));
+    return ids.map((id) => ({ id, name: effectNames[id] || id, warn: effectWarnings[id], secs: id in defaultSecs ? (+(cfg.durations || {})[id] > 0 ? +cfg.durations[id] : defaultSecs[id]) : 0 }));
   },
   timerView,
   timerApi: (op, seconds, why) => timerAction(op, seconds, why),

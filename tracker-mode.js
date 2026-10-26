@@ -1,5 +1,6 @@
 /*
- * Tracker choice: Hutch's newest release, his beta, or no tracker at all.
+ * Tracker choice: Hutch's newest release, his beta, EmoTracker (beta, see
+ * emo-host.js), or no tracker at all.
  *
  *   release  tracker/       (tools/update-hutch.py keeps it at his latest)
  *   beta     tracker-beta/  (his beta files over the release; the release
@@ -17,20 +18,49 @@
   'use strict';
   var KEY = 'unified-tracker';
   var V = window.HUTCH_TRACKERS || { release: { path: 'tracker/', version: '' }, beta: null };
-  var mode = 'release';
-  try { mode = localStorage.getItem(KEY) || 'release'; } catch (e) {}
-  if (mode !== 'release' && mode !== 'beta' && mode !== 'off') mode = 'release';
+  // Muffins' Tracker 2.0 and Mudora 2.0: offered to everyone now that his MIT
+  // license is out (they were test-only behind ?mfns-test=1 before).
+  var mfnsTest = true;
+  try { localStorage.removeItem('rhb-mfns-test'); } catch (e) {}
+  // Mudora 2.0 is the starting choice; after that, whatever was picked last
+  // (saved by set()). Mudora was the starting choice before: anyone still on it
+  // is moved to Mudora 2.0 once (picking Mudora again after that is kept).
+  var mode = 'mudora2';
+  try {
+    mode = localStorage.getItem(KEY) || 'mudora2';
+    if (mode === 'mudora' && !localStorage.getItem('rhb-tracker-m2')) { mode = 'mudora2'; localStorage.setItem(KEY, mode); }
+    localStorage.setItem('rhb-tracker-m2', '1');
+  } catch (e) {}
+  // EmoTracker and Muffins' own tracker are no longer offered (Oct 2026): Mudora
+  // 2.0 runs Muffins' logic with Mudora's items and maps instead
+  if (mode === 'emo' || mode === 'mfns') { mode = 'mudora2'; try { localStorage.setItem(KEY, mode); } catch (e) {} }
+  if (mode !== 'release' && mode !== 'beta' && mode !== 'off' && mode !== 'mudora' && mode !== 'mudora2') mode = 'mudora2';
 
   function off() { return mode === 'off'; }
+  // emo(): a tracker in its own frame (emo-host.js) — EmoTracker, or Mudora
+  function emo() { return mode === 'emo' || mode === 'mudora' || mode === 'mudora2' || mode === 'mfns'; }
+  // Muffins' Tracker 2.0 (mfns-tracker/): his own logic and autotracking
+  function mfns() { return mode === 'mfns'; }
+  // Mudora (mudora/): Rando Hub's own tracker. Hutch's release still runs,
+  // out of sight, for its logic; Mudora shows the answers.
+  function mudora() { return mode === 'mudora'; }
+  // Mudora 2.0 (mudora2/): Mudora's look with Muffins' logic (his tracker runs
+  // inside it).
+  function mudora2() { return mode === 'mudora2'; }
+  // either Mudora: same page layout, phone tabs and so on
+  function mudoraUi() { return mode === 'mudora' || mode === 'mudora2'; }
   function base() { return mode === 'beta' && V.beta ? V.beta.path : V.release.path; }
   function options() {
-    var rv = V.release.version ? ' (' + V.release.version + ')' : '';
-    var beta = V.beta ? 'Beta' + (V.beta.version ? ' (' + V.beta.version + ' beta)' : '') : 'Beta (same as release right now)';
-    return [['release', 'Newest release' + rv], ['beta', beta], ['off', 'Off (game full screen)']];
+    var rv = V.release.version ? ' ' + V.release.version : '';
+    return [['release', 'Hutch' + rv], ['beta', 'Hutch Beta'], ['mudora2', 'Mudora 2.0 (Muffins logic)'], ['mudora', 'Mudora (Hutch logic)'], ['off', 'Off (game full screen)']];
   }
   function applyBody() {
     if (!document.body) return;
     document.body.classList.toggle('tracker-off', off());
+    document.body.classList.toggle('tracker-emo', emo());
+    document.body.classList.toggle('tracker-mudora', mudoraUi());
+    document.body.classList.toggle('tracker-mudora2', mudora2());
+    document.body.classList.toggle('tracker-mfns', mfns());
   }
   function applyController() {
     var P = window.Snes9xPlayer;
@@ -51,6 +81,6 @@
 
   window.UnifiedTracker = {
     mode: function () { return mode; },
-    off: off, base: base, set: set, options: options, versions: V,
+    off: off, emo: emo, mudora: mudora, mudora2: mudora2, mudoraUi: mudoraUi, mfns: mfns, base: base, set: set, options: options, versions: V,
   };
 })();

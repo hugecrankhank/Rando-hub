@@ -58,34 +58,228 @@
     return 'No empty bottle';
   }
 
-  // Pink Link: tint Link's palette (main palette buffer $7EC6E2, 15 colours)
-  // and ask the game to re-upload palettes ($15). The original colours are
-  // kept and put back when it ends; if the game reloads them meanwhile (new
-  // area, tunic change) the new ones are kept instead.
-  var LINK_PAL = 0xC6E2, LINK_N = 15, pinkSaved = null, pinkWritten = null;
-  function pinkify(c) {
-    var r = c & 31, g = (c >> 5) & 31, b = (c >> 10) & 31;
-    var l = (r * 3 + g * 6 + b) / 10;
-    r = Math.min(31, Math.round(l * 0.55 + 14)); g = Math.round(l * 0.45 + 2); b = Math.min(31, Math.round(l * 0.6 + 9));
-    return r | (g << 5) | (b << 10);
+  // Link tints (Pink Link, Ghost Link, Pumpkin Link): tint Link's palette
+  // (main palette buffer $7EC6E2, 15 colours) and ask the game to re-upload
+  // palettes ($15). The original colours are kept and put back when it ends;
+  // if the game reloads them meanwhile (new area, tunic change) the new ones
+  // are kept instead. One tint at a time: the newest wins, and when it ends
+  // the next one still running takes over.
+  var LINK_PAL = 0xC6E2, LINK_N = 15;
+  function lum(c) { return ((c & 31) * 3 + ((c >> 5) & 31) * 6 + ((c >> 10) & 31)) / 10; }
+  function rgb(r, g, b) { var k = function (v) { return Math.max(0, Math.min(31, Math.round(v))); }; return k(r) | (k(g) << 5) | (k(b) << 10); }
+  var LINK_TINTS = {
+    pink_link: function (c) { var l = lum(c); return rgb(l * 0.55 + 14, l * 0.45 + 2, l * 0.6 + 9); },
+    // pale and see-through looking: everything washed towards a cold blue-white
+    ghost_link: function (c) { var l = lum(c); return rgb(l * 0.45 + 13, l * 0.55 + 14, l * 0.3 + 22); },
+    pumpkin_link: function (c) { var l = lum(c); return rgb(l * 0.45 + 17, l * 0.55 + 4, l * 0.1 + 1); },
+  };
+  var LT = { saved: null, written: null, owner: null, used: null };
+  function palRead(r, at, n) { var o = []; for (var i = 0; i < n; i++) o[i] = r[at + i * 2] | (r[at + i * 2 + 1] << 8); return o; }
+  function palWrite(r, at, list) { for (var k = 0; k < list.length; k++) { r[at + k * 2] = list[k] & 0xFF; r[at + k * 2 + 1] = list[k] >> 8; } r[0x15] = 1; }
+  function linkTintFrame(id, r) {
+    if (LT.owner !== id) { if (LT.owner && active[LT.owner]) return; LT.owner = id; }
+    var cur = palRead(r, LINK_PAL, LINK_N), same = !!LT.written;
+    if (same) for (var i = 0; i < LINK_N; i++) if (cur[i] !== LT.written[i]) { same = false; break; }
+    if (!same) LT.saved = cur;            // first frame, or the game loaded new colours
+    if (!same || LT.used !== id) { LT.used = id; LT.written = LT.saved.map(LINK_TINTS[id]); palWrite(r, LINK_PAL, LT.written); }
   }
-  function pinkFrame(r) {
-    var cur = [], same = !!pinkWritten;
-    for (var i = 0; i < LINK_N; i++) { cur[i] = r[LINK_PAL + i * 2] | (r[LINK_PAL + i * 2 + 1] << 8); if (pinkWritten && cur[i] !== pinkWritten[i]) same = false; }
-    if (!same) pinkSaved = cur;            // first frame, or the game loaded new colours
-    if (!pinkWritten || !same) {
-      pinkWritten = pinkSaved.map(pinkify);
-      for (var k = 0; k < LINK_N; k++) { r[LINK_PAL + k * 2] = pinkWritten[k] & 0xFF; r[LINK_PAL + k * 2 + 1] = pinkWritten[k] >> 8; }
+  function linkTintEnd(id) {
+    var c = core(); if (!c) return;
+    var r = c.wram();
+    if (LT.owner !== id) return;
+    for (var k in LINK_TINTS) if (k !== id && active[k]) { LT.owner = k; return; }   // the next one takes over
+    if (LT.saved && LT.written) {
+      var cur = palRead(r, LINK_PAL, LINK_N), still = true;
+      for (var i = 0; i < LINK_N; i++) if (cur[i] !== LT.written[i]) still = false;
+      if (still) palWrite(r, LINK_PAL, LT.saved);
+    }
+    LT = { saved: null, written: null, owner: null, used: null };
+  }
+  function linkTint(id) {
+    return { frame: function (r) { linkTintFrame(id, r); }, start: function () { LT.owner = id; }, end: function () { linkTintEnd(id); } };
+  }
+
+  // Spooky night: every colour on screen but Link's (main palette buffer
+  // $7EC500-$7EC6FF) turned to Halloween's purple and orange: dark → purple,
+  // light → orange. Same keep-and-restore as the Link tints, per colour.
+  var PAL0 = 0xC500, PAL_N = 256, LINK_FIRST = (LINK_PAL - PAL0) / 2;
+  function spooky(c) { var t = lum(c) / 31; return rgb(4 + 27 * t, 1 + 18 * t * t, 11 - 9 * t); }
+  var NIGHT = { saved: null, written: null };
+  function nightFrame(r) {
+    var cur = palRead(r, PAL0, PAL_N), dirty = false;
+    if (!NIGHT.saved) { NIGHT.saved = cur.slice(); NIGHT.written = cur.slice(); }
+    for (var i = 0; i < PAL_N; i++) {
+      if (i >= LINK_FIRST && i < LINK_FIRST + LINK_N) continue;      // Link keeps his colours (and his own tints)
+      if (cur[i] !== NIGHT.written[i]) { NIGHT.saved[i] = cur[i]; NIGHT.written[i] = spooky(cur[i]); dirty = true; }
+      else if (NIGHT.written[i] === NIGHT.saved[i] && spooky(cur[i]) !== cur[i]) { NIGHT.written[i] = spooky(cur[i]); dirty = true; }
+    }
+    if (dirty) {
+      for (var k = 0; k < PAL_N; k++) {
+        if (k >= LINK_FIRST && k < LINK_FIRST + LINK_N) continue;
+        r[PAL0 + k * 2] = NIGHT.written[k] & 0xFF; r[PAL0 + k * 2 + 1] = NIGHT.written[k] >> 8;
+      }
       r[0x15] = 1;
     }
   }
-  function pinkEnd(r) {
-    if (pinkSaved && pinkWritten) {
-      var still = true;
-      for (var i = 0; i < LINK_N; i++) if ((r[LINK_PAL + i * 2] | (r[LINK_PAL + i * 2 + 1] << 8)) !== pinkWritten[i]) still = false;
-      if (still) { for (var k = 0; k < LINK_N; k++) { r[LINK_PAL + k * 2] = pinkSaved[k] & 0xFF; r[LINK_PAL + k * 2 + 1] = pinkSaved[k] >> 8; } r[0x15] = 1; }
+  function nightEnd() {
+    var c = core(); if (!c || !NIGHT.saved) { NIGHT = { saved: null, written: null }; return; }
+    var r = c.wram(), cur = palRead(r, PAL0, PAL_N);
+    for (var i = 0; i < PAL_N; i++) {
+      if (i >= LINK_FIRST && i < LINK_FIRST + LINK_N) continue;
+      if (cur[i] === NIGHT.written[i]) { r[PAL0 + i * 2] = NIGHT.saved[i] & 0xFF; r[PAL0 + i * 2 + 1] = NIGHT.saved[i] >> 8; }
     }
-    pinkSaved = pinkWritten = null;
+    r[0x15] = 1;
+    NIGHT = { saved: null, written: null };
+  }
+
+  // Haunted lights: the screen's brightness ($13, the game's copy of INIDISP)
+  // dims down and flickers like a failing lantern, with a lightning flash
+  // now and then (at most one every ~2 s: no strobing). Put back to full when
+  // it ends. Only while Link is in normal play, so fades still work.
+  var haunt = { t: 0, flash: 0, next: 0, level: 6 };
+  function hauntFrame(r) {
+    haunt.t++;
+    if (haunt.flash > 0) { haunt.flash--; r[0x13] = 0x0F; return; }
+    if (haunt.t >= haunt.next) {
+      if (Math.random() < 0.35) { haunt.flash = 5; haunt.next = haunt.t + 120 + Math.floor(Math.random() * 120); r[0x13] = 0x0F; return; }
+      haunt.next = haunt.t + 8 + Math.floor(Math.random() * 30);
+      haunt.level = Math.random() < 0.15 ? 1 : 4 + Math.floor(Math.random() * 4);   // now and then nearly black
+    }
+    r[0x13] = haunt.level;
+  }
+  function hauntEnd() { var c = core(); if (c) c.wram()[0x13] = 0x0F; haunt = { t: 0, flash: 0, next: 0, level: 6 }; }
+
+  // Room lights (HydeOut, Oct 2026). How the game draws dark rooms (zelda3:
+  // dungeon.c, load_gfx.c): a dark room ($7EC005 dung_want_lights_out) turns
+  // on colour math that subtracts a fixed colour from the picture (CGADSUB
+  // copy $9A = $B3, COLDATA copies $9C-$9E). How much ($7EC017) depends on
+  // the torches lit ($045A): 31, 8, 4, then 0 with three, which is a lit room.
+  //   Lights on:  a dark room as if three torches were lit (0).
+  //   Lights out: a lit room gets a dark room's colour math, nearly black
+  //               (outdoors, where that doesn't work, the screen dims).
+  // The room's own values are kept when Link enters it and put back when the
+  // effect ends, so leaving or ending always gives the game's own lighting.
+  var TORCH_DARK = [31, 8, 4, 0], LIGHTS_OUT = 24;   // nearly black: a little stays visible (there's no lamp cone in a faked dark room)
+  var lightRoom = { room: -1, sub: 0, col: [0, 0, 0], dark: 0 };
+  function roomKey(r) { return r[0x1B] ? (r[0xA0] | (r[0xA1] << 8)) : -2; }
+  function roomSave(r) {
+    var k = roomKey(r);
+    if (lightRoom.room === k) return;
+    lightRoom = { room: k, sub: r[0x9A], col: [r[0x9C], r[0x9D], r[0x9E]], dark: r[0xC017] };
+  }
+  function coldata(r, v) { r[0x9C] = v | 0x20; r[0x9D] = v | 0x40; r[0x9E] = v | 0x80; }
+  function lightsOnFrame(r) {
+    if (!r[0x1B] || !r[0xC005]) return;                 // a lit room (or outdoors): nothing to do
+    roomSave(r);
+    r[0xC017] = 0; coldata(r, 0);
+  }
+  function lightsOnEnd() {
+    var c = core(); if (!c) return;
+    var r = c.wram();
+    if (r[0x1B] && r[0xC005]) { var v = TORCH_DARK[Math.min(3, r[0x45A])]; r[0xC017] = v; coldata(r, v); }
+    lightRoom.room = -1;
+  }
+  function lightsOutFrame(r) {
+    if (!r[0x1B]) { r[0x13] = 0x04; return; }          // outdoors: dim the screen instead
+    roomSave(r);
+    r[0x9A] = 0xB3; coldata(r, Math.max(LIGHTS_OUT, lightRoom.col[0] & 31));   // never lighter than the room already was
+  }
+  // one at a time: the newest wins
+  function lightsCancel(other, endFn) {
+    if (!active[other]) return;
+    delete active[other]; delete paused[other];
+    try { endFn(); } catch (e) {}
+    feed(EFFECTS[other].name + ' ended', 'end');
+  }
+  function lightsOutEnd() {
+    var c = core(); if (!c) return;
+    var r = c.wram();
+    if (!r[0x1B]) r[0x13] = 0x0F;
+    else if (lightRoom.room === roomKey(r)) { r[0x9A] = lightRoom.sub; r[0x9C] = lightRoom.col[0]; r[0x9D] = lightRoom.col[1]; r[0x9E] = lightRoom.col[2]; }
+    lightRoom.room = -1;
+  }
+
+  // ── Halloween screen overlays: drawn over the game picture (pointer-free),
+  // removed when the effect ends. Original art, made here in SVG. ──
+  var overlays = {};
+  function overlayOn(id, html, css) {
+    if (typeof document === 'undefined' || overlays[id]) return;
+    var host = document.querySelector('.s9x'); if (!host) return;
+    if (!document.getElementById('cc-ov-css')) {
+      var st = document.createElement('style'); st.id = 'cc-ov-css';
+      st.textContent = '.cc-ov { position: absolute; inset: 0; z-index: 23; pointer-events: none; overflow: hidden; transition: opacity .8s; }' +
+        '.cc-ov svg { position: absolute; inset: 0; width: 100%; height: 100%; }' +
+        '.cc-ov.bye { opacity: 0; }' +
+        '@keyframes cc-drip { from { transform: scaleY(0); } to { transform: scaleY(1); } }' +
+        '@keyframes cc-drop { 0% { transform: translateY(0); opacity: 0; } 8% { opacity: 1; } 100% { transform: translateY(105%); opacity: 1; } }' +
+        '@keyframes cc-spin { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(18%); } }' +
+        '@keyframes cc-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }';
+      document.head.appendChild(st);
+    }
+    var el = document.createElement('div'); el.className = 'cc-ov'; el.innerHTML = html;
+    host.appendChild(el); overlays[id] = el;
+  }
+  function overlayOff(id) {
+    var el = overlays[id]; if (!el) return;
+    delete overlays[id];
+    el.classList.add('bye'); setTimeout(function () { el.remove(); }, 900);
+  }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  // Blood: a bloody band along the top, drips that slowly run down from it
+  // (most short, a few long) and drops falling off some of them.
+  function bloodSvg() {
+    var W = 1000, edge = 'M0,0 H' + W + ' V46', x, drips = '', drops = '', i;
+    for (x = W; x > 0; x -= rnd(22, 46)) edge += ' Q' + (x - 12).toFixed(0) + ',' + rnd(60, 84).toFixed(0) + ' ' + Math.max(0, x - 26).toFixed(0) + ',' + rnd(40, 56).toFixed(0);
+    edge += ' L0,48 Z';
+    for (i = 0; i < 16; i++) {
+      var dx = rnd(15, 985), w = rnd(18, 34), len = Math.random() < 0.3 ? rnd(380, 700) : rnd(120, 320), t = rnd(0, 9), d = rnd(5, 12);
+      var top = 44, end = top + len, bulb = w * 0.62;
+      // a run of blood narrowing a little, with a round drop gathering at the end
+      drips += '<g style="transform-origin:' + dx.toFixed(0) + 'px ' + top + 'px;transform:scaleY(0);animation:cc-drip ' + d.toFixed(1) + 's ' + t.toFixed(1) + 's cubic-bezier(.25,.6,.35,1) forwards">' +
+        '<path d="M' + (dx - w / 2).toFixed(1) + ',' + top + ' C' + (dx - w / 2).toFixed(1) + ',' + (top + len * 0.5).toFixed(0) + ' ' + (dx - w * 0.3).toFixed(1) + ',' + (end - bulb).toFixed(0) + ' ' + (dx - bulb * 0.8).toFixed(1) + ',' + end.toFixed(0) +
+        ' A' + bulb.toFixed(1) + ',' + (bulb * 1.15).toFixed(1) + ' 0 1 0 ' + (dx + bulb * 0.8).toFixed(1) + ',' + end.toFixed(0) +
+        ' C' + (dx + w * 0.3).toFixed(1) + ',' + (end - bulb).toFixed(0) + ' ' + (dx + w / 2).toFixed(1) + ',' + (top + len * 0.5).toFixed(0) + ' ' + (dx + w / 2).toFixed(1) + ',' + top + ' Z" fill="url(#cc-blood)"/>' +
+        '<path d="M' + (dx - w * 0.2).toFixed(1) + ',' + (top + 8) + ' V' + (end - bulb).toFixed(0) + '" stroke="#ff8a8a" stroke-opacity=".35" stroke-width="' + (w * 0.16).toFixed(1) + '" stroke-linecap="round"/>' +
+        '<ellipse cx="' + (dx - bulb * 0.35).toFixed(1) + '" cy="' + (end + bulb * 0.2).toFixed(0) + '" rx="' + (bulb * 0.18).toFixed(1) + '" ry="' + (bulb * 0.3).toFixed(1) + '" fill="#ffb3b3" fill-opacity=".45"/></g>';
+      if (len > 300 && Math.random() < 0.7) {
+        drops += '<g style="animation:cc-drop ' + rnd(2.2, 3.5).toFixed(1) + 's ' + (t + d).toFixed(1) + 's ease-in infinite;opacity:0">' +
+          '<path d="M' + dx.toFixed(0) + ',' + (end + bulb).toFixed(0) + ' q' + (w * 0.4).toFixed(1) + ',' + (w * 0.9).toFixed(1) + ' 0,' + (w * 1.1).toFixed(1) + ' q-' + (w * 0.4).toFixed(1) + ',-' + (w * 0.2).toFixed(1) + ' 0,-' + (w * 1.1).toFixed(1) + ' Z" fill="#a4161a"/></g>';
+      }
+    }
+    return '<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="cc-blood" x1="0" x2="1"><stop offset="0" stop-color="#5c030c"/><stop offset=".4" stop-color="#b5121b"/><stop offset=".6" stop-color="#9d0f17"/><stop offset="1" stop-color="#5c030c"/></linearGradient></defs>' +
+      '<path d="' + edge + '" fill="#8a0a12"/>' + drips + drops + '</svg>';
+  }
+  // Spiderwebs: webs in three corners (spokes, and sagging threads between
+  // them) and a spider bobbing on its thread from the top.
+  function webCorner(cx, cy, a0, rmax) {
+    var spokes = 7, rings = 7, d = '', i, j, ang = [];
+    for (i = 0; i < spokes; i++) ang.push(a0 + (Math.PI / 2) * i / (spokes - 1) + rnd(-0.05, 0.05));
+    ang.forEach(function (a) { d += 'M' + cx + ',' + cy + ' L' + (cx + Math.cos(a) * rmax).toFixed(1) + ',' + (cy + Math.sin(a) * rmax).toFixed(1) + ' '; });
+    for (j = 1; j <= rings; j++) {
+      var rr = rmax * (j / rings) * rnd(0.92, 1.02);
+      for (i = 0; i < spokes - 1; i++) {
+        var p1 = [cx + Math.cos(ang[i]) * rr, cy + Math.sin(ang[i]) * rr], p2 = [cx + Math.cos(ang[i + 1]) * rr, cy + Math.sin(ang[i + 1]) * rr];
+        var mid = (ang[i] + ang[i + 1]) / 2, sag = rr * 0.86;
+        d += 'M' + p1[0].toFixed(1) + ',' + p1[1].toFixed(1) + ' Q' + (cx + Math.cos(mid) * sag).toFixed(1) + ',' + (cy + Math.sin(mid) * sag).toFixed(1) + ' ' + p2[0].toFixed(1) + ',' + p2[1].toFixed(1) + ' ';
+      }
+    }
+    return '<path d="' + d + '" fill="none" stroke="#f1f1f1" stroke-opacity=".78" stroke-width="1.6" filter="url(#cc-glow)"/>';
+  }
+  function webSvg() {
+    var sx0 = rnd(380, 620);
+    return '<svg viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><defs><filter id="cc-glow"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+      webCorner(0, 0, 0, rnd(300, 380)) + webCorner(1000, 0, Math.PI / 2, rnd(260, 340)) + webCorner(0, 1000, -Math.PI / 2, rnd(220, 290)) +
+      '<g style="transform-origin:' + sx0 + 'px 0;animation:cc-sway 5s ease-in-out infinite"><g style="animation:cc-spin 3.4s ease-in-out infinite">' +
+      '<line x1="' + sx0 + '" y1="0" x2="' + sx0 + '" y2="230" stroke="#eee" stroke-opacity=".8" stroke-width="1.5"/>' +
+      '<g transform="translate(' + sx0 + ',250) scale(1.6)">' +
+      [-1, 1].map(function (sd) {
+        return [[-14, -10, -28, -26], [-6, -4, -32, -6], [4, 2, -30, 16], [12, 8, -24, 34]].map(function (l) {
+          return '<path d="M0,' + l[0] * 0.3 + ' L' + (sd * 16) + ',' + l[1] + ' L' + (sd * -l[2]) + ',' + l[3] + '" fill="none" stroke="#111" stroke-width="4" stroke-linejoin="round"/>';
+        }).join('');
+      }).join('') +
+      '<ellipse cx="0" cy="8" rx="16" ry="20" fill="#151515"/><circle cx="0" cy="-14" r="10" fill="#1d1d1d"/>' +
+      '<circle cx="-4" cy="-16" r="2.6" fill="#ff2a2a"/><circle cx="4" cy="-16" r="2.6" fill="#ff2a2a"/>' +
+      '<path d="M-8,4 q8,10 16,0" fill="none" stroke="#c1121f" stroke-width="2.5"/></g></g></g></svg>';
   }
 
   // SNES pad bits, same order as Snes9xCore.BTN
@@ -160,40 +354,263 @@
     [0xAA, [[0,0,0,[27]]]], [0xC3, [[0,0,[40],0]]], [0xC4, [[[14,21],0,0,0]]], [0xC7, [[0,0,[39],0]]],
     [0xC9, [[0,0,0,[16]]]], [0xD0, [[0,0,0,[20]]]],
   ];
-  function enemiesThatFit(r) {
+  // Halloween's monsters (ids and sheet needs from the randomizer's enemizer:
+  // Kara's alttpr-python source/enemizer/SpriteSheets.py). Flying ones only
+  // outdoors (the enemizer keeps them out of some rooms).
+  var SPOOKY_ENEMIES = [
+    [0x19, [[0,0,0,[14,21]]], 'fly'],      // Poe (ghost)
+    [0x6F, [[0,0,[28,36],0]]],             // Keese (bat)
+    [0x8B, [[0,0,[35],0]]],                // Gibdo (mummy)
+    [0xA7, [[[31],0,0,0]]],                // Stalfos (skeleton)
+    [0x91, [[0,[32],0,0]]],                // Stalfos Knight
+    [0x00, [[0,0,0,[17,25]]], 'fly'],      // Raven
+    [0x01, [[0,0,[18],0]], 'fly'],         // Vulture
+  ];
+  // Monster mash: every ordinary enemy on screen turns into a bat (Keese) or a
+  // mummy (Gibdo), or another spooky monster when this area's graphics have
+  // neither. Each keeps its place and its slot in the room's list (so killing
+  // it still opens shutter doors), and starts over as the new monster.
+  var MASH_FIRST = [0x6F, 0x8B];                 // bats and mummies first
+  function monsterMash(r) {
+    var fit = enemiesThatFit(r, spookyHere(r));
+    if (!fit.length) return 'No spooky monster fits this area (their graphics aren\'t loaded here)';
+    var best = fit.filter(function (t) { return MASH_FIRST.indexOf(t) >= 0; });
+    var pool = best.length ? best : fit, n = 0;
+    var keep = [S.XL, S.XH, S.YL, S.YH, S.FLOOR, S.N];
+    for (var k = 0; k < 16; k++) {
+      if (r[S.STATE + k] !== 9 || !CLONEABLE[r[S.TYPE + k]] || pool.indexOf(r[S.TYPE + k]) >= 0) continue;
+      var saved = keep.map(function (t) { return r[t + k]; });
+      for (var i = 0; i < SLOT_TABLES.length; i++) r[SLOT_TABLES[i] + k] = 0;
+      keep.forEach(function (t, j) { r[t + k] = saved[j]; });
+      r[S.TYPE + k] = pool[Math.floor(Math.random() * pool.length)];
+      r[S.STATE + k] = 0x08;                       // "initialize": the game sets the new monster up
+      n++;
+    }
+    if (!n) return 'No enemies on screen to turn';
+    lastMash = n + (best.length ? (best.length === 2 ? ' into bats and mummies' : best[0] === 0x6F ? ' into bats' : ' into mummies') : ' into spooky monsters');
+    return true;
+  }
+  var lastMash = '';
+  function spookyHere(r) { var out = r[0x1B] ? SPOOKY_ENEMIES.filter(function (e) { return !e[2]; }) : SPOOKY_ENEMIES; return out; }
+  function enemiesThatFit(r, list) {
     var sheets = [r[0xC2FC], r[0xC2FD], r[0xC2FE], r[0xC2FF]];
-    return RANDOM_ENEMIES.filter(function (e) {
+    return (list || RANDOM_ENEMIES).filter(function (e) {
       return e[1].some(function (opt) { return opt.every(function (need, i) { return !need || need.indexOf(sheets[i]) >= 0; }); });
     }).map(function (e) { return e[0]; });
   }
-  function spawnRandomEnemy(r) {
-    var types = enemiesThatFit(r);
-    if (!types.length) return cloneEnemy(r) === true ? true : 'No enemy fits this area';
-    var free = -1;
-    for (var k = 15; k >= 1; k--) if (r[S.STATE + k] === 0) { free = k; break; }
-    if (free < 0) return 'Too many sprites on screen';
+  function spawnRandomEnemy(r, list) {
+    var types = enemiesThatFit(r, list);
+    if (!types.length) return list ? 'No spooky monster fits this area' : cloneEnemy(r) === true ? true : 'No enemy fits this area';
+    return placeEnemy(r, types[Math.floor(Math.random() * types.length)]);
+  }
+  function freeSlot(r) { for (var k = 15; k >= 1; k--) if (r[S.STATE + k] === 0) return k; return -1; }
+  function enemySpot(r) {
     var lx = r[0x22] | (r[0x23] << 8), ly = r[0x20] | (r[0x21] << 8), indoors = r[0x1B];
-    // a spot 3-4 tiles from Link; indoors, one with open floor (BG2 tile attributes)
-    var spots = [[48, 0], [-48, 0], [0, 40], [0, -40], [36, 32], [-36, 32], [36, -32], [-36, -32]], at = null;
-    for (var t = 0; t < 16 && !at; t++) {
+    var spots = [[48, 0], [-48, 0], [0, 40], [0, -40], [36, 32], [-36, 32], [36, -32], [-36, -32]];
+    for (var t = 0; t < 16; t++) {
       var d = spots[Math.floor(Math.random() * spots.length)], x = lx + d[0], y = ly + d[1];
-      if (!indoors) { at = [x, y]; break; }
+      if (!indoors) return [x, y];
       var tx = ((x + 8) & 0x1FF) >> 3, ty = ((y + 12) & 0x1FF) >> 3, ok = true;
       for (var dy = -1; dy <= 1 && ok; dy++) for (var dx = -1; dx <= 1 && ok; dx++) {
         var a = r[0x12000 + (((ty + dy) & 63) * 64) + ((tx + dx) & 63)];
         if (!(a === 0x00 || a === 0x09 || a === 0x0E || a === 0x0F)) ok = false;
       }
-      if (ok) at = [x, y];
+      if (ok) return [x, y];
     }
+    return null;
+  }
+  function placeEnemy(r, type) {
+    var free = freeSlot(r), indoors = r[0x1B];
+    if (free < 0) return 'Too many sprites on screen';
+    var at = enemySpot(r);   // 3-4 tiles from Link; indoors, on open floor (BG2 tile attributes)
     if (!at) return 'No room for an enemy here';
     for (var i = 0; i < SLOT_TABLES.length; i++) r[SLOT_TABLES[i] + free] = 0;
-    r[S.TYPE + free] = types[Math.floor(Math.random() * types.length)];
+    r[S.TYPE + free] = type;
     r[S.XL + free] = at[0] & 0xFF; r[S.XH + free] = (at[0] >> 8) & 0xFF;
     r[S.YL + free] = at[1] & 0xFF; r[S.YH + free] = (at[1] >> 8) & 0xFF;
     r[S.FLOOR + free] = r[0xEE];
     if (indoors) r[S.N + free] = 0xFF; else { r[0xBC0 + free * 2] = 0xFF; r[0xBC1 + free * 2] = 0xFF; }   // not from the room's list
     r[S.STATE + free] = 0x08;    // "initialize": the game loads its stats and sets it up
     return true;
+  }
+
+  // ── any enemy, anywhere ─────────────────────────────────────────────────
+  // An area has four enemy sprite sheets loaded (slots at VRAM $5000-$5FFF,
+  // their numbers at $7EC2FC-F). For an enemy whose sheets aren't here, the
+  // sheets it needs are unpacked from this ROM (as gearGfx does), turned into
+  // the 4bpp tiles the game itself would make (zelda3 LoadSpriteGraphics) at
+  // $7F0000 + slot*$800, where a screen change leaves them, and sent to VRAM
+  // by the game's own NMI: $19/$0118 copy $200 bytes a frame (zelda3
+  // Graphics_IncrementalVRAMUpload), so a sheet takes 4 frames. Then the
+  // enemy appears. Slots other enemies on screen use are left alone when
+  // possible; if not, they look wrong until the next screen. The next screen
+  // loads its own sheets as usual.
+  // Enemies and sheet needs: Kara's alttpr-python enemizer (SpriteSheets.py),
+  // everything killable that isn't a boss or an NPC, water and sand ones too
+  // (they're fun out of place), but not the Fireball Zora (it only surfaces
+  // from water, so on land it never shows). Not the Mimics: the enemizer's own ids for
+  // them aren't the game's (spawned as is, the game freezes).
+  var ANY_ENEMIES = [
+    [0x00, [[0,0,0,[17,25]]], 'Raven'],
+    [0x01, [[0,0,[18],0]], 'Vulture'],
+    [0x08, [[0,0,[12,24],0]], 'Octorok'],
+    [0x0A, [[0,0,[12],0]], 'Octorok 4 Way'],
+    [0x0D, [[0,0,0,[17]]], 'Buzzblob'],
+    [0x0E, [[[22],0,[23],0]], 'Snapdragon'],
+    [0x0F, [[0,0,[12],0]], 'Octoballoon'],
+    [0x11, [[[22],0,0,0]], 'Hinox'],
+    [0x12, [[0,0,[23],0]], 'Moblin'],
+    [0x13, [[0,[30],0,0]], 'Mini Helmasaur'],
+    [0x15, [[0,0,0,[82,83]]], 'Anti Fairy'],
+    [0x17, [[0,0,0,[17]]], 'Hoarder'],
+    [0x18, [[0,[30],0,0]], 'Mini Moldorm'],
+    [0x19, [[0,0,0,[21]]], 'Poe'],
+    [0x20, [[0,0,[37],0]], 'Sluggula'],
+    [0x22, [[[22],0,0,0]], 'Ropa'],
+    [0x23, [[[31],0,0,0]], 'Red Bari'],
+    [0x24, [[[31],0,0,0]], 'Blue Bari'],
+    [0x26, [[0,[30],0,0]], 'Hardhat Beetle'],
+    [0x27, [[0,0,0,[16]]], 'Deadrock'],
+    [0x3E, [[0,0,0,[17]]], 'Hoarder 2'],
+    [0x41, [[0,[13,73],[19,41],0]], 'Blue Guard'],
+    [0x42, [[0,[73],[19],0]], 'Green Guard'],
+    [0x43, [[0,[13,73],[19,41],0]], 'Red Spear Guard'],
+    [0x44, [[[70],[13,73],0,0]], 'Bluesain Bolt'],
+    [0x45, [[0,[13,73],0,0]], 'Usain Bolt'],
+    [0x46, [[[72],[73],0,0]], 'Blue Archer'],
+    [0x47, [[[72],[73],0,0]], 'Green Bush Guard'],
+    [0x48, [[[70],[73],0,0]], 'Red Javelin Guard'],
+    [0x49, [[[70],[73],0,0]], 'Red Bush Guard'],
+    [0x4A, [[[70],[73],0,0]], 'Bomb Guard'],
+    [0x4B, [[0,[73],[19],0]], 'Green Knife Guard'],
+    [0x4C, [[0,0,[18],0]], 'Geldman'],
+    [0x4E, [[0,[44],0,0]], 'Popo'],
+    [0x4F, [[0,[44],0,0]], 'Popo 2'],
+    [0x51, [[0,0,0,[16]]], 'Armos Statue'],
+    [0x58, [[0,0,[12],0]], 'Crab'],
+    [0x61, [[0,[44],0,0]], 'Beamos'],
+    [0x6A, [[[70],[73],0,0]], 'Ball NChain'],
+    [0x6B, [[[70],[73],0,0]], 'Cannon Trooper'],
+    [0x6D, [[0,0,[28,36],0]], 'Cricket Rat'],
+    [0x6E, [[0,0,[28,36],0]], 'Snake'],
+    [0x6F, [[0,0,[28,36],0]], 'Keese'],
+    [0x71, [[[47],0,0,0]], 'Leever'],
+    [0x7C, [[[31],0,0,0]], 'Floating Skull'],
+    [0x7D, [[0,0,0,[82,83]]], 'Big Spike'],
+    [0x80, [[[31],0,0,0]], 'Firesnake'],
+    [0x81, [[0,0,[34],0]], 'Hover'],
+    [0x82, [[0,0,0,[82,83]]], 'Anti Fairy Circle'],
+    [0x83, [[0,0,[46],0]], 'Green Eyegore'],
+    [0x84, [[0,0,[46],0]], 'Red Eyegore'],
+    [0x86, [[0,0,[42],0]], 'Kodongo'],
+    [0x8B, [[0,0,[35],0]], 'Gibdo'],
+    [0x8E, [[0,0,[42],0]], 'Terrorpin'],
+    [0x8F, [[0,[32],0,0]], 'Blob'],
+    [0x91, [[0,[32],0,0]], 'Stalfos Knight'],
+    [0x99, [[0,0,[38],0]], 'Pengator'],
+    [0x9B, [[0,0,[37,41],0]], 'Wizzrobe'],
+    [0x9C, [[0,[32],0,0]], 'Zoro'],
+    [0x9D, [[0,[32],0,0]], 'Babasu'],
+    [0xA5, [[0,0,[40],0]], 'Blue Zazak'],
+    [0xA6, [[0,0,[40],0]], 'Red Zazak'],
+    [0xA7, [[[31],0,0,0]], 'Stalfos'],
+    [0xA8, [[0,0,0,[27]]], 'Green Zirro'],
+    [0xA9, [[0,0,0,[27]]], 'Blue Zirro'],
+    [0xAA, [[0,0,0,[27]]], 'Pikit'],
+    [0xC3, [[0,0,[40],0]], 'Gibo'],
+    [0xC7, [[0,0,[39],0]], 'Pokey'],
+    [0xC9, [[0,0,0,[16]]], 'Tektite'],
+    [0xD0, [[0,0,0,[20]]], 'Lynel'],
+    // water and sand ones, out of their element on purpose
+    [0x56, [[0,0,[12],[68]]], 'Zora'],
+    [0x63, [[[47],0,0,0]], 'Debirando Pit'],
+    [0x64, [[[47],0,0,0]], 'Debirando'],
+    [0x9A, [[0,0,[34],0]], 'Kyameron'],
+    [0xA1, [[0,0,[38],0]], 'Freezor'],
+    [0xCF, [[0,0,0,[25]]], 'Swamola'],
+  ];
+  // which of the four slots each sprite type draws from (bit per slot, same source)
+  var SLOT_USE = '84008080444808540142084828a080814811182801f0400f0110f0400880ff808666323333364822088884c44cc1144442c11111113304440181ff0070f0181114844040c084444242c8088884442240444044418880040000108280080ff8004f841004c8499968800002f00000000000000000890004122040000000000000';
+  var HIGH_SHEETS = { 0x52: 1, 0x53: 1, 0x5A: 1, 0x5B: 1, 0x5C: 1, 0x5E: 1, 0x5F: 1 };
+  var sheetJob = null, lastAny = '';
+  function screenKey(r) { return r[0x1B] + ':' + (r[0x1B] ? r[0xA0] | r[0xA1] << 8 : r[0x8A]); }
+  function slotsInUse(r) {
+    var used = 0;
+    for (var k = 0; k < 16; k++) if (r[S.STATE + k]) used |= parseInt(SLOT_USE.charAt(r[S.TYPE + k]), 16) || 0;
+    return used;
+  }
+  // the cheapest way to get an enemy's sheets in: [changes [[slot, sheet]], cost]
+  function sheetPlan(r, e, used) {
+    var have = [r[0xC2FC], r[0xC2FD], r[0xC2FE], r[0xC2FF]], best = null;
+    e[1].forEach(function (opt) {
+      var ch = [], cost = 0;
+      opt.forEach(function (need, i) {
+        if (!need || need.indexOf(have[i]) >= 0) return;
+        ch.push([i, need[0]]); cost += (used >> i & 1) ? 10 : 1;
+      });
+      if (!best || cost < best[1]) best = [ch, cost];
+    });
+    return best;
+  }
+  function spriteSheet3bpp(n) {
+    var c = core(), rom; try { rom = c && c.rom(); } catch (e) { return null; }
+    if (!rom || rom.length < 0x100000) return null;
+    var pc = (rom[0x5033 + n] & 0x7F) * 0x8000 + ((rom[0x5112 + n] << 8 | rom[0x51F1 + n]) & 0x7FFF);
+    var d = lzDecomp(rom, pc);
+    return d && d.length === 0x600 ? d : null;
+  }
+  // zelda3 Do3To4Low16Bit / Do3To4High16Bit, 64 tiles
+  function sheet4bpp(r, dst, src, high) {
+    var si = 0;
+    for (var t = 0; t < 64; t++) {
+      for (var n = 0; n < 8; n++) {
+        var lo = src[si + n * 2], hi = src[si + n * 2 + 1], u = src[si + 16 + n];
+        r[dst + n * 2] = lo; r[dst + n * 2 + 1] = hi;
+        if (high) { var t2 = lo | hi << 8, v = ((t2 | (t2 >> 8) | u) << 8 | u) & 0xFFFF; r[dst + 16 + n * 2] = v & 0xFF; r[dst + 17 + n * 2] = v >> 8; }
+        else { r[dst + 16 + n * 2] = u; r[dst + 17 + n * 2] = 0; }
+      }
+      si += 24; dst += 32;
+    }
+  }
+  function spawnAnyEnemy(r, pick) {
+    if (sheetJob) return 'Another enemy is still on its way';
+    if (freeSlot(r) < 0) return 'Too many sprites on screen';
+    var here = r[0x1B] ? 'uw' : 'ow';   // e[3]: the only place it can go, when there's one
+    var pool = ANY_ENEMIES.filter(function (e) { return (!e[3] || e[3] === here) && (!pick || pick(e)); });
+    if (!pool.length) return 'No enemy for here';
+    var used = slotsInUse(r);
+    // prefer enemies that leave the slots in use alone
+    var plans = pool.map(function (e) { return [e, sheetPlan(r, e, used)]; });
+    var calm = plans.filter(function (p) { return p[1][1] < 10; });
+    var p = (calm.length ? calm : plans)[Math.floor(Math.random() * (calm.length || plans.length))];
+    var e = p[0], ch = p[1][0];
+    var chunks = [];
+    for (var i = 0; i < ch.length; i++) {
+      var slot = ch[i][0], n = ch[i][1], d = spriteSheet3bpp(n);
+      if (!d) return 'Couldn\'t read that enemy\'s graphics from this ROM';
+      for (var b = 0; b < 0x600; b++) r[0x7800 + slot * 0x600 + b] = d[b];   // the 3bpp copy the game keeps
+      sheet4bpp(r, 0x10000 + slot * 0x800, d, HIGH_SHEETS[n]);
+      r[0xC2FC + slot] = n;
+      for (var j = 0; j < 4; j++) chunks.push([0x50 + slot * 4 + j, slot * 0x800 + j * 0x200]);
+    }
+    lastAny = e[2];
+    sheetJob = { type: e[0], name: e[2], chunks: chunks, at: screenKey(r), wait: 2 };
+    if (!chunks.length) { sheetJob = null; return placeEnemy(r, e[0]); }
+    return true;
+  }
+  function sheetFrame(r) {
+    var j = sheetJob; if (!j) return;
+    if (screenKey(r) !== j.at) { sheetJob = null; feed(j.name + ' didn\'t make it: Link changed screens', 'info'); return; }
+    if (j.chunks.length) {
+      if (r[0x19]) return;               // the game's own upload is busy this frame
+      var c = j.chunks.shift();
+      r[0x19] = c[0]; r[0x118] = c[1] & 0xFF; r[0x119] = c[1] >> 8;
+      return;
+    }
+    if (--j.wait > 0) return;
+    sheetJob = null;
+    var res = placeEnemy(r, j.type);
+    if (res !== true) feed(j.name + ': ' + res, 'info');
   }
 
   // ── warps ──
@@ -237,6 +654,225 @@
     }
   }
 
+  // ── shield and sword ───────────────────────────────────────────────────
+  // $7EF35A shield: 0 none, 1 Fighter's, 2 Fire, 3 Mirror.
+  // $7EF359 sword: 0 none, 1 Fighter's, 2 Master, 3 Tempered, 4 Golden
+  // (0xFF: swordless). Changing the number is all the game needs to block,
+  // swing or fire beams by, as when a Pikit eats the shield. What Link holds
+  // is drawn from tiles the game unpacks once ($7E9000 sword, $7E9300
+  // shield: zelda3 DecompressSwordGraphics / DecompressShieldGraphics) and a
+  // palette ($7EC6B2 kPal_Sword, $7EC6B8 kPal_Shield). A changed level gets
+  // its tiles and colors made the way the game makes them, from this ROM's
+  // own graphics (sheets $5E/$5F, pointer tables at $00:D033/D112/D1F1) and
+  // palettes ($1B:D630 swords, $1B:D648 shields).
+  var GEAR = {
+    shield: { addr: 0xF35A, max: 3, names: ['no shield', "the Fighter's Shield", 'the Fire Shield', 'the Mirror Shield'],
+      gfx: [0x660, 0x660, 0x6F0, 0x900], tiles: [[0x9300, 0], [0x93C0, 0x180]], n: 6, pal: 0xDD648, palLen: 8, palAt: 0x1B8 },
+    sword: { addr: 0xF359, max: 4, names: ['no sword', "the Fighter's Sword", 'the Master Sword', 'the Tempered Sword', 'the Golden Sword'],
+      gfx: [0, 0, 0x120, 0x120, 0x120], tiles: [[0x9000, 0], [0x9180, 0x180]], n: 12, pal: 0xDD630, palLen: 6, palAt: 0x1B2 },
+  };
+  var SHIELD = GEAR.shield.addr, SWORD = GEAR.sword.addr;
+  var gearRom = { key: '', g: null };
+  function lzDecomp(rom, p) {
+    var out = [];
+    for (;;) {
+      if (p >= rom.length || out.length > 0x2000) return null;
+      var cmd = rom[p++], len;
+      if (cmd === 0xFF) return out;
+      if ((cmd & 0xE0) !== 0xE0) { len = (cmd & 0x1F) + 1; cmd &= 0xE0; }
+      else { len = rom[p++] + ((cmd & 3) << 8) + 1; cmd = (cmd << 3) & 0xE0; }
+      if (cmd === 0) { while (len--) out.push(rom[p++]); }
+      else if (cmd & 0x80) { var o = rom[p] | rom[p + 1] << 8; p += 2; while (len--) { if (o >= out.length) return null; out.push(out[o++]); } }
+      else if (!(cmd & 0x40)) { var v = rom[p++]; while (len--) out.push(v); }
+      else if (!(cmd & 0x20)) { var lo = rom[p++], hi = rom[p++]; for (;;) { out.push(lo); if (--len === 0) break; out.push(hi); if (--len === 0) break; } }
+      else { var c = rom[p++]; while (len--) out.push(c++ & 0xFF); }
+    }
+  }
+  function gearGfx() {
+    var c = core(), rom; try { rom = c && c.rom(); } catch (e) { return null; }
+    if (!rom || rom.length < 0xE0000) return null;
+    var key = rom.length + ':' + rom[0x7FDC] + ',' + rom[0x7FDD] + ',' + rom[0x7FC0] + ',' + rom[0x7FC1] + ',' + rom[0x7FC2];
+    if (gearRom.key === key) return gearRom.g;
+    var sheet = new Uint8Array(0xC00), ok = true;
+    [0x5E, 0x5F].forEach(function (n, i) {
+      var pc = (rom[0x5033 + n] & 0x7F) * 0x8000 + ((rom[0x5112 + n] << 8 | rom[0x51F1 + n]) & 0x7FFF);
+      var d = ok && lzDecomp(rom, pc);
+      if (!d || d.length !== 0x600) ok = false; else sheet.set(d, i * 0x600);
+    });
+    gearRom = { key: key, g: ok ? { tiles: sheet, rom: rom } : null };
+    return gearRom.g;
+  }
+  // zelda3 Expand3To4High: the sheet's 3bpp tiles into the 4bpp buffer
+  function expand3to4(r, dst, src, base, num) {
+    do {
+      var s2 = src + 0x10;
+      for (var n = 0; n < 8; n++) {
+        var t = base[src] | base[src + 1] << 8, u = base[s2], v = ((t | (t >> 8) | u) << 8 | u) & 0xFFFF;
+        r[dst] = t & 0xFF; r[dst + 1] = t >> 8; r[dst + 0x10] = v & 0xFF; r[dst + 0x11] = v >> 8;
+        src += 2; s2++; dst += 2;
+      }
+      dst += 16; src = s2;
+      if (!(src & 0x78)) src += 0x180;
+    } while (--num);
+  }
+  function setGear(kind, r, lvl) {
+    var G = GEAR[kind];
+    lvl = Math.max(0, Math.min(G.max, lvl));
+    var was = r[G.addr];
+    r[G.addr] = lvl;
+    if (!lvl || lvl === was) return;
+    var g = gearGfx(); if (!g) return;   // the level still changes; only the picture can't
+    G.tiles.forEach(function (t) { expand3to4(r, t[0], G.gfx[lvl] + t[1], g.tiles, G.n); });
+    for (var i = 0; i < G.palLen; i++) r[0xC300 + G.palAt + i] = r[0xC500 + G.palAt + i] = g.rom[G.pal + (lvl - 1) * G.palLen + i];
+    r[0x15] = 1;   // upload the palette next frame
+  }
+  function setShield(r, lvl) { setGear('shield', r, lvl); }
+  function gearHas(kind, r) { var v = r[GEAR[kind].addr]; return v > 0 && v <= GEAR[kind].max; }
+
+  // The timed ones lend the gear out: "Shield gone", "Sword gone", "Sword
+  // downgrade". Link holds less (none, or one sword level lower) while one
+  // runs, and gets back what he had when they've all ended. One found
+  // meanwhile counts too: pickups are progressive (each adds a level), so a
+  // sword found while holding the Fighter's in place of the Tempered gives
+  // the Golden back. The loan is kept in this browser with the ROM it
+  // belongs to, so a reload or a cleared effect list still gives it back,
+  // and another seed never gets it.
+  function romId() { var c = core(), rom; try { rom = c && c.rom(); } catch (e) { return ''; } if (!rom || !rom.length) return '';
+    var t = ''; for (var i = 0x7FC0; i < 0x7FD5; i++) t += String.fromCharCode(rom[i]); return rom.length + ':' + rom[0x7FDC] + ',' + rom[0x7FDD] + ':' + t; }
+  var LOAN_KEYS = { shield: 'rhb-shield-loan', sword: 'rhb-sword-loan' };
+  function loanRead(kind) { try { return JSON.parse(localStorage.getItem(LOAN_KEYS[kind]) || 'null'); } catch (e) { return null; } }
+  function loanSave(kind) { var v = loans[kind]; try { if (v) localStorage.setItem(LOAN_KEYS[kind], JSON.stringify(v)); else localStorage.removeItem(LOAN_KEYS[kind]); } catch (e) {} }
+  var loans = { shield: loanRead('shield'), sword: loanRead('sword') };
+  function lent(kind) { var l = loans[kind]; return l && l.rom === romId() ? l : null; }
+  function heldNow(kind, l) {
+    if (kind === 'shield') return active.shield_off ? 0 : -1;
+    if (active.sword_off) return 0;
+    if (active.sword_down) return Math.max(1, l.lvl - 1);
+    return -1;   // nothing holding it: give it back
+  }
+  function gearFrame(kind, r) {
+    var l = loans[kind]; if (!l) return;
+    if (l.rom !== romId()) return;   // another game: kept for when that seed's back
+    var G = GEAR[kind], v = r[G.addr];
+    if (v > l.held && v <= G.max) { l.lvl = Math.min(G.max, Math.max(v, l.lvl + v - l.held)); }   // found one meanwhile
+    var want = heldNow(kind, l);
+    if (want < 0) { loans[kind] = null; loanSave(kind); setGear(kind, r, Math.max(l.lvl, v <= G.max ? v : 0)); return; }
+    if (v !== want) setGear(kind, r, want);
+    if (l.held !== want || v !== want) { l.held = want; loanSave(kind); }
+  }
+  function lend(kind) {
+    var c = core(), r = c && c.wram(); if (!r || r.length < 0x20000) return;
+    if (!lent(kind)) { var v = r[GEAR[kind].addr]; loans[kind] = { rom: romId(), lvl: v <= GEAR[kind].max ? v : 0, held: v }; loanSave(kind); }
+    gearFrame(kind, r);
+  }
+  function giveBack(kind) { var c = core(), r = c && c.wram(); if (r && r.length >= 0x20000) gearFrame(kind, r); }
+  // permanent changes while some is lent change what comes back
+  function gearStep(kind, r, d, min) {
+    var G = GEAR[kind], l = lent(kind), cur = l ? l.lvl : r[G.addr];
+    if (cur > G.max) return 'swordless seed';
+    if (d < 0 && cur <= min) return cur ? 'Link only has ' + G.names[cur] : 'Link has no ' + kind;
+    if (d > 0 && cur >= G.max) return 'Link already has ' + G.names[G.max];
+    if (l) { l.lvl = cur + d; loanSave(kind); gearFrame(kind, r); return; }
+    setGear(kind, r, cur + d);
+  }
+  function gearSteal(kind, r) {
+    var l = lent(kind);
+    if (!l && !gearHas(kind, r)) return r[GEAR[kind].addr] > GEAR[kind].max ? 'swordless seed' : 'Link has no ' + kind;
+    if (l) { loans[kind] = null; loanSave(kind); ['shield_off', 'sword_off', 'sword_down'].forEach(function (id) { if (id.indexOf(kind) === 0) delete active[id]; }); }
+    r[GEAR[kind].addr] = 0;
+  }
+  function gearCheck(kind) { return function (r) { return gearHas(kind, r) || lent(kind) ? '' : r[GEAR[kind].addr] > GEAR[kind].max ? 'swordless seed' : 'Link has no ' + kind; }; }
+
+  // ── tunic ($7EF35B: 0 green, 1 blue, 2 red) ─────────────────────────────
+  // The number is what hits are worked out by. Link's colors are the
+  // tunic's 15-color palette from this ROM ($1B:D308, 30 bytes a tunic; a
+  // custom sprite brings its own there) into $7EC6E2, then the gloves' color
+  // on top ($1B:EDF5), as zelda3 LoadActualGearPalettes does. As a bunny
+  // the game picks the colors when he turns back.
+  var TUNICS = ['the Green Mail', 'the Blue Mail', 'the Red Mail'];
+  function setTunic(r, lvl) {
+    r[0xF35B] = lvl;
+    var c = core(), rom; try { rom = c && c.rom(); } catch (e) {}
+    if (!rom || rom.length < 0xE0000 || r[0x56]) return;
+    for (var i = 0; i < 30; i++) r[0xC4E2 + i] = r[0xC6E2 + i] = rom[0xDD308 + lvl * 30 + i];
+    var g = r[0xF354];
+    if (g >= 1 && g <= 2) for (i = 0; i < 2; i++) r[0xC4FA + i] = r[0xC6FA + i] = rom[0xDEDF5 + (g - 1) * 2 + i];
+    r[0x15] = 1;
+  }
+
+  // ── "Item gone": one random inventory item lent out for a while ─────────
+  // Every item in the item menu, plus the gloves, boots, flippers and Moon
+  // Pearl ($7EF340-$7EF357). The sword and shield have their own effects,
+  // and the tunic is left alone. The item's number is held at 0 while the
+  // effect runs, as if Link never had it; the boots and flippers also lose
+  // their ability bits ($7EF379: 4 dash, 2 swim). All four bottles go as one.
+  // It comes back when time's up, with anything found meanwhile added
+  // (bombs and gloves add up, the rest keep the better one). Kept in this
+  // browser with the ROM, like the shield and sword loans.
+  //
+  // The game uses the item equipped on Y without checking Link still has
+  // it (zelda3 Link_HandleYItem), so Y does nothing while the equipped item
+  // is the one that's gone; the item menu skips it (Hud_DoWeHaveThisItem).
+  var INV = [
+    [0x340, function (v) { return v >= 3 ? 'Silver Arrows' : 'Bow'; }], [0x341, function (v) { return v >= 2 ? 'Red Boomerang' : 'Boomerang'; }],
+    [0x342, 'Hookshot'], [0x343, 'Bombs', 'add', 99], [0x344, function (v) { return v >= 2 ? 'Magic Powder' : 'Mushroom'; }],
+    [0x345, 'Fire Rod'], [0x346, 'Ice Rod'], [0x347, 'Bombos'], [0x348, 'Ether'], [0x349, 'Quake'], [0x34A, 'Lamp'],
+    [0x34B, 'Hammer'], [0x34C, function (v) { return v >= 2 ? 'Flute' : 'Shovel'; }], [0x34D, 'Bug Net'], [0x34E, 'Book of Mudora'],
+    [0x34F, 'Bottles', 'bottles'], [0x350, 'Cane of Somaria'], [0x351, 'Cane of Byrna'], [0x352, 'Magic Cape'],
+    [0x353, function (v) { return v >= 2 ? 'Magic Mirror' : 'Magic Scroll'; }],
+    [0x354, function (v) { return v >= 2 ? "Titan's Mitt" : 'Power Glove'; }, 'add', 2], [0x355, 'Pegasus Boots', 0, 0, 0x04],
+    [0x356, 'Flippers', 0, 0, 0x02], [0x357, 'Moon Pearl'],
+  ];
+  function invName(e, v) { return typeof e[1] === 'function' ? e[1](v) : e[1]; }
+  function invEntry(addr) { for (var i = 0; i < INV.length; i++) if (INV[i][0] === addr) return INV[i]; return null; }
+  var ITEM_KEY = 'rhb-item-loan';
+  var itemLoan = (function () { try { return JSON.parse(localStorage.getItem(ITEM_KEY) || 'null'); } catch (e) { return null; } })();
+  function itemSave() { try { if (itemLoan) localStorage.setItem(ITEM_KEY, JSON.stringify(itemLoan)); else localStorage.removeItem(ITEM_KEY); } catch (e) {} }
+  function itemCandidates(r) {
+    return INV.filter(function (e) {
+      var a = 0xF000 + e[0];
+      if (e[2] === 'bottles') { for (var i = 0; i < 4; i++) if (r[0xF35C + i]) return true; return false; }
+      if (!r[a]) return false;
+      if (e[0] === 0x352 && r[0x55]) return false;                          // cape on: it'd stay on with Y blocked
+      if (e[0] === 0x351 && r[0x303] === 18 && r[0x37B]) return false;     // Byrna's shield up
+      if (e[0] === 0x356 && (r[0x5D] === 4 || r[0x5D] === 0x13)) return false;   // swimming
+      return true;
+    });
+  }
+  function itemTake(r) {
+    var list = itemCandidates(r); if (!list.length) return null;
+    var e = list[Math.floor(Math.random() * list.length)], a = 0xF000 + e[0];
+    var l = { rom: romId(), addr: e[0], name: invName(e, r[a]), v: r[a], ab: e[4] ? r[0xF379] & e[4] : 0 };
+    if (e[2] === 'bottles') { l.slots = [r[0xF35C], r[0xF35D], r[0xF35E], r[0xF35F]]; l.name = 'Bottles'; for (var i = 0; i < 4; i++) r[0xF35C + i] = 0; }
+    r[a] = 0; if (e[4]) r[0xF379] &= ~e[4];
+    itemLoan = l; itemSave();
+    return l;
+  }
+  function itemFrame(r) {
+    var l = itemLoan; if (!l || l.rom !== romId()) return;
+    var e = invEntry(l.addr), a = 0xF000 + l.addr, i;
+    if (active.item_off) {
+      var changed = false;
+      if (e[2] === 'bottles') {
+        for (i = 0; i < 4; i++) if (r[0xF35C + i]) { if (!l.slots[i]) l.slots[i] = r[0xF35C + i]; r[0xF35C + i] = 0; changed = true; }
+        r[a] = 0;
+      } else if (r[a]) {
+        l.v = e[2] === 'add' ? Math.min(e[3], l.v + r[a]) : Math.max(l.v, r[a]);
+        r[a] = 0; changed = true;
+      }
+      if (e[4] && (r[0xF379] & e[4])) { l.ab |= e[4]; r[0xF379] &= ~e[4]; changed = true; }
+      if (changed) itemSave();
+      return;
+    }
+    // time's up (or the page was reloaded): give it back
+    itemLoan = null; itemSave();
+    if (e[2] === 'bottles') {
+      for (i = 0; i < 4; i++) if (!r[0xF35C + i] && l.slots[i]) r[0xF35C + i] = l.slots[i];
+      if (!r[a] || !r[0xF35C + r[a] - 1]) { r[a] = 0; for (i = 0; i < 4; i++) if (r[0xF35C + i]) { r[a] = i + 1; break; } }
+    } else r[a] = e[2] === 'add' ? Math.min(e[3], l.v + r[a]) : Math.max(l.v, r[a]);
+    if (l.ab) r[0xF379] |= l.ab;
+  }
+
   // ── the effects ─────────────────────────────────────────────────────────
   // Instant effects run once (apply). Timed ones last `secs` seconds of play
   // (the clock stops in menus and text boxes); a second gift adds more time.
@@ -276,15 +912,26 @@
       input: function (p) { return p & ~B.Y; } },
     swap_by:     { name: 'B and Y swapped', good: false, secs: 20,
       input: function (p) { return swapBits(p, B.B, B.Y); } },
-    // Hands the game a hit worth all of Link's hearts, so it runs its own
-    // death: a bottled fairy still saves him, and the cape / Cane of
-    // Byrna's invincibility still blocks it, exactly like a real hit.
+    // Starts the game's own death right away, the way a fatal hit does
+    // (zelda3 Link_ControlHandler), but without going through the hit: the
+    // Magic Cape, the Cane of Byrna, i-frames and the like don't stop it.
+    // The game over sequence turns the cape off itself, and a bottled fairy
+    // still revives Link, as on any death.
     insta_kill:  { name: 'Instant death', good: false,
-      apply: function (r) { r[0x373] = r[A.HP]; } },
+      apply: function (r) {
+        r[0x373] = 0;                          // no hit pending
+        r[0xC211] = r[0x1C]; r[0xC212] = r[0x1D];   // mapbak_TM/TS = TM/TS
+        r[0x10C] = r[A.MODE];                  // saved_module_for_menu
+        r[A.MODE] = 0x12; r[A.SUBMODE] = 1;    // game over, death
+        r[0x31F] = 0;                          // no blinking
+        r[A.HP_FILL] = 0; r[A.HP] = 0;
+      } },
     enemy_spawn: { name: 'Extra enemy', good: false,
       apply: function (r) { return cloneEnemy(r); } },
     enemy_random: { name: 'Random enemy', good: false,
       apply: function (r) { return spawnRandomEnemy(r); } },
+    enemy_any:   { name: 'Any enemy', good: false,
+      apply: function (r) { return spawnAnyEnemy(r); } },
     magic_small: { name: 'Small magic refill', good: true,
       apply: function (r) { r[A.MAGIC_FILL] = Math.min(0x80, r[A.MAGIC_FILL] + 0x20); } },
     warp_dungeon: { name: 'Warp to a random dungeon', good: false,
@@ -320,8 +967,70 @@
       apply: function (r) { return fillBottle(r, 6); } },
     bee_bottle:  { name: 'Bee in a bottle', good: true,
       apply: function (r) { return fillBottle(r, 7); } },
-    pink_link:   { name: 'Pink Link', good: true, secs: 60,
-      frame: pinkFrame, end: function () { var c = core(); if (c) pinkEnd(c.wram()); } },
+    pink_link:   Object.assign({ name: 'Pink Link', good: true, secs: 60 }, linkTint('pink_link')),
+
+    blood_drip:    { name: 'Blood drip', good: false, secs: 20,
+      start: function () { overlayOn('blood', bloodSvg()); }, end: function () { overlayOff('blood'); } },
+    spider_web:    { name: 'Spiderwebs', good: false, secs: 30,
+      start: function () { overlayOn('web', webSvg()); }, end: function () { overlayOff('web'); } },
+    monster_mash:  { name: 'Monster mash (enemies → bats / mummies)', good: false,
+      apply: function (r) { return monsterMash(r); } },
+
+    // ── room lights ──
+    lights_on:     { name: 'Lights on!', good: true, secs: 60, indoors: true, frame: lightsOnFrame, end: lightsOnEnd,
+      start: function () { lightsCancel('lights_out', lightsOutEnd); } },
+    lights_out:    { name: 'Lights out!', good: false, secs: 30, frame: lightsOutFrame, end: lightsOutEnd,
+      start: function () { lightsCancel('lights_on', lightsOnEnd); } },
+
+    // ── Halloween ──
+    spooky_night:  { name: 'Spooky night', good: false, secs: 45, frame: nightFrame, end: nightEnd },
+    ghost_link:    Object.assign({ name: 'Ghost Link', good: true, secs: 60 }, linkTint('ghost_link')),
+    pumpkin_link:  Object.assign({ name: 'Pumpkin Link', good: true, secs: 60 }, linkTint('pumpkin_link')),
+    haunted_lights: { name: 'Haunted lights', good: false, secs: 20, frame: hauntFrame, end: hauntEnd },
+    spooky_monster: { name: 'Spooky monster', good: false,
+      apply: function (r) { var res = spawnRandomEnemy(r, spookyHere(r)); return res === true ? true : spawnRandomEnemy(r); } },
+    haunting:      { name: 'Haunting! (3 spooky monsters)', good: false,
+      apply: function (r) {
+        var n = 0, pool = spookyHere(r);
+        for (var i = 0; i < 3; i++) if (spawnRandomEnemy(r, pool) === true) n++;
+        if (!n) return spawnRandomEnemy(r);
+        return true;
+      } },
+    trick_or_treat: { name: 'Trick or treat!', good: true,
+      app: function (job) {
+        var treat = Math.random() < 0.5;
+        var list = treat ? ['heal_full', 'rupees_plus', 'bombs_plus', 'arrows_plus', 'magic_full', 'fairy', 'pumpkin_link']
+          : ['hurt_2', 'rupees_minus', 'magic_drain', 'spooky_monster', 'haunted_lights', 'spooky_night', 'ghost_link', 'blood_drip', 'spider_web', 'monster_mash'];
+        var pick = list[Math.floor(Math.random() * list.length)];
+        feed((job.user ? job.user + ': ' : '') + (treat ? '🍬 TREAT! ' : '🎃 TRICK! ') + EFFECTS[pick].name, treat ? 'good' : 'bad');
+        trigger(pick, job.user, treat ? 'Treat!' : 'Trick!');
+        return true;
+      } },
+    // HydeOut's idea: a gift shows where one item the run still needs is
+    // (addons/reveal.js reads the seed's spoiler). A banner on the game says
+    // it, and Mudora 2.0 marks that spot on its map.
+    reveal_item:   { name: 'Reveal a go-mode item', good: true,
+      app: function (job) {
+        var R = root.UnifiedRando && root.UnifiedRando.crowd, RV = root.RandoReveal, c = core();
+        var sp = R && R.spoiler && R.spoiler();
+        if (!RV || !sp) { feed('Reveal: no spoiler for this game (only seeds made here have one)', 'info'); return false; }
+        if (sp.race) { feed('Reveal: race seed, its spoiler stays hidden', 'info'); return false; }
+        var e = RV.pick(RV.parse(sp.spoiler), c && c.wram(), sp.name);
+        if (!e) { feed('Reveal: nothing left to reveal (Link has everything it needs)', 'info'); return false; }
+        var where = e.loc + (/^(Light|Dark) World$/.test(e.region) ? ' (' + e.region + ')' : '');
+        banner('done-ok', '\ud83d\udd2e ' + e.name + ' is at ' + e.loc, (job.user && job.user !== 'test' ? 'Revealed by ' + job.user : 'Revealed') +
+          (/^(Light|Dark) World$/.test(e.region) ? ' \u00b7 ' + e.region : ''), 9000);
+        feed('\ud83d\udd2e ' + e.name + ': ' + where, 'good');
+        try { var bc = new BroadcastChannel('rando-hub-reveal'); bc.postMessage({ type: 'reveal', loc: e.loc, region: e.region, item: e.name, icon: e.icon, seed: sp.name }); bc.close(); } catch (x) {}
+        send({ type: 'reveal', item: e.name, loc: e.loc, region: e.region, user: job.user || '' });
+        return true;
+      } },
+    spooky_sprite: { name: 'Spooky sprite', good: true,
+      app: function () {
+        var R = root.UnifiedRando && root.UnifiedRando.crowd;
+        if (!R || !R.spookySprite) { feed('Spooky sprite: the randomizer isn\'t ready', 'info'); return false; }
+        R.spookySprite(); return true;
+      } },
     music_roulette: { name: 'Music roulette', good: true,
       app: function () {
         var m = root.UnifiedRando && root.UnifiedRando.music;
@@ -334,10 +1043,75 @@
     boss_aga:    { name: 'Boss detour: Agahnim', good: false, detour: 'aga1' },
     boss_random: { name: 'Boss detour: random boss', good: false, detour: 'random' },
 
-    one_hit:     { name: 'One-heart mode', good: false, secs: 30,
-      frame: function (r) { if (r[A.HP] > 8) r[A.HP] = 8; r[A.HP_FILL] = 0; } },
+    // One-hit KO: any hit kills, whatever mail Link wears. The game works out
+    // a hit's damage (blue mail halves it, red quarters it) into $0373 and
+    // takes it off a frame later (zelda3 player.c Link_ControlHandler): here
+    // the waiting damage becomes all of Link's hearts. Like a real hit, a
+    // bottled fairy still saves him and the cape / Cane of Byrna still block it.
+    one_hit:     { name: 'One-hit KO', good: false, secs: 30,
+      frame: function (r) {
+        if (r[A.HP] > 8) r[A.HP] = 8; r[A.HP_FILL] = 0;   // shows one heart
+        if (r[0x373] && r[0x373] < r[A.HP]) r[0x373] = r[A.HP];
+      } },
     no_magic:    { name: 'Magic locked', good: false, secs: 30,
       frame: function (r) { r[A.MAGIC] = 0; r[A.MAGIC_FILL] = 0; } },
+
+    // Shields and swords (see setGear above). The "gone" and sword downgrade
+    // ones are timed and give it back at the end; "stolen" doesn't: Link
+    // needs to find one again. Sword stolen can leave a seed unbeatable (no
+    // sword left to find), so Crowd Control+ asks before it's put on a gift.
+    shield_off:  { name: 'Shield gone', good: false, secs: 30, check: gearCheck('shield'),
+      start: function () { lend('shield'); }, end: function () { giveBack('shield'); } },
+    shield_steal: { name: 'Shield stolen', good: false, apply: function (r) { return gearSteal('shield', r); } },
+    shield_down: { name: 'Shield downgrade', good: false, apply: function (r) { return gearStep('shield', r, -1, 1); } },
+    shield_up:   { name: 'Shield upgrade', good: true, apply: function (r) { return gearStep('shield', r, 1); } },
+    sword_off:   { name: 'Sword gone', good: false, secs: 30, check: gearCheck('sword'),
+      start: function () { lend('sword'); }, end: function () { giveBack('sword'); } },
+    sword_down:  { name: 'Sword downgrade', good: false, secs: 30,
+      check: function (r) { var l = lent('sword'), v = l ? l.lvl : r[SWORD]; return v > 4 ? 'swordless seed' : v >= 2 ? '' : v ? 'Link only has the Fighter\'s Sword' : 'Link has no sword'; },
+      start: function () { lend('sword'); }, end: function () { giveBack('sword'); } },
+    sword_up:    { name: 'Sword upgrade', good: true, apply: function (r) { return gearStep('sword', r, 1); } },
+    sword_steal: { name: 'Sword stolen', good: false, apply: function (r) { return gearSteal('sword', r); },
+      warn: 'Sword stolen can make the seed unbeatable: if every sword has been found, there is none left to get back (Agahnim\'s barrier and Ganon need one), and the next sword found only gives the Fighter\'s Sword.' },
+
+    // Heart containers, for good: $7EF36C is the hearts Link has (8 a heart,
+    // 20 at most). A new one fills itself up, as when one is picked up
+    // (zelda3 ancilla.c). One taken away takes its health with it and is
+    // wiped off the HUD (the game only draws the hearts Link has, so the old
+    // one would stay: $7EC768, two rows of ten, 0x207F is a blank tile).
+    heart_add:   { name: '+1 heart container', good: true,
+      apply: function (r) {
+        if (r[A.HP_MAX] >= 0xA0) return 'Link already has 20 hearts';
+        r[A.HP_MAX] += 8; r[A.HP_FILL] = Math.min(0xA0, r[A.HP_FILL] + 8);
+      } },
+    heart_remove: { name: '-1 heart container', good: false,
+      apply: function (r) {
+        var n = r[A.HP_MAX] >> 3;
+        if (n <= 1) return 'Link only has 1 heart';
+        r[A.HP_MAX] = (n - 1) * 8;
+        if (r[A.HP] > r[A.HP_MAX]) r[A.HP] = r[A.HP_MAX];
+        for (var i = n - 1; i < 20; i++) { var at = 0xC768 + (i % 10) * 2 + (i >= 10 ? 0x40 : 0); r[at] = 0x7F; r[at + 1] = 0x20; }
+        r[0x16] = 1;   // send the HUD next frame
+      } },
+    tunic_up:    { name: 'Tunic upgrade', good: true,
+      apply: function (r) { var t = r[0xF35B]; if (t >= 2) return 'Link already has the Red Mail'; setTunic(r, t + 1); } },
+    tunic_down:  { name: 'Tunic downgrade', good: false,
+      apply: function (r) { var t = r[0xF35B]; if (!t || t > 2) return 'Link only has the Green Mail'; setTunic(r, t - 1); } },
+
+    // A random item from the inventory, gone for a while (see itemTake above).
+    item_off:    { name: 'Item gone', good: false, secs: 30,
+      check: function (r) { return itemLoan && itemLoan.rom === romId() || itemCandidates(r).length ? '' : 'Link has no items to take'; },
+      start: function () {
+        var c = core(), r = c && c.wram(); if (!r) return;
+        if (itemLoan && itemLoan.rom === romId()) { feed('Item gone: still the ' + itemLoan.name, 'bad'); return; }
+        var l = itemTake(r); if (l) { lastItemGone = l.name; feed('Item gone: the ' + l.name + ' (it comes back when time\'s up)', 'bad'); }
+      },
+      // the game uses Y's item without checking Link still has it
+      input: function (p) {
+        var l = itemLoan, c = core(), r = c && c.wram();
+        return l && r && r[0x202] === l.addr - 0x33F ? p & ~B.Y : p;
+      },
+      end: function () { var c = core(), r = c && c.wram(); if (r && r.length >= 0x20000) itemFrame(r); } },
 
     // These press the app's own roll buttons (randomizer/app.js, reroll.js).
     sprite_roll: { name: 'Random sprite', good: true,
@@ -346,6 +1120,12 @@
       app: function () { return press(['r-sprite-fav-roll', 'sprite-fav-btn'], 'the sprite buttons'); } },
     msu_roll:    { name: 'Random MSU pack', good: true,
       app: function () { return press(['music-roll-btn'], 'MSU packs (add some and star favourites in ♪)'); } },
+    // Item sound packs (addons/sound-packs.js): what plays on item pickups in
+    // the broadcast view. Off → each pack → Mix, or a random different one.
+    sound_pack_next:   { name: 'Next item sound pack', good: true,
+      app: function () { return soundPack('next'); } },
+    sound_pack_random: { name: 'Random item sound pack', good: true,
+      app: function () { return soundPack('random'); } },
     seed_roll:   { name: 'New seed!', good: false,
       app: function (job) { return startReroll(job, 'same'); } },
     seed_preset: { name: 'Random preset seed!', good: false,
@@ -368,6 +1148,13 @@
       if (Date.now() < quietUntil) { feed(String(msg), 'info'); return; }
       return realAlert.call(window, msg);
     };
+  }
+  function soundPack(how) {
+    var sp = root.RandoSoundPacks;
+    if (!sp) { feed('Not available: item sound packs', 'info'); return false; }
+    if (!sp.packs().length) { feed('Add an item sound pack first (♪ Item Sounds in the broadcast view)', 'info'); return false; }
+    sp[how]().then(function (id) { if (id !== null) feed('Item sounds: ' + sp.activeName(id), 'info'); });
+    return true;
   }
   function press(ids, what) {
     if (typeof document === 'undefined') return false;
@@ -428,6 +1215,16 @@
 
   // Set up the settings for this kind of roll, then press Generate & Play.
   function rollNow() {
+    // "Rerolls can land on either game" (games.js): a random preset or a
+    // CHAOS seed may be Zelda 1 (a random Zelda 1 preset, rolled in z1r/).
+    // "New seed (same settings)" always stays in this game.
+    var G = root.RandoGames;
+    if (G && rerollMode !== 'same' && rerollTry === 0 && G.pickZ1()) {
+      feed('The new seed is Zelda 1!', 'bad');
+      banner('roll', rerollMode === 'chaos' ? 'CHAOS: Zelda 1 seed!' : 'Zelda 1 seed!', (rerollBy ? 'Courtesy of ' + rerollBy + ' · ' : '') + 'switching games', 0);
+      setTimeout(function () { G.goZ1(rerollBy, rerollMode); }, 1500);
+      return;
+    }
     var gen = document.getElementById('r-generate');
     if (!gen || gen.disabled) { feed('A seed is already being made', 'info'); banner('done-bad', 'No new seed', 'A seed was already being made', 4000); return; }
     rerollTry++;
@@ -459,6 +1256,7 @@
         seed.dispatchEvent(new Event('input', { bubbles: true }));
         seed.dispatchEvent(new Event('change', { bubbles: true }));
       }
+      if (root.RandoSeedLog) root.RandoSeedLog.next({ kind: rerollMode, by: rerollBy, pick: pickText });
       feed(rerollMode === 'preset' ? 'Random preset: ' + pickText : rerollMode === 'chaos' ? 'CHAOS seed: ' + pickText.split(':')[0] : 'Rolling a new seed…', 'bad');
       g.click();
       watchRoll();
@@ -568,14 +1366,15 @@
   // player rebuilds its screen when the new ROM starts.
   var bannerEl = null, bannerHideT = null;
   var BANNER_CSS =
-    '.cc-reroll { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); z-index: 26; pointer-events: none;' +
-    ' min-width: 58%; max-width: 92%; box-sizing: border-box; padding: 10px 16px 12px; border-radius: 10px; text-align: center;' +
+    // at the very top, over the HUD (it covered the play area just below: HydeOut, Oct 2026)
+    '.cc-reroll { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); z-index: 26; pointer-events: none;' +
+    ' min-width: 58%; max-width: 92%; box-sizing: border-box; padding: 6px 14px 8px; border-radius: 10px; text-align: center;' +
     ' background: rgba(10,12,16,.86); color: #fff; font: 700 13px/1.3 system-ui, sans-serif; text-shadow: 0 1px 2px #000;' +
     ' border: 2px solid #e5534b; box-shadow: 0 4px 18px rgba(0,0,0,.5); transition: opacity .5s; }' +
-    '.cc-reroll .t { font-size: clamp(15px, 3.6vw, 28px); letter-spacing: .04em; }' +
+    '.cc-reroll .t { font-size: clamp(14px, 3vw, 24px); letter-spacing: .04em; }' +
     '.cc-reroll .s { margin-top: 3px; font-weight: 600; opacity: .9; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }' +
     '.cc-reroll .d { margin-top: 5px; font-weight: 700; font-size: 13px; color: #f0c674; line-height: 1.35; }' +
-    '.cc-reroll .bar { margin-top: 8px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }' +
+    '.cc-reroll .bar { margin-top: 6px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.18); overflow: hidden; }' +
     '.cc-reroll .bar i { display: block; height: 100%; background: #e5534b; transition: width 1s linear; }' +
     '.cc-reroll.roll { border-color: #e3b341; } .cc-reroll.roll .bar i { width: 35% !important; background: #e3b341; animation: cc-slide 1.1s ease-in-out infinite alternate; }' +
     '.cc-reroll.done-ok { border-color: #3fb950; } .cc-reroll.done-bad { border-color: #8b95a3; }' +
@@ -609,6 +1408,7 @@
   // ── queue and timers ────────────────────────────────────────────────────
   var queue = [];              // { id, user, label }
   var active = {};             // id -> frames left
+  var lastItemGone = '';
   var paused = {};             // outdoor-only effects waiting indoors
   var gap = 0;                 // frames until the next queued effect may run
   var GAP_FRAMES = 45;         // ~0.75 s between effects, so each one is seen
@@ -683,16 +1483,19 @@
       if (++waitT === 240) feed(queue.length + ' waiting: ' + (detour ? 'boss detour still running (' + detour.state + ')' :
         'Link isn\'t in normal play (mode ' + ram[A.MODE] + '/' + ram[A.SUBMODE] + ', frozen ' + ram[A.FROZEN] + ', hearts ' + ram[A.HP] + '/' + ram[A.HP_MAX] + ')'), 'info');
     } else waitT = 0;
-    if (!inPlay(ram)) return;
+    if (!inPlay(ram)) { if (sheetJob && !PLAY_MODES[ram[A.MODE]]) sheetJob = null; return; }
+    sheetFrame(ram);
+    gearFrame('shield', ram); gearFrame('sword', ram); itemFrame(ram);
     // timed effects
     var outside = ram[A.MODE] === 0x09;   // the ROM only spawns cuccos on the overworld
     for (var id in active) {
       var fx = EFFECTS[id];
       if (fx.frame) fx.frame(ram);
-      if (fx.outdoors) {
-        // Outdoor-only effects pause their clock indoors and pick up again outside.
-        if (!outside) {
-          if (!paused[id]) { paused[id] = true; feed(fx.name + ' paused indoors (' + Math.ceil(active[id] / 60) + 's left)', 'info'); render(); }
+      if (fx.outdoors || fx.indoors) {
+        // Outdoor-only effects pause their clock indoors and pick up again
+        // outside; indoor-only ones (Lights on!) the other way round.
+        if (fx.outdoors ? !outside : outside) {
+          if (!paused[id]) { paused[id] = true; feed(fx.name + ' waits ' + (fx.outdoors ? 'until Link is outside' : 'for the next dungeon or cave') + ' (' + Math.ceil(active[id] / 60) + 's left)', 'info'); render(); }
           continue;
         }
         if (paused[id]) { delete paused[id]; feed(fx.name + ' resumed', 'bad'); render(); }
@@ -708,10 +1511,17 @@
     if (f.romCheck && !romHas(core, f.romCheck)) {
       feed(f.name + ' needs a randomizer ROM (not this one)', 'info'); render(); return;
     }
+    if (f.check) {
+      var why = f.check(ram);
+      if (why) { feed(f.name + ': ' + why, 'info'); render(); return; }
+    }
     var secs = secsOf(job.id);
     if (secs) {
-      if (!active[job.id] && f.start) { try { f.start(); } catch (e) { console.warn('[crowd]', job.id, e); } }
+      // counted as running before start(), so start() sees it running (the
+      // shield / sword / item loans hold their gear only while it runs)
+      var isNew = !active[job.id];
       active[job.id] = (active[job.id] || 0) + Math.round(secs * (core.fps || 60.1));
+      if (isNew && f.start) { try { f.start(); } catch (e) { console.warn('[crowd]', job.id, e); } }
     }
     else if (f.detour) {
       var dres = startDetour(job, f.detour, core, ram);
@@ -723,9 +1533,11 @@
       if (typeof res === 'string' && !/^flute only/.test(res)) { feed(f.name + ': ' + res, 'info'); render(); return; }
       if (typeof res === 'string') feed(res, 'info');
       if (/^warp_/.test(job.id) && lastWarp) note('warp: ' + lastWarp);
+      if (job.id === 'monster_mash' && lastMash) feed('🦇 ' + lastMash, 'bad');
+      if (job.id === 'enemy_any' && lastAny) feed('Any enemy: a ' + lastAny + ' is coming', 'bad');
     }
     gap = GAP_FRAMES;
-    if (!f.detour) giftCard(job.user, job.label, f.name + (secs ? ' · ' + secs + 's' : '') + (/^warp_/.test(job.id) && lastWarp ? ': ' + lastWarp : ''), f.good);
+    if (!f.detour) giftCard(job.user, job.label, f.name + (job.id === 'item_off' && lastItemGone ? ': ' + lastItemGone : '') + (secs ? ' · ' + secs + 's' : '') + (/^warp_/.test(job.id) && lastWarp ? ': ' + lastWarp : ''), f.good);
     if (!cfg.alerts) feed((job.user ? job.user + ': ' : '') + (job.label ? job.label + ' → ' : '') + f.name + (secs ? ' (' + secs + 's)' : ''),
       f.good ? 'good' : 'bad');   // the gift card already says it
     send({ type: 'applied', effect: job.id, user: job.user });
@@ -864,6 +1676,14 @@
     if (!snap || !snap.length) return 'Could not save the game first, so no detour';
     detour = { key: key, boss: b, by: job.user || '', state: 'entering', snap: snap.slice ? snap.slice() : snap, frames: 0,
       total: Math.round(detourSecs(job.id) * (core.fps || 60.1)), hpMax: ram[A.HP_MAX], wait: 0 };
+    // Blind only shows up once the maiden has turned into him: his room's
+    // flag (save word bit 0x0200, which the game moves to $0402 bit 0x2000;
+    // zelda3 SpritePrep_Blind_PrepareBattle) and no maiden following Link.
+    // Set for the trip only; the save state puts both back.
+    if (b.room === 0xAC) {
+      ram[0xF000 + 0xAC * 2 + 1] |= 0x02;
+      if (ram[0xF3CC] === 0x06) ram[0xF3CC] = 0;
+    }
     // 1. drop in through the entrance
     ram[0x10E] = b.entrance; ram[0x10F] = 0;
     ram[0x10] = 0x11; ram[0x11] = 0; ram[0xB0] = 0;
@@ -991,22 +1811,38 @@
   var BOSS_ROOMS = [['armos', 0xC8], ['lanmolas', 0x33], ['moldorm', 0x07], ['helmasaur', 0x5A], ['arrghus', 0x06],
     ['mothula', 0x29], ['blind', 0xAC], ['kholdstare', 0xDE], ['vitreous', 0x90], ['trinexx', 0xA4], ['aga2', 0x0D]];
   // Ganon's Tower chests (room-flag offsets from $7EF000, the same table as
-  // Hutch's tracker, js/dngpanel.js, MIT): 26 chests, not Bob's Torch. For the
-  // "which GT chest has the big key?" guessing game: gt.at is how many GT chests
-  // were open when the big key arrived (that chest included). Only known if the
+  // Hutch's tracker, js/dngpanel.js, MIT). Only the 22 places the big key can
+  // be: Bob's Torch and every chest except the Big Chest and the four behind
+  // the big key door (Mini Helmasaur x2, Pre-Moldorm, Validation), so the
+  // guesses run 1-22 (HydeOut, Oct 2026). For the "which GT chest has the big
+  // key?" guessing game: gt.at is how many of them were open when the big key
+  // arrived (that one included). Only known if the
   // key was seen missing first and it turned up inside GT.
-  var GT_CHESTS = [[0x118, 0x20], [0x118, 0x40], [0x11a, 0x10], [0x13a, 0x10], [0x13a, 0x20], [0x13a, 0x40], [0x13a, 0x80],
+  var GT_CHESTS = [[0x119, 0x04], [0x118, 0x20], [0x118, 0x40], [0x11a, 0x10], [0x13a, 0x10], [0x13a, 0x20], [0x13a, 0x40], [0x13a, 0x80],
     [0x0f6, 0x10], [0x0f6, 0x20], [0x0f6, 0x40], [0x0f6, 0x80], [0x116, 0x10], [0x0fa, 0x10], [0x0f8, 0x10], [0x0f8, 0x20],
-    [0x0f8, 0x40], [0x0f8, 0x80], [0x118, 0x80], [0x118, 0x10], [0x038, 0x20], [0x038, 0x40], [0x038, 0x10], [0x07a, 0x10],
-    [0x07a, 0x20], [0x07a, 0x40], [0x09a, 0x10]];
+    [0x0f8, 0x40], [0x0f8, 0x80], [0x118, 0x80], [0x038, 0x20], [0x038, 0x40], [0x038, 0x10]];
   function gtOpened(ram) {
     var n = 0;
     for (var i = 0; i < GT_CHESTS.length; i++) if (ram[0xF000 + GT_CHESTS[i][0]] & GT_CHESTS[i][1]) n++;
     return n;
   }
   var gtArmed = false;
+  // The Digging Game (Dark World): which dig gives the prize? The randomizer
+  // sets it per seed (ROM 0x180020, DiggingGameRNG, up to ~30 digs) and the
+  // game counts the digs at $7FFE01. The prize is the "Digging Game" check
+  // ($7EF2E8 bit 0x40, like Hutch's tracker). For the guessing game: dig.digs
+  // is the count in the current game, dig.at the dig the prize came on, known
+  // once it's collected (and it was seen not collected first).
+  var DIG_MAX = 30, digArmed = false;
+  function digRng() {
+    var P = root.Snes9xPlayer, core = P && P.core, rom = null;
+    try { rom = core && core.rom(); } catch (e) {}
+    var v = rom && rom.length > 0x180020 ? rom[0x180020] : 0;
+    return v >= 1 && v <= DIG_MAX ? v : 0;
+  }
   var run = { deaths: -1, checks: 0, bonks: 0, place: '', seed: '', music: '', bosses: [],
-    gt: { opened: 0, total: 26, found: false, at: null } }, runSent = '', runT = 0;
+    gt: { opened: 0, total: 22, found: false, at: null },
+    dig: { digs: 0, total: DIG_MAX, found: false, at: null, here: false } }, runSent = '', runT = 0;
   function readRun(ram) {
     if (ram.length < 0x20000) return;
     var mode = ram[A.MODE];
@@ -1015,16 +1851,29 @@
       // another game: its counts start over (the bridge sees the new seed and
       // doesn't count the drop as anything)
       run.checks = 0; run.bonks = 0; run.deaths = -1; run.bosses = [];
-      run.gt = { opened: 0, total: 26, found: false, at: null }; gtArmed = false;
+      run.gt = { opened: 0, total: 22, found: false, at: null }; gtArmed = false;
+      run.dig = { digs: 0, total: DIG_MAX, found: false, at: null, here: false }; digArmed = false;
     }
     if (PLAY_MODES[mode]) {
       var gtFound = !!(ram[0xF366] & 0x04), gtNow = gtOpened(ram);
-      if (!gtFound) { gtArmed = true; run.gt = { opened: gtNow, total: 26, found: false, at: null }; }
+      if (!gtFound) { gtArmed = true; run.gt = { opened: gtNow, total: 22, found: false, at: null }; }
       else {
         // the key just turned up: the chest count right now is the answer
         // (if it came from a GT chest; $040C 0x1A = in Ganon's Tower)
         if (gtArmed && run.gt.at === null && !run.gt.found) run.gt.at = ram[0x40C] === 0x1A ? gtNow : null;
         run.gt.opened = gtNow; run.gt.found = true;
+      }
+      // the digging game: outdoors on screen 0x68
+      var digHere = mode === 0x09 && !ram[0x1B] && ram[0x8A] === 0x68, digs = ram[0x1FE01];
+      run.dig.here = digHere;
+      if (digHere && digs <= 60) run.dig.digs = digs;
+      var digFound = !!(ram[0xF2E8] & 0x40);
+      if (!digFound) { digArmed = true; run.dig.found = false; run.dig.at = null; }
+      else if (!run.dig.found) {
+        // just collected: the prize came on the seed's dig (the count, if the ROM doesn't say)
+        var r = digRng();
+        if (digArmed) run.dig.at = r && run.dig.digs >= r ? r : (run.dig.digs >= 1 && run.dig.digs <= DIG_MAX ? run.dig.digs : null);
+        run.dig.found = true;
       }
       if (ram[0xF3C5] >= 3 && run.bosses.indexOf('aga1') < 0) run.bosses.push('aga1');
       BOSS_ROOMS.forEach(function (b) {
@@ -1044,10 +1893,24 @@
     run.music = m && m.count ? m.pack || 'MSU-1' : '';
     run.hearts = ram[A.HP_MAX] >> 3;
   }
+  // A new seed in the game: tell Crowd Control+ (its seed history, seeds.json),
+  // with what the hub's seed history knows about it (seed-log.js).
+  var seedSent = '';
+  function sendSeed() {
+    if (!run.seed || run.seed === seedSent) return;
+    seedSent = run.seed;
+    var L = root.RandoSeedLog, e = null;
+    if (L) { var l = L.list(); for (var i = l.length - 1; i >= 0 && i >= l.length - 30; i--) if (String(l[i].name || '').replace(/\.[^.]+$/, '') === run.seed) { e = l[i]; break; } }
+    var info = { name: run.seed, game: 'Zelda 3' };
+    if (e) ['at', 'what', 'generator', 'preset', 'pick', 'code', 'race', 'link', 'kind', 'by', 'from'].forEach(function (k) { if (e[k] != null && e[k] !== '') info[k] = e[k]; });
+    if (e && L.kindText) info.how = L.kindText(e);
+    send({ type: 'seed', seed: info });
+  }
   function sendRun(ram) {
     if (status !== 'connected') return;
     if (++runT % 60) return;                                       // about once a second
     readRun(ram);
+    sendSeed();
     var j = JSON.stringify(run);
     if (j !== runSent) {
       if (run.music !== JSON.parse(runSent || '{}').music && runSent) send({ type: 'music', pack: run.music });
@@ -1195,7 +2058,7 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function menuHtml(rr) {
     if (rr) rerender = rr;
-    var timed = Object.keys(active).map(function (id) { return EFFECTS[id].name + ' ' + Math.ceil(active[id] / 60) + 's' + (paused[id] ? ' (paused indoors)' : ''); });
+    var timed = Object.keys(active).map(function (id) { return EFFECTS[id].name + ' ' + Math.ceil(active[id] / 60) + 's' + (paused[id] ? ' (paused)' : ''); });
     var tests = Object.keys(EFFECTS).filter(function (id) { return id.charAt(0) !== '_'; }).map(function (id) {
       return '<button type="button" data-ext="cc-test" data-id="' + id + '">' + esc(EFFECTS[id].name) + '</button>';
     }).join('');
@@ -1227,7 +2090,7 @@
   function menuClick(b, rr) {
     rerender = rr;
     var a = b.dataset.ext;
-    if (a === 'cc-test') { note('test button: ' + b.dataset.id); trigger(b.dataset.id, 'test'); }
+    if (a === 'cc-test') { var wf = EFFECTS[b.dataset.id]; if (wf && wf.warn && !confirm(wf.warn + '\n\nRun it now?')) return; note('test button: ' + b.dataset.id); trigger(b.dataset.id, 'test'); }
     else if (a === 'cc-clear') { endAll(); queue.length = 0; paused = {}; cancelReroll(); }
     else if (a === 'cc-cancel-reroll') cancelReroll();
     else if (a === 'cc-end-detour') cancelDetour();
@@ -1261,7 +2124,7 @@
 
   function list() {
     return Object.keys(EFFECTS).filter(function (id) { return id.charAt(0) !== '_'; }).map(function (id) {
-      return { id: id, name: EFFECTS[id].name, secs: EFFECTS[id].detour ? detourSecs(id) : secsOf(id), good: !!EFFECTS[id].good };
+      return { id: id, name: EFFECTS[id].name, secs: EFFECTS[id].detour ? detourSecs(id) : secsOf(id), good: !!EFFECTS[id].good, warn: EFFECTS[id].warn || undefined };
     });
   }
 
@@ -1284,6 +2147,10 @@
     giftCard: giftCard,
     get waiting() { return queue.length + (gap > 0 ? 1 : 0); },
     detourTo: function (key) { return testBoss(key, 'test'); },
+    // for testing from the console: CrowdEffects.spawnEnemy('Lynel')
+    spawnEnemy: function (name) { var c = core(); if (!c) return 'no game'; var n = String(name || '').toLowerCase();
+      return spawnAnyEnemy(c.wram(), n ? function (e) { return e[2].toLowerCase() === n; } : null); },
+    get enemyJob() { return sheetJob && { name: sheetJob.name, left: sheetJob.chunks.length }; },
     _onFrame: onFrame, _onInput: onInput, _showClock: showClock,
     get queue() { return queue.slice(); }, get active() { return Object.assign({}, active); },
     get status() { return status; },

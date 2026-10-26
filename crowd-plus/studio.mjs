@@ -33,7 +33,7 @@ export function createStudio(ctx) {
   const DEFAULTS = {
     alerts: {
       enabled: true, minCoins: 1, seconds: 6, sound: true, volume: 0.7, showEffect: true,
-      follows: true, shares: false,
+      follows: true, shares: false, superfans: true, community: true,
       // bigger donations get bigger alerts: the highest tier reached is used
       tiers: [
         { coins: 1, name: 'small', title: 'THANK YOU!' },
@@ -118,8 +118,8 @@ export function createStudio(ctx) {
       settings, stats: { ...stats, gifters: undefined, top: topGifters(Math.max(10, settings.leaderboard.size)) },
       status: ctx.status(), timer: ctx.timerView(true),
       mapping: {
-        gifts: cfg.gifts || {}, coinTiers: cfg.coinTiers || [], likes: cfg.likes || {}, follow: cfg.follow || '', share: cfg.share || '',
-        durations: cfg.durations || {}, maxPerGift: cfg.maxPerGift ?? 5, giftCoins: cfg.giftCoins || {}, timer: cfg.timer || {}, source: cfg.source,
+        gifts: cfg.gifts || {}, coinTiers: cfg.coinTiers || [], likes: cfg.likes || {}, follow: cfg.follow || '', share: cfg.share || '', superfan: cfg.superfan || '', community: cfg.community || '',
+        durations: cfg.durations || {}, maxPerGift: cfg.maxPerGift ?? 5, giftCoins: cfg.giftCoins || {}, timer: cfg.timer || {}, ticker: cfg.ticker || {}, source: cfg.source,
       },
       effects: ctx.effectList(), catalog: giftCatalog(), profiles: listProfiles(),
       recent: events.slice(-40),
@@ -161,9 +161,14 @@ export function createStudio(ctx) {
     const tiers = [...(settings.alerts.tiers || [])].filter((t) => +t.coins > 0).sort((a, b) => b.coins - a.coins);
     return tiers.find((t) => coins >= +t.coins) || null;
   }
-  function moveGoals(type, amount) {
+  // a "gifts" goal can be for one gift only (g.gift, e.g. "Rose"): only that gift moves it
+  function moveGoals(type, amount, gift) {
     let moved = false;
-    for (const g of settings.goals) if (g.type === type && amount > 0) { g.current = (+g.current || 0) + amount; moved = true; }
+    for (const g of settings.goals) {
+      if (g.type !== type || !(amount > 0)) continue;
+      if (type === 'gifts' && g.gift && String(gift || '').toLowerCase() !== g.gift.toLowerCase()) continue;
+      g.current = (+g.current || 0) + amount; moved = true;
+    }
     if (moved) saveSettings();
   }
   const clean = (s, max) => String(s ?? '').replace(/[\u0000-\u001f]/g, '').slice(0, max);
@@ -179,7 +184,7 @@ export function createStudio(ctx) {
         stats.gifts += e.count || 1; stats.coins += e.coins || 0;
         const g = stats.gifters[e.user] || (stats.gifters[e.user] = { coins: 0, gifts: 0, nickname: e.nickname || '', avatar: '' });
         g.coins += e.coins || 0; g.gifts += e.count || 1; if (e.avatar) g.avatar = e.avatar; if (e.nickname) g.nickname = e.nickname;
-        moveGoals('coins', e.coins || 0); moveGoals('gifts', e.count || 1);
+        moveGoals('coins', e.coins || 0); moveGoals('gifts', e.count || 1, e.gift);
         if (e.gift && !e.test) {
           const each = e.count ? Math.round((e.coins || 0) / e.count) : 0;
           seen[e.gift] = { coins: each || seen[e.gift]?.coins || null, id: e.giftId ?? null, last: Date.now() };
@@ -196,6 +201,8 @@ export function createStudio(ctx) {
       if (e.type === 'gift' && (e.coins || 0) >= (+A.minCoins || 0)) { const t = alertTier(e.coins || 0) || { name: 'small', title: 'THANK YOU!' }; e.alert = { tier: t.name, title: t.title }; }
       else if (e.type === 'follow' && A.follows) e.alert = { tier: 'follow', title: 'NEW FOLLOWER' };
       else if (e.type === 'share' && A.shares) e.alert = { tier: 'share', title: 'SHARED THE LIVE' };
+      else if (e.type === 'superfan' && A.superfans !== false) e.alert = { tier: 'follow', title: 'NEW SUPER FAN' };
+      else if (e.type === 'community' && A.community !== false) e.alert = { tier: 'follow', title: 'NEW COMMUNITY MEMBER' };
     }
     // text-to-speech (spoken by the panel page, so it uses this PC's voices)
     if (e.type === 'chat' && e.text) {
@@ -244,7 +251,7 @@ export function createStudio(ctx) {
   function listProfiles() {
     try { return fs.readdirSync(PROFILES).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort(); } catch { return []; }
   }
-  const MAPPING_KEYS = ['gifts', 'coinTiers', 'likes', 'follow', 'share', 'durations', 'maxPerGift', 'giftCoins', 'timer', 'ticker'];
+  const MAPPING_KEYS = ['gifts', 'coinTiers', 'likes', 'follow', 'share', 'superfan', 'community', 'durations', 'maxPerGift', 'giftCoins', 'timer', 'ticker'];
 
   // ── HTTP ─────────────────────────────────────────────────────────────────
   const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -254,7 +261,7 @@ export function createStudio(ctx) {
     res.writeHead(200, { 'content-type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream', 'cache-control': 'no-cache' });
     fs.createReadStream(file).pipe(res);
   }
-  const OVERLAYS = ['alerts', 'goal', 'leaderboard', 'feed', 'commands', 'vote', 'battle', 'mystery', 'combo', 'run', 'predict', 'gtkey', 'halloffame', 'welcome'];
+  const OVERLAYS = ['alerts', 'goal', 'leaderboard', 'feed', 'commands', 'vote', 'battle', 'mystery', 'combo', 'run', 'predict', 'gtkey', 'dig', 'halloffame', 'welcome'];
 
   function handle(req, res, url) {
     const p = url.pathname;
@@ -330,6 +337,7 @@ export function createStudio(ctx) {
         else if (g && a.op === 'update') Object.assign(g, {
           label: clean(a.goal.label ?? g.label, 40), type: ['coins', 'likes', 'follows', 'shares', 'gifts'].includes(a.goal.type) ? a.goal.type : g.type,
           target: Math.max(1, Math.round(+a.goal.target || g.target)), current: Math.max(0, Math.round(+(a.goal.current ?? g.current) || 0)), show: !!a.goal.show,
+          gift: clean(a.goal.gift ?? g.gift ?? '', 60),
         });
         saveSettings(); return;
       }

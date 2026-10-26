@@ -14,6 +14,8 @@ import * as AvianUi from './avianart-ui.js';
 import { buildUi as buildKaraUi } from './kara/ui.js';
 import { initCustomizer, customizerOn, customRequest, snapshotAlttpr, applyAlttpr, fromSiteSave } from './custom-ui.js';
 import * as Saved from './saved-presets.js';
+import { SETTINGS as KARA_SETTINGS } from './kara/settings-data.js';
+import { patchRomCredits } from './hub-credits.js';
 
 const msu = new MsuPlayer();
 
@@ -174,6 +176,12 @@ function applyCosmetics(rom, { quickswap = true, menuSpeed = true } = {}) {
   w(0x18017F, 0x00);   // reduce flashing off
 }
 
+// The playtesters and shout-outs in the game's ending (hub-credits.js), for
+// seeds from any generator; then the header checksum again.
+function addHubCredits(rom) {
+  try { if (rom && patchRomCredits(rom) && rom.length % 1024 === 0) updateChecksum(rom); } catch (e) { console.warn('[randomizer] credits', e); }
+}
+
 function updateChecksum(rom) {
   let sum = 0;
   for (let i = 0; i < rom.length; i++) if (i < 0x7FDC || i >= 0x7FE0) sum += rom[i];
@@ -289,6 +297,7 @@ function showLast() {
   $('r-share-race').hidden = !canShare || !!last.alttpr || !!last.gwaa || !!last.avian;   // their link is the link   // an alttpr.com seed's link is the link
   const code = playing ? playing.code : (last ? (last.code || (last.alttpr || last.avian ? null : codeForSeed(last.spoiler.seed))) : null);
   renderCode($('r-code'), code);
+  try { showSeedInfo(last, live); } catch (e) { console.warn('[randomizer] seed info', e); }
 }
 
 // Called by the main page whenever a ROM starts, generated or loaded.
@@ -298,13 +307,109 @@ function noteRom(bytes, name) {
   showLast();
 }
 
+// ── seed type and settings (under the code), to check the tracker's logic ──
+// What kind of seed it was (seed-log.js: who rolled it and how), every
+// setting the generator used, and what the tracker was set to for it.
+const META_LABELS = {
+  mode: 'World state', goal: 'Goal', logic: 'Logic', weapons: 'Swords', dungeon_items: 'Dungeon items',
+  item_placement: 'Item placement', accessibility: 'Accessibility', item_pool: 'Item pool', item_functionality: 'Item functionality',
+  entry_crystals_tower: 'GT crystals (asked)', crystals_tower: 'GT crystals', entry_crystals_ganon: 'Ganon crystals (asked)', crystals_ganon: 'Ganon crystals',
+  hints: 'Hints', pseudoboots: 'Pseudoboots', allow_quickswap: 'Quickswap', shuffle: 'Entrance shuffle', entrances: 'Entrance shuffle',
+  'enemizer.boss_shuffle': 'Boss shuffle', 'enemizer.enemy_shuffle': 'Enemy shuffle', 'enemizer.enemy_damage': 'Enemy damage',
+  'enemizer.enemy_health': 'Enemy health', 'enemizer.pot_shuffle': 'Pot shuffle', spoilers: 'Spoiler', tournament: 'Race',
+};
+const META_SKIP = new Set(['build', 'worlds', 'world_id', 'size', 'rom_mode', 'name', 'notes', 'version', 'hash', 'seed', 'permalink', 'user_id', 'created_at']);
+const MF_LABELS = {
+  worldState: 'World state', logicMode: 'Logic', goal: 'Goal', ganonVulnerable: 'Ganon vulnerable', gtOpen: 'GT open', swords: 'Swords',
+  wildSmallKeys: 'Small keys', wildBigKeys: 'Big keys outside dungeons', wildMaps: 'Maps outside', wildCompasses: 'Compasses outside',
+  entranceMode: 'Entrance mode', shuffleLinks: "Link's house shuffled", bossShuffle: 'Boss shuffle', enemyShuffle: 'Enemy shuffle',
+  pottery: 'Pottery', enemyDrop: 'Enemy drops', prizeShuffle: 'Prizes', followerShuffle: 'Followers', activatedFlute: 'Flute activated',
+  shopsanity: 'Shopsanity', pseudoboots: 'Pseudoboots', mirrorScroll: 'Mirror scroll',
+};
+const HUTCH_LABELS = { gamemode: 'World state', dungeonitems: 'Dungeon items', swordless: 'Swordless', gtcrystals: 'GT crystals',
+  bossshuffle: 'Boss shuffle', enemizer: 'Enemizer' };
+const showVal = (v) => v === true ? 'yes' : v === false ? 'no' : v == null || v === '' ? '—' : String(v);
+function seedSettings(l) {
+  const rows = [];   // [label, value, isDefault]
+  if (l.kara) {
+    for (const st of KARA_SETTINGS) {
+      const v = l.kara[st.key] ?? st.def, opt = (st.values || []).find((x) => x[0] === v);
+      rows.push([st.label || st.key, opt ? opt[1] : v, v === st.def]);
+    }
+    return rows;
+  }
+  const meta = (l.spoiler && l.spoiler.meta) || {};
+  for (const [k, v] of Object.entries(meta)) {
+    if (META_SKIP.has(k) || (v && typeof v === 'object')) continue;
+    rows.push([META_LABELS[k] || k.replace(/[._]/g, ' '), showVal(v), false]);
+  }
+  return rows;
+}
+function trackerSettings(l) {
+  let t = null;
+  try { const r = JSON.parse(localStorage.getItem('rhb-seed-tracker') || 'null'); if (r && r.name === l.name) t = r.flags; } catch (e) {}
+  if (!t) return null;
+  // Mudora 2.0 (Muffins' logic): what it was told, by its own mapping
+  const T = window.UnifiedTracker, f = document.getElementById('emo-frame');
+  let M2 = null;
+  try { M2 = f && f.contentWindow && f.contentWindow.Mudora2; } catch (e) {}
+  if (T && T.mudora2 && T.mudora2() && M2 && M2.fromSeed) {
+    const m = M2.fromSeed(t);
+    return { title: 'Mudora 2.0 (Muffins\' logic) was set to', rows: Object.keys(m).map((k) => [MF_LABELS[k] || k, showVal(m[k])]) };
+  }
+  const rows = Object.keys(HUTCH_LABELS).filter((k) => k in t).map((k) => [HUTCH_LABELS[k], showVal(t[k])]);
+  Object.entries(t.more || {}).forEach(([k, v]) => rows.push([k, showVal(v)]));
+  return { title: 'The tracker was given', rows };
+}
+function showSeedInfo(l, live) {
+  const box = $('r-seed-info');
+  if (!box) return;
+  if (!l || !live) { box.hidden = true; return; }
+  const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const gen = l.alttpr ? 'alttpr.com' : l.avian ? 'AVIANART' + (l.avianPreset ? ': ' + l.avianPreset : '') : l.gwaa ? 'Kara (her server)' : l.kara ? 'Kara' : l.custom ? 'Customizer' : 'Rando Hub';
+  let how = '', pick = '', by = '';
+  const L = window.RandoSeedLog;
+  if (L) { const e = L.list().slice().reverse().find((x) => x.name === l.name); if (e) { how = L.kindText(e); pick = e.pick || e.preset || ''; by = e.by || ''; } }
+  const type = [how || 'Generate & Play', gen, pick].filter(Boolean).join(' · ') + (by ? ' (by ' + by + ')' : '') + (l.race ? ' · race' : '');
+  box.querySelector('summary').innerHTML = '<b>Seed type:</b> ' + esc(type);
+  const rows = seedSettings(l), tr = trackerSettings(l);
+  const table = (rs) => '<table>' + rs.map((r) => '<tr' + (r[2] ? ' class="def"' : '') + '><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>').join('') + '</table>';
+  box.querySelector('.si-body').innerHTML =
+    '<div><h5>Seed settings' + (l.kara ? ' <small>(dim: left at default)</small>' : '') + '</h5>' + (rows.length ? table(rows) : '<p>This generator didn\'t say.</p>') + '</div>' +
+    (tr ? '<div><h5>' + esc(tr.title) + '</h5>' + table(tr.rows) + '</div>' : '');
+  box.hidden = false;
+}
+
+function linkFor(l, race) {
+  if (!l || (!l.fields && !l.alttpr && !l.kara && !l.gwaa && !l.avian)) return '';
+  return l.alttpr ? `https://alttpr.com/h/${l.alttpr}`
+    : l.avian ? Avian.permLink(l.avian)
+    : l.gwaa ? Kara.siteLink(l.gwaa)
+    : l.kara ? Kara.buildLink(l.spoiler.seed, l.kara, race)
+      : buildLink(l.spoiler.seed, l.fields, race);
+}
+
+// The seed history (seed-log.js): one entry each time a seed is started here.
+// Who asked for it and how (Crowd Control, 🎲 Reroll…) is added by seed-log.js.
+function logSeed({ fromLink = false } = {}) {
+  const L = window.RandoSeedLog;
+  if (!L || !last) return;
+  try {
+    const code = last.code || (last.alttpr || last.avian ? null : codeForSeed(last.spoiler.seed));
+    const sel = $('r-saved'), opt = sel && sel.value ? sel.options[sel.selectedIndex] : null;
+    L.add({
+      name: last.name, game: 'Zelda 3', what: $('r-seed-out').textContent || last.name,
+      generator: last.alttpr ? 'alttpr.com' : last.avian ? 'AVIANART' + (last.avianPreset ? ': ' + last.avianPreset : '') : last.gwaa ? 'Kara (her server)' : last.kara ? 'Kara' : last.custom ? 'Customizer' : 'Rando Hub',
+      preset: opt ? opt.textContent.replace(/^★\s*/, '').trim() : '',
+      code: code ? codeNames(code).join(' / ') : '', race: !!last.race, link: linkFor(last, !!last.race),
+      ...(fromLink ? { kind: 'link' } : {}),
+    });
+  } catch (e) { console.warn('[randomizer] seed log', e); }
+}
+
 async function copyLink(race) {
   if (!last || (!last.fields && !last.alttpr && !last.kara && !last.gwaa && !last.avian)) return;
-  const url = last.alttpr ? `https://alttpr.com/h/${last.alttpr}`
-    : last.avian ? Avian.permLink(last.avian)
-    : last.gwaa ? Kara.siteLink(last.gwaa)
-    : last.kara ? Kara.buildLink(last.spoiler.seed, last.kara, race)
-      : buildLink(last.spoiler.seed, last.fields, race);
+  const url = linkFor(last, race);
   const what = last.alttpr ? 'alttpr.com link' : last.avian ? 'AVIANART permalink' : last.gwaa ? 'Kara seed link' : race ? 'Race link' : 'Seed link';
   try {
     await navigator.clipboard.writeText(url);
@@ -461,7 +566,9 @@ async function generateAndPlay() {
     $('r-toggle').setAttribute('aria-expanded', 'false');
     try { localStorage.setItem('unified-kara-open', '0'); } catch (e) {}
     // keep it across the page reload EmulatorJS needs when switching games
+    addHubCredits(last.rom);
     try { await kvSet('last-seed', last); } catch (e) {}
+    logSeed({ fromLink });
 
     window.UnifiedApp.playRom(rom, name, {
       gamemode: settings.mode,
@@ -469,6 +576,9 @@ async function generateAndPlay() {
         : TRACKER_DI[settings.dungeon_items] || 'standard',
       swordless: settings.weapons === 'swordless' ? 'yes' : 'no',
       gtcrystals: String(m.crystals_tower ?? 7),
+      // the rest of the seed, for trackers with more settings (Mudora 2.0)
+      seed: { goal: settings.goal, ganon: String(m.entry_crystals_ganon ?? m.crystals_ganon ?? settings.crystals.ganon),
+        gt: String(m.crystals_tower ?? settings.crystals.tower), logic: m.logic || 'noglitches', swords: settings.weapons, inverted: 1 },
     });
   } catch (e) {
     console.error(e);
@@ -575,7 +685,9 @@ async function generateKara({ local = false, note = '' } = {}) {
     document.body.classList.remove('rando-open');
     $('r-toggle').setAttribute('aria-expanded', 'false');
     try { localStorage.setItem('unified-kara-open', '0'); } catch (e) {}
+    addHubCredits(last.rom);
     try { await kvSet('last-seed', last); } catch (e) {}
+    logSeed({ fromLink });
     window.UnifiedApp.playRom(rom, name, Kara.trackerFor(settings));
   } catch (e) {
     if (e.cancelled) status('Stopped.', '');
@@ -637,7 +749,9 @@ async function playGwaa(id, { settings = null, race = false, fallback = null } =
     document.body.classList.remove('rando-open');
     $('r-toggle').setAttribute('aria-expanded', 'false');
     try { localStorage.setItem('unified-kara-open', '0'); } catch (e) {}
+    addHubCredits(last.rom);
     try { await kvSet('last-seed', last); } catch (e) {}
+    logSeed();
     window.UnifiedApp.playRom(rom, name, Kara.trackerFor(s));
   } catch (e) {
     if (e.cancelled) status('Stopped.', '');
@@ -697,7 +811,9 @@ async function playAlttprSeed(id) {
     document.body.classList.remove('rando-open');
     $('r-toggle').setAttribute('aria-expanded', 'false');
     try { localStorage.setItem('unified-kara-open', '0'); } catch (e) {}
+    addHubCredits(last.rom);
     try { await kvSet('last-seed', last); } catch (e) {}
+    logSeed();
     window.UnifiedApp.playRom(rom, name, {
       gamemode: ALTTPR_MODES.includes(m.mode) ? m.mode : 'open',
       dungeonitems: TRACKER_DI[m.dungeon_items] || 'standard',
@@ -705,6 +821,8 @@ async function playAlttprSeed(id) {
       gtcrystals: String(m.entry_crystals_tower ?? 7),
       bossshuffle: m['enemizer.boss_shuffle'] && m['enemizer.boss_shuffle'] !== 'none' ? 'yes' : 'no',
       enemizer: m['enemizer.enemy_shuffle'] && m['enemizer.enemy_shuffle'] !== 'none' ? 'yes' : 'no',
+      seed: { goal: m.goal, ganon: String(m.entry_crystals_ganon ?? m.crystals_ganon ?? 7), gt: String(m.entry_crystals_tower ?? 7),
+        logic: m.logic, swords: m.weapons, entrances: m.shuffle || m.entrances, inverted: 1 },
     });
   } catch (e) {
     console.error(e);
@@ -769,7 +887,9 @@ async function playAvian(hash, { preset = null, custom = null, race = false } = 
     document.body.classList.remove('rando-open');
     $('r-toggle').setAttribute('aria-expanded', 'false');
     try { localStorage.setItem('unified-kara-open', '0'); } catch (e) {}
+    addHubCredits(last.rom);
     try { await kvSet('last-seed', last); } catch (e) {}
+    logSeed();
     window.UnifiedApp.playRom(rom, name, Avian.trackerFor(m));
   } catch (e) {
     if (e.cancelled) status('Stopped.', '');
@@ -920,7 +1040,14 @@ function crowdApi() {
     Saved.edited();
     return `${GEN_NAME[gen]}: ${parts.filter(Boolean).join(' · ')}`;
   }
-  return { presets, pool, usePreset, chaos };
+  // Crowd Control's "Reveal a go-mode item": the spoiler of the seed being
+  // played (only if the game running is that seed). race: its spoiler stays hidden.
+  function spoiler() {
+    if (!last || !last.spoiler) return null;
+    if (playing && playing.name !== last.name) return null;
+    return { spoiler: last.spoiler, race: !!last.race, name: last.name };
+  }
+  return { presets, pool, usePreset, chaos, spookySprite: () => randomSprite('spooky'), spoiler };
 }
 
 // ── "Load a seed": paste a link or a number ──────────────────────────────────
@@ -1074,6 +1201,7 @@ function spriteStatus(label, live) {
 
 // 🎲 rolls the whole library plus your own sprites; 🎲★ only your favourites.
 // Neither gives you the sprite you already have when there's another.
+const SPOOKY_RE = /skele|skull|ghost|ghoul|zombie|pumpkin|jack.?o|witch|vampire|dracula|frankenstein|mummy|reaper|spook|halloween|haunt|boo\b|poe\b|stalfos|gibdo|redead|undead|phantom|shade|specter|spectre|wraith|demon|devil|bat\b|werewolf|monster|creep|horror|corpse|dead/i;
 async function randomSprite(mode) {
   const favs = mode === 'fav';
   const btns = [$('r-sprite-random'), $('r-sprite-fav-roll'), $('sprite-btn'), $('sprite-fav-btn')].filter(Boolean);
@@ -1097,6 +1225,11 @@ async function randomSprite(mode) {
         throw e;
       })).filter((e) => !isPlainLink(e));
       pool = coll.ownEntries().concat(list);
+      // Crowd Control's "Spooky sprite": only the Halloween-ish ones (by name or tag)
+      if (mode === 'spooky') {
+        const spooky = pool.filter((e) => SPOOKY_RE.test(e.name + ' ' + (e.tags || []).join(' ')));
+        if (spooky.length) pool = spooky;
+      }
     }
     const entry = pickFrom(pool, cur && cur.key);
     await useLibrarySprite(entry);
@@ -1993,6 +2126,10 @@ export function init() {
   });
   $('r-generate').addEventListener('click', generateAndPlay);
   $('r-download').addEventListener('click', () => last && download(last.rom, last.name, 'application/octet-stream'));
+  // the seed info is drawn again when opened (the tracker is ready by then) and once the seed is logged
+  const refreshInfo = () => { try { showSeedInfo(last, !!last && (!playing || playing.name === last.name)); } catch (e) {} };
+  $('r-seed-info').addEventListener('toggle', () => { if ($('r-seed-info').open) refreshInfo(); });
+  window.addEventListener('seedlog', refreshInfo);
   $('r-spoiler').addEventListener('click', () => last && download(
     new TextEncoder().encode(JSON.stringify(last.spoiler, null, 2)), last.name.replace(/\.sfc$/, '') + '_spoiler.json', 'application/json'));
   $('r-toggle').addEventListener('click', () => {

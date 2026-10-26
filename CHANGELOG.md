@@ -5,6 +5,57 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.10.0 (2026-10-25)
+
+Everything from the beta since 1.9.0 (its full notes are in the
+[beta's changelog](https://github.com/hugecrankhank/Rando-hub-Beta/blob/main/CHANGELOG.md)).
+
+Trackers:
+- **Mudora 2.0 is the new default tracker:** Rando Hub's own tracker, drawn from the game
+  itself (items cut from its pause menu, both worlds from the ROM, checks on their real
+  spots), running the logic and settings of Muffins' Tracker 2.0 (with his permission, MIT).
+  Each seed rolled here starts a game in it with the seed's settings; ⚙ Settings has his game
+  and logic settings mid-game, all 67 of his presets with search, and Autotracking details.
+- **Mudora (Hutch logic):** the same look with Hutch's logic.
+- **Tracker choices:** Hutch, Hutch Beta, Mudora 2.0, Mudora, Off. Anyone who never picked one
+  starts on Mudora 2.0; a choice made before is kept.
+- Mudora: click a check to mark it, right click / press and hold for its card; dungeon prizes in
+  their own colours (copied from the game's own world map, or picked); boss, keys and chests of
+  the dungeon Link is in (and a pop-out card for OBS); dungeon maps (Explore, Map, Full);
+  entrances on entrance-shuffle seeds, filled in as you walk through them; visible (orange)
+  checks; counters for checks, deaths, bonks, the GT big key game and the Digging Game;
+  icon styles (game pixels, smooth, or your own pictures).
+- **⚙ Settings** in the header: Tracker world, Tracker dungeon items, Tracker keys (found / in
+  hand / both), **Item sounds** (sound packs that play with every tracker), **Seed history**
+  and **Credits**.
+
+Games and layouts:
+- **Zelda 1 (Z1R)** and **The Guardian Legend (GLR)** randomizers are in the hub (Game row in
+  the Randomizer bar, or Zelda 1 ▸ / GLR ▸ in the header). Both seed generators are beta.
+  "Rerolls can land on either game" mixes Zelda 3 and Zelda 1; GLR is only picked by hand.
+- **iPad layout** (was "Stacked"), the starting layout on an iPad; other tablets start on Tablet.
+- **Seed history:** every seed started here, with who rolled it and how, and a link to replay.
+- **Playtesters in the ending** of every ALTTP randomizer seed played here.
+- The seed's type and every generator setting shown under the seed code.
+
+Crowd Control+ (download it again from this release):
+- New effects: shield, sword (gone / down / up / stolen, which asks first) and tunic up / down,
+  +1 / −1 heart container, item gone, any enemy (74 of them, anywhere), Lights on / Lights out,
+  reveal a go-mode item, item sound pack switches, and Halloween effects (Blood drip,
+  Spiderwebs, Monster mash, Spooky night, Ghost Link, Pumpkin Link and more).
+- Instant death can't be blocked any more; one-hit KO kills through any mail.
+- Live games: the GT big key game counts the 22 places the key can be; new **Digging Game**
+  guessing (`!dig`).
+- Subathon clock: likes, follows, shares, Super Fans, community members and comments add time;
+  the control panel's clock no longer runs fast.
+- Gift goals for a single gift; scrolling gift list rows, order and per-gift hide; new Super
+  Fan and community member alerts.
+
+Fixes:
+- Installed apps on this site no longer get mixed up (an installed app could open another game).
+- Double tap no longer zooms the page on iPhone / iPad; controller buttons can be remapped one
+  after another; long press on a tracker no longer selects text.
+
 ## 1.9.0 (2026-10-19)
 
 Crowd Control+:

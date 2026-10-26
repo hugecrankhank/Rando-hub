@@ -5,6 +5,163 @@ Crowd Control+ is Rando Hub's crowd control: the gift bridge with a
 control panel and stream overlays. Every gift effect, big-donation seed
 roll and the subathon clock work exactly as before.
 
+NEW IN 1.10.10
+-------------
+- enemy_any (Any enemy): one of 74 enemies appears near Link, anywhere,
+  even with nothing on screen. Its graphics are loaded into the area
+  first. Water and sand enemies too, out of their element. The gift
+  alert says which enemy.
+
+NEW IN 1.10.9
+------------
+- item_off (Item gone, 30s): a random item Link has disappears, then
+  comes back. Any item-menu item, the bottles (as one), gloves, boots,
+  flippers or Moon Pearl. The gift alert says which item.
+- heart_add / heart_remove: a heart container more or less, for good
+  (20 at most, never below 1 heart).
+- tunic_up / tunic_down: the tunic one step better or worse (green,
+  blue, red mail). Link's colors change with it.
+- Fix: Shield gone, Sword gone and Sword downgrade gave the gear back
+  straight away in 1.10.7 and 1.10.8. They work now.
+
+NEW IN 1.10.8
+------------
+- Sword effects: sword_off (Sword gone for 30s, then it comes back),
+  sword_down (one step worse for 30s, then back) and sword_up (one
+  step better). Swordless seeds skip them.
+- sword_steal (Sword stolen) is there too, marked with a warning: it
+  can make a seed unbeatable. The control panel asks before it goes on
+  a gift, a level, the mystery box or a test.
+- Shield gone now counts a shield found during it as one more level
+  (shields are progressive), like the sword ones.
+
+NEW IN 1.10.7
+------------
+- Four shield effects: shield_off (Shield gone for 30s, then it comes
+  back), shield_steal (gone until Link finds another), shield_down and
+  shield_up (one step worse or better: Fighter's, Fire, Mirror). Map
+  them to gifts in the Gifts & effects tab.
+- insta_kill (Instant death) can't be blocked by the Magic Cape or the
+  Cane of Byrna any more (a bottled fairy still revives).
+
+NEW IN 1.10.3
+------------
+- Scrolling gift list: an "On ticker" checkbox on every gift (Gifts &
+  effects tab). Untick it to leave the gift out of the list; it still
+  works in the game. "Also show" switches the like, follow / share, big
+  donation and subathon lines on or off.
+
+NEW IN 1.9.20
+------------
+- More Halloween: blood_drip (blood runs down the screen), spider_web
+  (webs and a dangling spider) and monster_mash (every enemy on screen
+  becomes a bat or a mummy). Trick or treat can land on them too.
+
+NEW IN 1.9.19
+------------
+- one_hit is a true One-hit KO now: any hit kills, whether Link wears
+  the green, blue or red mail (before, mail could leave him alive on
+  his one heart). A bottled fairy and the cape / Cane of Byrna still
+  save him, like a real hit.
+
+NEW IN 1.9.18
+------------
+- Scrolling gift list: 1 to 4 rows (Gifts & effects tab → Scrolling
+  gift list), so more gifts show at once. Make the browser source
+  72 px taller per row.
+- Gifts & effects tab: put the gifts in any order (drag the handle, or
+  the arrows), then Save. The scrolling gift list follows that order.
+
+NEW IN 1.9.16
+------------
+- Room lights: lights_on (a dark room lit up as if every torch were
+  lit, 60s) and lights_out (any room nearly black, 30s; outdoors the
+  screen dims). Pick them for gifts on the Gifts & effects tab.
+
+NEW IN 1.9.15
+------------
+- reveal_item (HydeOut's idea): a gift shows where one item the run
+  still needs is, read from the seed's spoiler. A banner on the game,
+  a mark on Mudora 2.0's map, and a clip marker. Seeds made in the hub
+  only; race seeds keep their spoiler hidden.
+
+NEW IN 1.9.14
+------------
+- Seed history: every seed played, with when, its code, which game,
+  who rolled it and how, and a link to play it again. In the control
+  panel (Live games tab, saved in seeds.json, Download as CSV) and in
+  the hub (Settings menu > Seed history).
+
+NEW IN 1.9.13
+------------
+- Halloween effects: spooky_night (everything purple and orange),
+  ghost_link, pumpkin_link, haunted_lights (flickering, lightning),
+  spooky_monster and haunting (ghosts, bats, mummies, skeletons),
+  trick_or_treat (50/50 treat or trick) and spooky_sprite. Pick them
+  for gifts on the Gifts & effects tab. Details in INSTRUCTIONS.txt.
+
+NEW IN 1.9.11
+------------
+- Digging Game guessing (Live games tab): like the GT big key game.
+  Chat guesses which dig gives the Digging Game's prize (!dig 1-30);
+  the game says which dig it was. New "Digging Game" overlay.
+- The seed reroll banner on the game sits at the very top now (over
+  the hearts and rupees), so it doesn't cover the play area.
+
+NEW IN 1.9.6
+------------
+- Ticker (scrolling gift list): when a reroll switches between Zelda 3
+  and Zelda 1, the list changes to the new game's effects within a few
+  seconds. Gifts whose effect that game doesn't have are left out.
+- Rerolls with "Rerolls can land on either game" on: "New seed (same
+  settings)" never changes games. "Random preset seed" and "CHAOS seed"
+  can, and roll the same kind in the other game.
+
+NEW IN 1.9.5
+------------
+- Goals: a gifts goal can be for one gift. On the Goals tab set the type
+  to "gifts", pick the gift (or leave "any gift") and enter how many,
+  e.g. 50 Roses. Only that gift fills the bar, and the goal bar overlay
+  shows the gift's picture and name.
+
+NEW IN 1.9.4
+------------
+- GT big key game: guesses are now 1-22, the places Ganon's Tower's big
+  key can actually be: Bob's Torch and every chest except the Big Chest
+  and the four behind the big key door. Chest numbers count only those.
+
+NEW IN 1.9.3
+------------
+- Comments add time to the subathon clock too: set seconds per comment on
+  the control panel's Subathon tab, plus an optional wait before the same
+  viewer's next comment counts again (stops one viewer spamming the clock).
+- Test chats on the control panel add time when "Also run the game
+  effect" is ticked, like the other test buttons.
+
+NEW IN 1.9.2
+------------
+- Time on the subathon clock from the crowd, not just coins: set seconds
+  for each like (as small as 0.01), follow, share, new Super Fan and new
+  community member on the control panel's Subathon tab.
+- Effects for new Super Fans and new community members (Gifts & effects
+  tab), with their own alerts (Alerts tab) and test buttons.
+- TikTok events Crowd Control+ doesn't use yet are listed once each in
+  the black window ("TikTok event not used: ..."), so a renamed event can
+  be spotted and added.
+
+NEW IN 1.9.1
+------------
+- Fixed: the subathon clock on the control panel ran about twice as fast
+  as the real clock (one second, then a jump of two or three), so after a
+  while it showed far less time than the game and the stream overlay.
+  The real clock, the clock on the game and the /timer overlay were right
+  all along; only the control panel's display was off.
+- New effects for the item sound packs: sound_pack_next and
+  sound_pack_random switch which pack plays on item pickups.
+- Works with Zelda 1 (Z1R) in Rando Hub too: same bridge, same
+  mapping.json. Effects that only exist in ALTTP are skipped while
+  Zelda 1 is playing.
+
 NEW IN 1.9.0
 ------------
 - GT big key guessing game (Live games tab): chat guesses which Ganon's

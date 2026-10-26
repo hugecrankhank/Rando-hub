@@ -11,7 +11,11 @@
  *   predictions     "Will he beat this dungeon without dying?" !yes / !no
  *   GT big key      chat guesses which Ganon's Tower chest has the big key
  *                   (!gt 9); the game says which it was
+ *   dig game        chat guesses which dig gives the Digging Game's prize
+ *                   (!dig 15); the game says which it was
  *   clip markers    big moments time-stamped for editing later (+ !clip)
+ *   seed history    every seed played: when, which, its code, who rolled it
+ *                   and how (seeds.json, kept across streams)
  *   hall of fame    all-time top gifters across streams
  *   welcome back    a pop-up when a regular shows up again
  *
@@ -36,6 +40,7 @@ export const LIVE_DEFAULTS = {
   runClock: { enabled: false, mode: 'remove', checkSeconds: 60, bossSeconds: 300, alert: true },
   predict: { seconds: 60, winnersShown: 12 },
   gtGuess: { command: '!gt', lockOnFirstChest: true, winnersShown: 12, alert: true },
+  digGuess: { command: '!dig', lockOnFirstDig: true, winnersShown: 12, alert: true },
   clips: { minCoins: 500, deaths: true, seeds: true, chatClip: true, chatCooldown: 30 },
   hallOfFame: { title: 'HALL OF FAME', size: 5 },
   welcome: { enabled: true, minStreams: 3, title: 'WELCOME BACK' },
@@ -63,6 +68,27 @@ export function createLive(ctx) {
   let fame = readJson(FAME_FILE, {});          // user → { coins, gifts, nickname, avatar, streams, last }
   let viewers = readJson(VIEWERS_FILE, {});    // user → { streams, lastStream, nickname }
   let clips = readJson(CLIPS_FILE, []);        // { id, at, elapsed, label, kind }
+  const SEEDS_FILE = path.join(HERE, 'seeds.json');
+  let seeds = readJson(SEEDS_FILE, []);        // { at, name, game, what, code, link, how, by, ... }
+  if (!Array.isArray(seeds)) seeds = [];
+
+  // ── seed history ───────────────────────────────────────────────────────
+  // The game says when a new seed starts ('seed', with the hub's details:
+  // code, link, who rolled it and how). Zelda 1 (and a hub without the
+  // details) only shows a new seed name in its run stats: that's logged too.
+  const SEED_KEYS = ['what', 'generator', 'preset', 'pick', 'code', 'race', 'link', 'kind', 'how', 'by', 'from'];
+  function seedSeen(info, game) {
+    const nm = clean(info.name, 120);
+    if (!nm) return;
+    const last = seeds[seeds.length - 1];
+    let e = last && last.name === nm ? last : null;
+    if (!e) { e = { at: Date.now(), name: nm, game: clean(info.game || game || 'Zelda 3', 20), elapsed: Math.max(0, Math.round((Date.now() - ctx.streamSince()) / 1000)) }; seeds.push(e); if (seeds.length > 2000) seeds.shift(); }
+    let changed = e !== last;
+    for (const k of SEED_KEYS) if (info[k] != null && info[k] !== '' && e[k] !== info[k]) { e[k] = k === 'race' ? !!info[k] : clean(info[k], 400); changed = true; }
+    if (!changed) return;
+    writeLater(SEEDS_FILE, seeds);
+    send('seeds', { seeds: seeds.slice(-200) });
+  }
 
   // ── run stats from the game ────────────────────────────────────────────
   let runStats = { deaths: 0, checks: 0, bonks: 0, place: '', seed: '', music: '', hearts: 0, bosses: [], at: 0 };
@@ -71,8 +97,14 @@ export function createLive(ctx) {
       runStats = { deaths: +m.deaths || 0, checks: +m.checks || 0, bonks: +m.bonks || 0, place: clean(m.place, 40), seed: clean(m.seed, 80),
         music: clean(m.music, 80), hearts: +m.hearts || 0, bosses: Array.isArray(m.bosses) ? m.bosses.map((b) => clean(b, 20)).slice(0, 20) : [], at: Date.now() };
       onProgress(runStats);
+      if (m.seed) seedSeen({ name: m.seed }, m.game === 'z1r' ? 'Zelda 1' : 'Zelda 3');
       if (m.gt && typeof m.gt === 'object') onGt(m.gt);
+      if (m.dig && typeof m.dig === 'object') onDig(m.dig);
       send('run', { run: runStats });
+    } else if (m.type === 'reveal') {
+      addClip(`🔮 ${clean(m.user, 40) || 'Someone'} revealed ${clean(m.item, 40)} at ${clean(m.loc, 80)}`, 'reveal', m.user);
+    } else if (m.type === 'seed' && m.seed && typeof m.seed === 'object') {
+      seedSeen(m.seed);
     } else if (m.type === 'death') {
       runStats.deaths = +m.deaths || runStats.deaths + 1;
       onDeath();
@@ -279,31 +311,31 @@ export function createLive(ctx) {
   }
 
   // ── GT big key: which Ganon's Tower chest has it? ──────────────────────
-  // Chat guesses a chest number (!gt 9, 1-26: GT's 26 chests, not Bob's
+  // Chat guesses a chest number (!gt 9, 1-22: the 22 places GT's big key can be, Bob's Torch included; not
   // Torch). The game counts the GT chests opened and reports the count at the
   // moment the big key arrived (that chest included). Exact guesses win; if
   // nobody's exact, the closest do. Guesses close when the first GT chest is
   // opened (or by hand).
   let gtg = null;           // { id, open, guesses: Map(user → { n, nick }), opened0, opened, result }
-  let gtLive = { opened: 0, total: 26, found: false, at: null };
+  let gtLive = { opened: 0, total: 22, found: false, at: null };
   function gtView() {
     if (!gtg) return null;
     const counts = {};
     for (const g of gtg.guesses.values()) counts[g.n] = (counts[g.n] || 0) + 1;
-    return { id: gtg.id, open: gtg.open, total: gtLive.total || 26, opened: gtLive.opened, guesses: gtg.guesses.size, counts,
+    return { id: gtg.id, open: gtg.open, total: gtLive.total || 22, opened: gtLive.opened, guesses: gtg.guesses.size, counts,
       command: S().gtGuess.command || '!gt', result: gtg.result };
   }
   const gtSend = () => send('gtguess', { gtguess: gtView(), gt: gtLive });
   function gtStart() {
     gtg = { id: Date.now(), open: true, guesses: new Map(), opened0: gtLive.opened, result: null };
-    log(`GT big key guessing open (${S().gtGuess.command || '!gt'} 1-26)`);
+    log(`GT big key guessing open (${S().gtGuess.command || '!gt'} 1-22)`);
     gtSend();
   }
   function gtLock() { if (gtg && gtg.open) { gtg.open = false; log(`GT big key guesses closed (${gtg.guesses.size})`); gtSend(); } }
   function gtResolve(at, how) {
     if (!gtg || gtg.result) return;
     at = Math.round(+at);
-    if (!(at >= 1 && at <= 26)) return;
+    if (!(at >= 1 && at <= 22)) return;
     gtg.open = false;
     const all = [...gtg.guesses.entries()].map(([u, g]) => ({ user: u, nick: g.nick, n: g.n, off: Math.abs(g.n - at) }));
     const best = all.length ? Math.min(...all.map((g) => g.off)) : null;
@@ -319,7 +351,7 @@ export function createLive(ctx) {
   }
   function onGt(g) {
     const prev = JSON.stringify(gtLive), prevOpened = gtLive.opened;
-    gtLive = { opened: Math.max(0, Math.min(26, +g.opened || 0)), total: 26, found: !!g.found, at: g.at == null ? null : +g.at };
+    gtLive = { opened: Math.max(0, Math.min(22, +g.opened || 0)), total: 22, found: !!g.found, at: g.at == null ? null : +g.at };
     if (JSON.stringify(gtLive) !== prev) send('gt', { gt: gtLive });
     if (!gtg) return;
     if (gtg.open && S().gtGuess.lockOnFirstChest && gtLive.opened > gtg.opened0) gtLock();
@@ -333,10 +365,72 @@ export function createLive(ctx) {
     const m = t.match(new RegExp('^' + esc + '\\s*#?(\\d{1,2})$'));
     if (!m) return;
     const n = +m[1];
-    if (n < 1 || n > 26) return;
+    if (n < 1 || n > 22) return;
     gtg.guesses.set(e.user, { n, nick: e.nickname || '' });
     e.gtguess = n;
     gtSend();
+  }
+
+  // ── the Digging Game: which dig gives the prize? ───────────────────────
+  // Chat guesses a dig number (!dig 15, 1-30). The randomizer sets it per seed
+  // and the game counts the digs; when the prize is collected the game says
+  // which dig it came on. Exact guesses win, or the closest. Guesses close at
+  // the first dig (or by hand).
+  const DIG_MAX = 30;
+  let dgg = null;           // { id, open, guesses: Map(user → { n, nick }), result }
+  let digLive = { digs: 0, total: DIG_MAX, found: false, at: null, here: false };
+  function digView() {
+    if (!dgg) return null;
+    const counts = {};
+    for (const g of dgg.guesses.values()) counts[g.n] = (counts[g.n] || 0) + 1;
+    return { id: dgg.id, open: dgg.open, total: DIG_MAX, digs: digLive.digs, guesses: dgg.guesses.size, counts,
+      command: S().digGuess.command || '!dig', result: dgg.result };
+  }
+  const digSend = () => send('digguess', { digguess: digView(), dig: digLive });
+  function digStart() {
+    dgg = { id: Date.now(), open: true, guesses: new Map(), result: null, digs0: digLive.here ? digLive.digs : 0 };
+    log(`Digging Game guessing open (${S().digGuess.command || '!dig'} 1-${DIG_MAX})`);
+    digSend();
+  }
+  function digLock() { if (dgg && dgg.open) { dgg.open = false; log(`Digging Game guesses closed (${dgg.guesses.size})`); digSend(); } }
+  function digResolve(at, how) {
+    if (!dgg || dgg.result) return;
+    at = Math.round(+at);
+    if (!(at >= 1 && at <= DIG_MAX)) return;
+    dgg.open = false;
+    const all = [...dgg.guesses.entries()].map(([u, g]) => ({ user: u, nick: g.nick, n: g.n, off: Math.abs(g.n - at) }));
+    const best = all.length ? Math.min(...all.map((g) => g.off)) : null;
+    const winners = all.filter((g) => g.off === best).map((g) => g.nick || g.user);
+    dgg.result = { at, exact: best === 0, off: best, winners, how: how || 'game' };
+    const txt = winners.length ? (best === 0 ? 'called it: ' : `closest (${best} off): `) + winners.slice(0, 5).join(', ') + (winners.length > 5 ? ` +${winners.length - 5}` : '') : 'nobody guessed';
+    log(`Digging Game prize came on dig #${at}: ${txt}`);
+    ctx.record({ type: 'digprize', user: 'Link', text: `Digging Game: dig #${at}`, bonus: txt,
+      alert: S().digGuess.alert ? { tier: 'big', title: 'DIG PRIZE FOUND!' } : undefined });
+    addClip(`Digging Game prize on dig #${at} (${txt})`, 'dig');
+    digSend();
+  }
+  function onDig(g) {
+    const prev = JSON.stringify(digLive);
+    digLive = { digs: Math.max(0, Math.min(99, +g.digs || 0)), total: DIG_MAX, found: !!g.found, at: g.at == null ? null : +g.at, here: !!g.here };
+    if (JSON.stringify(digLive) === prev) return;
+    send('dig', { dig: digLive });
+    if (!dgg) return;
+    // the first dig of a game closes the guesses
+    if (dgg.open && S().digGuess.lockOnFirstDig && digLive.here && digLive.digs > 0 && digLive.digs !== dgg.digs0) digLock();
+    if (digLive.found && digLive.at != null && !dgg.result) digResolve(digLive.at, 'game');
+    else digSend();
+  }
+  function digChat(e, t) {
+    if (!dgg || !dgg.open) return;
+    const cmd = String(S().digGuess.command || '!dig').toLowerCase().trim();
+    const esc = cmd.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = t.match(new RegExp('^' + esc + '\\s*#?(\\d{1,2})$'));
+    if (!m) return;
+    const n = +m[1];
+    if (n < 1 || n > DIG_MAX) return;
+    dgg.guesses.set(e.user, { n, nick: e.nickname || '' });
+    e.digguess = n;
+    digSend();
   }
 
   // ── predictions ────────────────────────────────────────────────────────
@@ -418,6 +512,7 @@ export function createLive(ctx) {
       const v = t.match(/^(?:!vote\s*)?([1-4])$/);
       if (v && poll && !poll.done) { if (votePoll(e.user, +v[1] - 1)) e.vote = +v[1]; }
       gtChat(e, t);
+      digChat(e, t);
       // predictions
       if (pred && !pred.locked) { const i = pred.words.indexOf(t); if (i >= 0) { pred.votes.set(e.user, i); e.predict = pred.labels[i]; send('predict', { predict: predView() }); } }
       // team battle
@@ -456,12 +551,24 @@ export function createLive(ctx) {
         setTimeout(() => gtResolve(9, 'test'), 2500);
         return true;
       }
+      case 'dig-start': digStart(); return true;
+      case 'dig-lock': digLock(); return true;
+      case 'dig-resolve': digResolve(a.at, 'by hand'); return true;
+      case 'dig-cancel': dgg = null; digSend(); return true;
+      case 'dig-test': {
+        if (!dgg) digStart();
+        ['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo'].forEach((u, i) => { if (dgg.open) dgg.guesses.set('test_' + u, { n: [4, 12, 15, 15, 27][i], nick: u }); });
+        digSend();
+        setTimeout(() => digResolve(15, 'test'), 2500);
+        return true;
+      }
       case 'predict-start': startPred(a); return true;
       case 'predict-lock': lockPred(); return true;
       case 'predict-resolve': resolvePred(a.result ? 1 : 0); return true;
       case 'predict-cancel': clearTimeout(predT); pred = null; send('predict', { predict: null }); return true;
       case 'clip-add': return { clip: addClip(a.label || 'Marked by the streamer', 'manual') };
       case 'clip-delete': clips = clips.filter((c) => c.id !== a.id); writeLater(CLIPS_FILE, clips); send('clips'); return true;
+      case 'seeds-clear': seeds = []; writeLater(SEEDS_FILE, seeds); send('seeds', { seeds: [] }); return true;
       case 'clips-clear': clips = []; writeLater(CLIPS_FILE, clips); send('clips'); return true;
       case 'fame-reset': fame = {}; writeLater(FAME_FILE, fame); send('fame', { fame: [] }); return true;
       case 'fame-remove': delete fame[a.user]; writeLater(FAME_FILE, fame); send('fame', { fame: famous(20) }); return true;
@@ -487,8 +594,8 @@ export function createLive(ctx) {
   }
 
   function snapshot() {
-    return { poll: pollView(), battle: battleView(), combo: { n: combo.n, at: S().combo.bonusAt, best: combo.best }, predict: predView(), gtguess: gtView(), gt: gtLive, run: runStats,
-      clips: clips.slice(-200), fame: famous(20), viewersKnown: Object.keys(viewers).length };
+    return { poll: pollView(), battle: battleView(), combo: { n: combo.n, at: S().combo.bonusAt, best: combo.best }, predict: predView(), gtguess: gtView(), gt: gtLive, digguess: digView(), dig: digLive, run: runStats,
+      clips: clips.slice(-200), seeds: seeds.slice(-200), fame: famous(20), viewersKnown: Object.keys(viewers).length };
   }
 
   return { onEvent, onGame, mystery, run: action, snapshot, addClip, famous };

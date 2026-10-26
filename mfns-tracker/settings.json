@@ -1,0 +1,1187 @@
+{
+ "sections": [
+  {
+   "title": "Randomizer",
+   "items": [
+    {
+     "key": "worldState",
+     "label": "World State",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "standard",
+       "label": "Standard"
+      },
+      {
+       "value": "open",
+       "label": "Open"
+      },
+      {
+       "value": "standverted",
+       "label": "Standverted"
+      },
+      {
+       "value": "inverted_1",
+       "label": "Inverted 1.0"
+      },
+      {
+       "value": "inverted",
+       "label": "Inverted 2.0"
+      }
+     ]
+    },
+    {
+     "key": "logicMode",
+     "label": "Logic Mode",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "noglitches",
+       "label": "No Glitches"
+      },
+      {
+       "value": "overworldglitches",
+       "label": "Overworld Glitches"
+      },
+      {
+       "value": "hybridglitches",
+       "label": "Hybrid Glitches"
+      },
+      {
+       "value": "nologic",
+       "label": "No Logic"
+      }
+     ]
+    },
+    {
+     "key": "goal",
+     "label": "Goal",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "fast_ganon",
+       "label": "Fast Ganon"
+      },
+      {
+       "value": "ganon",
+       "label": "Defeat Ganon"
+      },
+      {
+       "value": "ad",
+       "label": "All Dungeons"
+      },
+      {
+       "value": "pedestal",
+       "label": "Pedestal"
+      },
+      {
+       "value": "triforce_hunt",
+       "label": "Triforce Hunt"
+      },
+      {
+       "value": "ganonhunt",
+       "label": "Ganonhunt"
+      },
+      {
+       "value": "completionist",
+       "label": "Completionist"
+      },
+      {
+       "value": "trinity",
+       "label": "Trinity"
+      }
+     ]
+    },
+    {
+     "key": "swords",
+     "label": "Swords",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "randomized",
+       "label": "Randomized"
+      }
+     ]
+    },
+    {
+     "key": "ganonVulnerable",
+     "label": "Ganon Vulnerable",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "0",
+       "label": "0 crystals"
+      },
+      {
+       "value": "1",
+       "label": "1 crystal"
+      },
+      {
+       "value": "2",
+       "label": "2 crystals"
+      },
+      {
+       "value": "3",
+       "label": "3 crystals"
+      },
+      {
+       "value": "4",
+       "label": "4 crystals"
+      },
+      {
+       "value": "5",
+       "label": "5 crystals"
+      },
+      {
+       "value": "6",
+       "label": "6 crystals"
+      },
+      {
+       "value": "7",
+       "label": "7 crystals"
+      },
+      {
+       "value": "ad",
+       "label": "All Dungeons"
+      },
+      {
+       "value": "completionist",
+       "label": "Completionist"
+      },
+      {
+       "value": "triforce",
+       "label": "Ganonhunt"
+      },
+      {
+       "value": "random",
+       "label": "Random crystals"
+      }
+     ]
+    },
+    {
+     "key": "gtOpen",
+     "label": "GT Open",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "0",
+       "label": "0 crystals"
+      },
+      {
+       "value": "1",
+       "label": "1 crystal"
+      },
+      {
+       "value": "2",
+       "label": "2 crystals"
+      },
+      {
+       "value": "3",
+       "label": "3 crystals"
+      },
+      {
+       "value": "4",
+       "label": "4 crystals"
+      },
+      {
+       "value": "5",
+       "label": "5 crystals"
+      },
+      {
+       "value": "6",
+       "label": "6 crystals"
+      },
+      {
+       "value": "7",
+       "label": "7 crystals"
+      },
+      {
+       "value": "random",
+       "label": "Random crystals"
+      },
+      {
+       "value": "locksmith",
+       "label": "Locksmith"
+      },
+      {
+       "value": "other",
+       "label": "Other conditions"
+      }
+     ]
+    },
+    {
+     "key": "pottery",
+     "label": "Pottery",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "none",
+       "label": "None"
+      },
+      {
+       "value": "keys",
+       "label": "Key Pots"
+      },
+      {
+       "value": "cave",
+       "label": "Cave Pots"
+      },
+      {
+       "value": "cavekeys",
+       "label": "Cave+Key Pots"
+      },
+      {
+       "value": "reduced",
+       "label": "Reduced"
+      },
+      {
+       "value": "clustered",
+       "label": "Clustered"
+      },
+      {
+       "value": "nonempty",
+       "label": "Non-empty"
+      },
+      {
+       "value": "dungeon",
+       "label": "Dungeon"
+      },
+      {
+       "value": "lottery",
+       "label": "Lottery"
+      }
+     ]
+    },
+    {
+     "key": "enemyDrop",
+     "label": "Enemy Drops",
+     "type": "select",
+     "group": "Randomizer Settings",
+     "options": [
+      {
+       "value": "none",
+       "label": "None"
+      },
+      {
+       "value": "keys",
+       "label": "Key Enemies"
+      },
+      {
+       "value": "underworld",
+       "label": "Underworld"
+      }
+     ]
+    },
+    {
+     "key": "activatedFlute",
+     "label": "Activated Flute",
+     "type": "switch",
+     "group": "Misc"
+    },
+    {
+     "key": "ambrosia",
+     "label": "Ambrosia",
+     "type": "switch",
+     "group": "Misc"
+    },
+    {
+     "key": "bonkShuffle",
+     "label": "Bonk Shuffle",
+     "type": "switch",
+     "group": "Misc"
+    },
+    {
+     "key": "followerShuffle",
+     "label": "Follower Shuffle",
+     "type": "switch",
+     "group": "Misc"
+    },
+    {
+     "key": "mirrorScroll",
+     "label": "Mirror scroll",
+     "type": "switch",
+     "group": "Misc"
+    },
+    {
+     "key": "shopsanity",
+     "label": "Shopsanity",
+     "type": "switch",
+     "group": "Misc"
+    },
+    {
+     "key": "pseudoboots",
+     "label": "Pseudoboots",
+     "type": "switch",
+     "group": "Misc"
+    }
+   ]
+  },
+  {
+   "title": "Dungeons, entrances and more",
+   "items": [
+    {
+     "key": "wildSmallKeys",
+     "label": "Small Keys",
+     "type": "select",
+     "group": "Dungeon Items & Keys",
+     "options": [
+      {
+       "value": "inDungeon",
+       "label": "In Dungeon"
+      },
+      {
+       "value": "wild",
+       "label": "Randomized"
+      },
+      {
+       "value": "universal",
+       "label": "Universal"
+      }
+     ]
+    },
+    {
+     "key": "keyLogic",
+     "label": "Key Logic",
+     "type": "select",
+     "group": "Dungeon Items & Keys",
+     "options": [
+      {
+       "value": "partial",
+       "label": "Partial"
+      },
+      {
+       "value": "dangerous",
+       "label": "Dangerous"
+      },
+      {
+       "value": "static",
+       "label": "Static"
+      }
+     ]
+    },
+    {
+     "key": "prizeShuffle",
+     "label": "Prize Shuffle",
+     "type": "select",
+     "group": "Dungeon Items & Keys",
+     "options": [
+      {
+       "value": "vanilla",
+       "label": "Vanilla"
+      },
+      {
+       "value": "inDungeon",
+       "label": "In Dungeon"
+      },
+      {
+       "value": "wild",
+       "label": "Randomized"
+      }
+     ]
+    },
+    {
+     "key": "wildBigKeys",
+     "label": "Wild Big Keys",
+     "type": "switch",
+     "group": "Dungeon Items"
+    },
+    {
+     "key": "wildMaps",
+     "label": "Wild Maps",
+     "type": "switch",
+     "group": "Dungeon Items"
+    },
+    {
+     "key": "wildCompasses",
+     "label": "Wild Compasses",
+     "type": "switch",
+     "group": "Dungeon Items"
+    },
+    {
+     "key": "entranceMode",
+     "label": "Entrance Mode",
+     "type": "select",
+     "group": "Entrance Shuffle",
+     "options": [
+      {
+       "value": "none",
+       "label": "None"
+      },
+      {
+       "value": "dungeonssimple",
+       "label": "Dungeons Simple"
+      },
+      {
+       "value": "dungeonsfull",
+       "label": "Dungeons Full"
+      },
+      {
+       "value": "lite",
+       "label": "Lite"
+      },
+      {
+       "value": "lean",
+       "label": "Lean"
+      },
+      {
+       "value": "simple",
+       "label": "Simple"
+      },
+      {
+       "value": "restricted",
+       "label": "Restricted"
+      },
+      {
+       "value": "full",
+       "label": "Full"
+      },
+      {
+       "value": "district",
+       "label": "District"
+      },
+      {
+       "value": "swapped",
+       "label": "Swapped"
+      },
+      {
+       "value": "crossed",
+       "label": "Crossed"
+      },
+      {
+       "value": "insanity",
+       "label": "Insanity"
+      }
+     ]
+    },
+    {
+     "key": "shuffleLinks",
+     "label": "Link's House Shuffle",
+     "type": "switch",
+     "group": "Entrance Shuffle"
+    },
+    {
+     "key": "tavernShuffle",
+     "label": "Tavern Shuffle",
+     "type": "switch",
+     "group": "Entrance Shuffle"
+    },
+    {
+     "key": "zelgaWoods",
+     "label": "Zelga Woods",
+     "type": "switch",
+     "group": "Entrance Shuffle"
+    },
+    {
+     "key": "bossShuffle",
+     "label": "Boss Shuffle",
+     "type": "select",
+     "group": "Enemy & Boss Settings",
+     "options": [
+      {
+       "value": "none",
+       "label": "None"
+      },
+      {
+       "value": "random",
+       "label": "Random"
+      }
+     ]
+    },
+    {
+     "key": "enemyShuffle",
+     "label": "Enemy Shuffle",
+     "type": "select",
+     "group": "Enemy & Boss Settings",
+     "options": [
+      {
+       "value": "none",
+       "label": "None"
+      },
+      {
+       "value": "random",
+       "label": "Random"
+      }
+     ]
+    },
+    {
+     "key": "owLayout",
+     "label": "Layout",
+     "type": "select",
+     "group": "Overworld Shuffle",
+     "options": [
+      {
+       "value": "vanilla",
+       "label": "Vanilla"
+      }
+     ]
+    },
+    {
+     "key": "owCrossed",
+     "label": "Crossed",
+     "type": "select",
+     "group": "Overworld Shuffle",
+     "options": [
+      {
+       "value": "none",
+       "label": "None"
+      }
+     ]
+    },
+    {
+     "key": "owFluteShuffle",
+     "label": "Flute Shuffle",
+     "type": "select",
+     "group": "Overworld Shuffle",
+     "options": [
+      {
+       "value": "vanilla",
+       "label": "Vanilla"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Tracker",
+   "items": [
+    {
+     "key": "autotracking",
+     "label": "Enable Autotracking",
+     "type": "switch",
+     "group": "Autotracking",
+     "desc": "Read your items, keys, dungeon progress and checked locations from the running game through SNI or QUsb2snes, so you don't have to track by hand."
+    },
+    {
+     "key": "assumeOldManOnCollect",
+     "label": "Assume old man access on item collect",
+     "type": "switch",
+     "group": "Logic",
+     "desc": "When the old man item has been collected, assume logical access to Old Man S&Q spot without placing Old Man rescue caves"
+    },
+    {
+     "key": "includeDungeonItemsInCounter",
+     "label": "Always Count Dungeon Items",
+     "type": "switch",
+     "group": "Display",
+     "desc": "Include dungeon items (maps, compasses, small keys, big keys and prizes) in dungeon chest counters even when they stay in their own dungeon. When off, counters only count the checks that hold items shuffled outside of the dungeon."
+    }
+   ]
+  }
+ ],
+ "breaks": [
+  {
+   "id": "canNavigateDarkRooms",
+   "label": "Dark Room Navigation",
+   "desc": "Navigate dark rooms without a light source (lamp/firerod)",
+   "group": "Dungeon logic"
+  },
+  {
+   "id": "canIceBreak",
+   "label": "Ice Breaker",
+   "desc": "Use somaria to clip through the wall in IP Big Key Chest Room",
+   "group": "Dungeon logic"
+  },
+  {
+   "id": "canBombJump",
+   "label": "Bomb Jumps",
+   "desc": "Use bomb recoil to cross gaps",
+   "group": "Dungeon logic"
+  },
+  {
+   "id": "canHover",
+   "label": "Hover",
+   "desc": "Use boots + Pegasus to hover across gaps",
+   "group": "Dungeon logic"
+  },
+  {
+   "id": "canSuperBunny",
+   "label": "Mirror Super Bunny",
+   "desc": "Enter caves/dungeons as superbunny by mirror-canceling on the frame of entry. Sequence break in No Glitches; in logic for glitched modes.",
+   "group": "Overworld logic"
+  },
+  {
+   "id": "canSuperBunnyCave",
+   "label": "Superbunny Cave Drop",
+   "desc": "Get the Superbunny Cave chests without the Moon Pearl by dropping down its hole as a bunny. Sequence break in No Glitches; automatically in logic for glitched modes.",
+   "group": "Overworld logic"
+  }
+ ],
+ "remembered": [
+  "includeDungeonItemsInCounter",
+  "colouredChests",
+  "showMapTooltips",
+  "showChestTooltips",
+  "mapMode",
+  "connectionLinesMode",
+  "spriteName",
+  "entranceLabelsMode",
+  "showInsetBossSquare",
+  "useOldStyleDungeonSquares",
+  "alwaysShowHCCTCounts",
+  "alwaysShowBigKeys",
+  "alwaysShowSmallKeys",
+  "showKeyTotals",
+  "eventLogMode",
+  "logTriforcePieces",
+  "appBackground",
+  "connectionLineColor",
+  "customColors",
+  "entranceLabelOverrides",
+  "autotracking",
+  "sequenceBreaks",
+  "assumeOldManOnCollect"
+ ],
+ "entranceMenu": [
+  {
+   "title": "Light World Dungeons",
+   "to": [
+    "Hyrule Castle Entrance (South)",
+    "Hyrule Castle Entrance (East)",
+    "Hyrule Castle Entrance (West)",
+    "Agahnims Tower",
+    "Eastern Palace",
+    "Desert Palace Entrance (South)",
+    "Desert Palace Entrance (West)",
+    "Desert Palace Entrance (East)",
+    "Desert Palace Entrance (North)",
+    "Tower of Hera"
+   ]
+  },
+  {
+   "title": "Light Key Locations",
+   "to": [
+    "Potion Shop",
+    "Sick Kids House",
+    "Blacksmiths Hut",
+    "Bat Cave Drop",
+    "Library",
+    "Sahasrahlas Hut",
+    "Mimic Cave",
+    "Dam"
+   ]
+  },
+  {
+   "title": "General Key Locations",
+   "to": [
+    "Generic Rupee Cave",
+    "Generic Shop",
+    "Generic Dark Cave",
+    "Unknown Connector",
+    "Generic Item Cave"
+   ]
+  },
+  {
+   "title": "Starting Locations",
+   "to": [
+    "Links House",
+    "Sanctuary",
+    "Old Man House (Bottom)"
+   ]
+  },
+  {
+   "title": "Dark World Dungeons",
+   "to": [
+    "Palace of Darkness",
+    "Swamp Palace",
+    "Skull Woods First Section Door",
+    "Skull Woods Second Section Door (East)",
+    "Skull Woods Second Section Door (West)",
+    "Skull Woods Final Section",
+    "Thieves Town",
+    "Ice Palace",
+    "Misery Mire",
+    "Turtle Rock",
+    "Dark Death Mountain Ledge (East)",
+    "Dark Death Mountain Ledge (West)",
+    "Turtle Rock Isolated Ledge Entrance",
+    "Ganons Tower"
+   ]
+  },
+  {
+   "title": "Dark World Key Locations",
+   "to": [
+    "Big Bomb Shop",
+    "Bumper Cave (Top)",
+    "Spike Cave",
+    "Hookshot Cave",
+    "Pyramid Hole"
+   ]
+  }
+ ],
+ "presets": [
+  {
+   "title": "Step Ladder",
+   "presets": [
+    {
+     "id": "casualboots",
+     "name": "Casual Boots",
+     "desc": "Standard 7/7, assured sword, boots start"
+    },
+    {
+     "id": "crosskeys",
+     "name": "Crosskeys",
+     "desc": "Crossed ER with full keysanity, fast Ganon"
+    },
+    {
+     "id": "crosskeys2024",
+     "name": "Crosskeys 2024/5/6",
+     "desc": "Crosskeys with pseudoboots"
+    },
+    {
+     "id": "crisscross",
+     "name": "Crisscross",
+     "desc": "Crosskeys, crossed doors, pseudoboots, shopsanity"
+    },
+    {
+     "id": "openkeysanity",
+     "name": "Open Keysanity",
+     "desc": "Open mode, defeat Ganon, all dungeon items wild"
+    },
+    {
+     "id": "adkeysanity",
+     "name": "AD Keysanity",
+     "desc": "All Dungeons with full keysanity"
+    },
+    {
+     "id": "mystery",
+     "name": "Mystery",
+     "desc": "Mystery/unknown settings"
+    }
+   ]
+  },
+  {
+   "title": "Glitched Presets",
+   "presets": [
+    {
+     "id": "owg",
+     "name": "OWG",
+     "desc": "Overworld glitches logic"
+    },
+    {
+     "id": "hmg",
+     "name": "HMG",
+     "desc": "Hybrid major glitches, start with boots"
+    },
+    {
+     "id": "nologic",
+     "name": "No Logic",
+     "desc": "No logic — anything goes, keysanity, start with boots"
+    }
+   ]
+  },
+  {
+   "title": "Tournament Presets",
+   "presets": [
+    {
+     "id": "open47keys",
+     "name": "4/7 Open Keys",
+     "desc": "Open keysanity, 4 crystals for tower, 7 for Ganon"
+    },
+    {
+     "id": "ad",
+     "name": "All Dungeons",
+     "desc": "Open, All Dungeons "
+    },
+    {
+     "id": "adkdf",
+     "name": "ADKDF",
+     "desc": "All Dungeons, keysanity, key drop, follower shuffle"
+    },
+    {
+     "id": "ambroz1a",
+     "name": "AmbroZ1a",
+     "desc": "Retro mode, Ganon hunt, ambrosia, activated flute"
+    },
+    {
+     "id": "casualboots",
+     "name": "Casual Boots",
+     "desc": "Standard 7/7, assured sword, boots start"
+    },
+    {
+     "id": "cabookeydrop",
+     "name": "Cabookeydrop",
+     "desc": "Standard mode, all dungeons, keysanity, key drop, assured sword, start with boots"
+    },
+    {
+     "id": "enemizer",
+     "name": "Enemizer",
+     "desc": "Open mode with boss and enemy shuffle"
+    },
+    {
+     "id": "inverted_startflute",
+     "name": "Inverted (Start Flute)",
+     "desc": "Inverted mode with activated starting flute"
+    },
+    {
+     "id": "enemizerboots",
+     "name": "Enemizer Boots",
+     "desc": "Enemizer with starting boots"
+    },
+    {
+     "id": "mystery",
+     "name": "Mystery",
+     "desc": "Mystery/unknown settings"
+    },
+    {
+     "id": "openboots",
+     "name": "Open Boots",
+     "desc": "Open 7/7, boots start"
+    },
+    {
+     "id": "standard",
+     "name": "Standard",
+     "desc": "Standard 7/7"
+    },
+    {
+     "id": "stanvertedkeys",
+     "name": "Stanverted Keys",
+     "desc": "Standard mode, overworld shuffle, keysanity, defeat Ganon"
+    }
+   ]
+  }
+ ],
+ "allPresets": [
+  {
+   "id": "open",
+   "name": "Open",
+   "desc": "Open 7/7"
+  },
+  {
+   "id": "open76",
+   "name": "Open 7/6",
+   "desc": "Open mode, fast Ganon with 6 crystals ganon, 7 crystals GT"
+  },
+  {
+   "id": "openboots",
+   "name": "Open Boots",
+   "desc": "Open 7/7, boots start"
+  },
+  {
+   "id": "standard",
+   "name": "Standard",
+   "desc": "Standard 7/7"
+  },
+  {
+   "id": "standardboots",
+   "name": "Standard Boots",
+   "desc": "Standard 7/7, boots start"
+  },
+  {
+   "id": "casualboots",
+   "name": "Casual Boots",
+   "desc": "Standard 7/7, assured sword, boots start"
+  },
+  {
+   "id": "ad",
+   "name": "All Dungeons",
+   "desc": "Open, All Dungeons "
+  },
+  {
+   "id": "adenemizer",
+   "name": "AD Enemizer",
+   "desc": "All Dungeons with boss and enemy shuffle"
+  },
+  {
+   "id": "adkdb",
+   "name": "ADKDB",
+   "desc": "All Dungeons, keysanity, key drop, start with boots"
+  },
+  {
+   "id": "adkdf",
+   "name": "ADKDF",
+   "desc": "All Dungeons, keysanity, key drop, follower shuffle"
+  },
+  {
+   "id": "adkeydrop",
+   "name": "AD Keydrop",
+   "desc": "All Dungeons with keysanity and key drop pots"
+  },
+  {
+   "id": "adkeydropshop",
+   "name": "AD Keydrop Shop",
+   "desc": "All Dungeons with keysanity, key drop pots, and shopsanity"
+  },
+  {
+   "id": "adkeysanity",
+   "name": "AD Keysanity",
+   "desc": "All Dungeons with full keysanity"
+  },
+  {
+   "id": "adtileswap",
+   "name": "AD Tile Swap",
+   "desc": "All Dungeons with overworld tile swap"
+  },
+  {
+   "id": "openkeysanity",
+   "name": "Open Keysanity",
+   "desc": "Open mode, defeat Ganon, all dungeon items wild"
+  },
+  {
+   "id": "open47keys",
+   "name": "4/7 Open Keys",
+   "desc": "Open keysanity, 4 crystals for tower, 7 for Ganon"
+  },
+  {
+   "id": "mcshuffle",
+   "name": "MC Shuffle",
+   "desc": "Maps and compasses shuffled, keys in dungeon"
+  },
+  {
+   "id": "mcboss",
+   "name": "MCBoss",
+   "desc": "Maps and compasses shuffled with boss shuffle"
+  },
+  {
+   "id": "crosskeys",
+   "name": "Crosskeys",
+   "desc": "Crossed ER with full keysanity, fast Ganon"
+  },
+  {
+   "id": "crosskeys2024",
+   "name": "Crosskeys 2024/5/6",
+   "desc": "Crosskeys with pseudoboots"
+  },
+  {
+   "id": "crosshunt",
+   "name": "Crosshunt",
+   "desc": "Crosskeys, ganon hunt with 0 tower crystals"
+  },
+  {
+   "id": "crosskeys_flute_ms_pb",
+   "name": "Crosskeys Flute MS PB",
+   "desc": "Crosskeys with activated flute, mirror scroll, pseudoboots"
+  },
+  {
+   "id": "crosskeys_kd_flute_inv_pb_zw",
+   "name": "Crosskeys KD Flute Inv PB ZW",
+   "desc": "Inverted crosskeys with key drop, activated flute, pseudoboots"
+  },
+  {
+   "id": "crosskeys_kd_ms_pb_zw",
+   "name": "Crosskeys KD MS PB ZW",
+   "desc": "Crosskeys with key drop, mirror scroll, pseudoboots"
+  },
+  {
+   "id": "crosskeys_ms_pb_zw",
+   "name": "Crosskeys MS PB ZW",
+   "desc": "Crosskeys with mirror scroll, pseudoboots"
+  },
+  {
+   "id": "crosskeys_kd_ad",
+   "name": "Crosskeys KD AD",
+   "desc": "Crosskeys with key drop, all dungeons goal"
+  },
+  {
+   "id": "supercrosskeys",
+   "name": "Supercrosskeys",
+   "desc": "Crosskeys key drop, pseudoboots, bonk shuffle, fast Ganon 4 crystals"
+  },
+  {
+   "id": "invertedcrosskeys",
+   "name": "Inverted Crosskeys",
+   "desc": "Inverted Crosskeys"
+  },
+  {
+   "id": "crisscross",
+   "name": "Crisscross",
+   "desc": "Crosskeys, crossed doors, pseudoboots, shopsanity"
+  },
+  {
+   "id": "beginnerdoors",
+   "name": "Beginner Doors",
+   "desc": "Standard mode, basic doors, assured sword, pseudoboots"
+  },
+  {
+   "id": "intermediatedoors",
+   "name": "Intermediate Doors",
+   "desc": "Standard mode, partitioned doors, assured sword, pseudoboots, keysanity"
+  },
+  {
+   "id": "inverted",
+   "name": "Inverted",
+   "desc": "Inverted mode, defeat Ganon"
+  },
+  {
+   "id": "inverted_startflute",
+   "name": "Inverted (Start Flute)",
+   "desc": "Inverted mode with activated starting flute"
+  },
+  {
+   "id": "invertedkeysanity",
+   "name": "Inverted Keysanity",
+   "desc": "Inverted mode with full keysanity"
+  },
+  {
+   "id": "invertedadkeysanity",
+   "name": "Inverted AD Keysanity",
+   "desc": "Inverted mode, all dungeons, full keysanity"
+  },
+  {
+   "id": "influkeys",
+   "name": "Influkeys",
+   "desc": "Inverted, keysanity, activated flute, start with flute"
+  },
+  {
+   "id": "invrosia",
+   "name": "Invrosia",
+   "desc": "Inverted mode with assured sword, wild big keys and guaranteed non-dungeon item on the boss"
+  },
+  {
+   "id": "championsswordless",
+   "name": "Champions Swordless",
+   "desc": "Swordless with MC shuffle"
+  },
+  {
+   "id": "championshunt",
+   "name": "Champions Hunt",
+   "desc": "Assured sword, wild big keys, 5 tower crystals, Ganon hunt, start with boots"
+  },
+  {
+   "id": "enemizer",
+   "name": "Enemizer",
+   "desc": "Open mode with boss and enemy shuffle"
+  },
+  {
+   "id": "enemizerboots",
+   "name": "Enemizer Boots",
+   "desc": "Enemizer with starting boots"
+  },
+  {
+   "id": "enemizerkeydrop",
+   "name": "Enemizer Keydrop",
+   "desc": "Enemizer with key drop pots and full keysanity"
+  },
+  {
+   "id": "bosshunt",
+   "name": "Bosshunt",
+   "desc": "Ganon hunt with 0 tower crystals"
+  },
+  {
+   "id": "ganonhunt",
+   "name": "Ganonhunt",
+   "desc": "Ganon hunt, assured sword, wild big keys, 5/2, start with boots"
+  },
+  {
+   "id": "goldrush",
+   "name": "Gold Rush",
+   "desc": "Triforce hunt with full keysanity, start with boots"
+  },
+  {
+   "id": "reducedcrystals",
+   "name": "Reduced Crystals",
+   "desc": "Open mode, fast Ganon with 6 crystals"
+  },
+  {
+   "id": "doubledown",
+   "name": "Double Down",
+   "desc": "All Dungeons, keysanity, start with boots"
+  },
+  {
+   "id": "duality",
+   "name": "Duality",
+   "desc": "Fast Ganon 1/5, full keysanity"
+  },
+  {
+   "id": "ambrosia",
+   "name": "Ambrosia",
+   "desc": "Standard mode, assured sword, ambrosia"
+  },
+  {
+   "id": "ambroz1a",
+   "name": "AmbroZ1a",
+   "desc": "Retro mode, Ganon hunt, ambrosia, activated flute"
+  },
+  {
+   "id": "cabookey",
+   "name": "Cabookey",
+   "desc": "Standard mode, all dungeons, keysanity, assured sword, start with boots"
+  },
+  {
+   "id": "cabookeydrop",
+   "name": "Cabookeydrop",
+   "desc": "Standard mode, all dungeons, keysanity, key drop, assured sword, start with boots"
+  },
+  {
+   "id": "hardopenplus",
+   "name": "Hard Open Plus",
+   "desc": "Open mode, defeat Ganon"
+  },
+  {
+   "id": "ludicrousspeed",
+   "name": "Ludicrous Speed",
+   "desc": "All Dungeons with wild compasses"
+  },
+  {
+   "id": "mystery",
+   "name": "Mystery",
+   "desc": "Mystery/unknown settings"
+  },
+  {
+   "id": "patronparty",
+   "name": "Patron Party",
+   "desc": "Inverted, boss shuffle, keysanity, pseudoboots, activated flute, start with hookshot/glove/flute"
+  },
+  {
+   "id": "potpourri",
+   "name": "Potpourri",
+   "desc": "All Dungeons, boss shuffle, wild keys, activated flute, start with hookshot/icerod/flute"
+  },
+  {
+   "id": "potsandbones",
+   "name": "Pots & Bones",
+   "desc": "Standard, crossed ER, key drop, triforce hunt, keysanity, start with boots/lantern/red boomerang"
+  },
+  {
+   "id": "retrance",
+   "name": "Retrance",
+   "desc": "Retro mode, crossed ER, keysanity, assured sword"
+  },
+  {
+   "id": "shoptillyoudrop",
+   "name": "Shop Till You Drop",
+   "desc": "Retro mode, crossed ER, key drop, keysanity, shopsanity, start with boots"
+  },
+  {
+   "id": "truepothunt",
+   "name": "True Pot Hunt",
+   "desc": "Crossed ER, key drop, triforce hunt, keysanity, shopsanity, start with boots/lantern"
+  },
+  {
+   "id": "xdhunt",
+   "name": "XDHunt",
+   "desc": "Crossed ER, key drop, Ganon hunt, keysanity, pseudoboots, 4 tower crystals"
+  },
+  {
+   "id": "stanvertedkeys",
+   "name": "Stanverted Keys",
+   "desc": "Standard mode, overworld shuffle, keysanity, defeat Ganon"
+  },
+  {
+   "id": "owg",
+   "name": "OWG",
+   "desc": "Overworld glitches logic"
+  },
+  {
+   "id": "owg_assured",
+   "name": "OWG Assured",
+   "desc": "Overworld glitches with assured sword, start with boots"
+  },
+  {
+   "id": "hmg",
+   "name": "HMG",
+   "desc": "Hybrid major glitches, start with boots"
+  },
+  {
+   "id": "nologic",
+   "name": "No Logic",
+   "desc": "No logic — anything goes, keysanity, start with boots"
+  }
+ ]
+}

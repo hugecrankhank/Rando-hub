@@ -56,6 +56,12 @@
   // this file it is the classic layout (wantMode false).
   // Tracker off (tracker-mode.js): just the game, so none of the tracker layouts
   function trackerOff() { return !!(window.UnifiedTracker && window.UnifiedTracker.off()); }
+  // EmoTracker (emo-host.js) has its own layouts: it always sits in the column
+  function trackerEmo() { return !!(window.UnifiedTracker && window.UnifiedTracker.emo && window.UnifiedTracker.emo()); }
+  function isIPad() {
+    var ua = navigator.userAgent || '';
+    return /iPad/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+  }
   function wantDesktop() {
     if (!window.UnifiedDesktop) return false;   // editions without pop-outs (Lite)
     if (trackerOff()) return false;
@@ -64,7 +70,7 @@
     return p === 'auto' && finePointer() && window.innerWidth > 900;
   }
   function wantMode() {
-    if (trackerOff()) return false;
+    if (trackerOff() || trackerEmo()) return false;
     var p = pref(), W = window.innerWidth, H = window.innerHeight;
     if (p === 'tablet') return p;
     if (p === 'stacked') return 'portrait';
@@ -72,8 +78,9 @@
     if (p === 'classic' || p === 'desktop' || p === 'phone') return false;
     if (window.UnifiedPhone && window.UnifiedPhone.wanted()) return false;
     if (wantDesktop()) return false;
-    if (W >= 1000 && W > H) return 'tablet';
-    if (W >= 700 && H > W) return 'portrait';
+    // Auto: an iPad gets the iPad layout (formerly "Stacked"), any other tablet the Tablet layout
+    if (isIPad() && Math.max(W, H) >= 700) return 'portrait';
+    if (Math.max(W, H) >= 900 && Math.min(W, H) >= 600) return 'tablet';
     return false;
   }
 

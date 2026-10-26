@@ -1,11 +1,12 @@
 {
  "edition": "full",
- "version": "0518aeb8583f",
+ "version": "81fa0bbcc402",
  "cache": "rando-hub-v1",
  "files": [
   "./",
   "bridge/sni-bridge.js",
   "bridge/sni-shim.js",
+  "addons/reveal.js",
   "crowd/effects.js",
   "compact-header.js",
   "desktop.js",
@@ -321,6 +322,19 @@
   "emu/shaders/crt-pi.glsl",
   "emu/shaders/sharp-bilinear-simple.glsl",
   "emu/shaders/stock.glsl",
-  "tracker/hutch-versions.js"
+  "tracker/hutch-versions.js",
+  "addons/sound-packs.js",
+  "addons/sound-packs-ui.js",
+  "addons/key-display.js",
+  "sounds/packs/index.json",
+  "seed-log.js",
+  "games.js",
+  "addons/hub-items.js",
+  "addons/keys-client.js",
+  "tracker-settings.js",
+  "credits.js",
+  "randomizer/hub-credits.js",
+  "addons/map-prizes.js",
+  "mudora-stack.js"
  ]
 }

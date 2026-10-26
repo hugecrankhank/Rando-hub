@@ -1,7 +1,7 @@
 {
   "name": "Rando Hub",
   "short_name": "Rando Hub",
-  "description": "Rando Hub: A Link to the Past Randomizer on a built-in Snes9x emulator, with the Hutch tracker, seed generators and TikTok crowd control.",
+  "description": "Rando Hub: A Link to the Past Randomizer on a built-in Snes9x emulator, with autotracking (Mudora 2.0, Mudora, Hutch's tracker), seed generators, Zelda 1 and Guardian Legend randomizers, and TikTok crowd control.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

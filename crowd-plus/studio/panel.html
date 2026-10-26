@@ -81,6 +81,11 @@
   label.check { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0; color: var(--text); cursor: pointer; } label.check input { margin-top: 2px; flex: none; }
   .pill { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 11px; background: var(--panel2); border: 1px solid var(--line); color: var(--dim); }
   @media (max-width: 860px) { .ov { grid-template-columns: 1fr; } nav { top: 0; position: static; } header { position: static; } }
+  #gift-rows td.drag { cursor: grab; color: var(--dim, #8b8fa3); font-size: 18px; text-align: center; user-select: none; }
+  #gift-rows tr.dragging { opacity: .45; }
+  #gift-rows tr.drop-above td { box-shadow: inset 0 2px 0 #e63946; }
+  #gift-rows tr.drop-below td { box-shadow: inset 0 -2px 0 #e63946; }
+  [data-gmove] { padding: 2px 6px; }
 </style>
 </head>
 <body>
@@ -138,7 +143,7 @@
         <input id="t-coins" type="number" min="0" placeholder="coins" title="Total coins for this donation" style="width:90px">
         <button class="primary" id="t-send">Send gift</button></div>
       <label class="check"><input type="checkbox" id="t-run"> Also run the game effect (and count it in stats, goals and the subathon clock)</label>
-      <div class="row"><button data-sim="follow">Follow</button><button data-sim="share">Share</button><button data-sim="like">50 likes</button></div>
+      <div class="row"><button data-sim="follow">Follow</button><button data-sim="share">Share</button><button data-sim="like">50 likes</button><button data-sim="superfan">Super Fan</button><button data-sim="community">Community member</button></div>
       <div class="row"><input id="t-chat" placeholder="Chat message, e.g. !rules" style="flex:1"><button id="t-chat-send">Send chat</button></div>
       <h3 style="margin-top:18px">Stream</h3>
       <div class="row"><button id="clear-alerts">Clear alerts on screen</button><button class="danger" id="reset-stats">Reset stream stats</button></div>
@@ -150,10 +155,23 @@
 <!-- GIFTS -->
 <section id="tab-gifts">
   <h2>GIFTS</h2>
-  <p class="hint">Which gift does what in the game. The coin value is only needed if the bridge window doesn't show "= N coins" for that gift. Gifts seen on stream show up at the bottom so you can add them.</p>
-  <div class="card"><table><thead><tr><th style="width:44px"></th><th>Gift</th><th>Coins</th><th>Effect in the game</th><th></th></tr></thead><tbody id="gift-rows"></tbody></table>
+  <p class="hint">Which gift does what in the game. The coin value is only needed if the bridge window doesn't show "= N coins" for that gift. Gifts seen on stream show up at the bottom so you can add them. The scrolling gift list shows them in this order: drag a row by its ⠿ handle, or use ▲ ▼, then Save.</p>
+  <div class="card"><table><thead><tr><th style="width:30px"></th><th style="width:44px"></th><th>Gift</th><th>Coins</th><th>Effect in the game</th><th title="Shown in the scrolling gift list">On ticker</th><th></th></tr></thead><tbody id="gift-rows"></tbody></table>
     <div class="bar"><input id="gift-new" list="gift-catalog" placeholder="Gift name (exactly as TikTok spells it)" style="min-width:260px"><datalist id="gift-catalog"></datalist><button id="gift-add">Add gift</button></div>
     <div id="unmapped"></div>
+  </div>
+  <div class="card">
+    <h3>Scrolling gift list</h3>
+    <p class="hint">The ticker overlay (Overlays tab). More rows show more gifts at once: the gifts are dealt out across the rows in the order above, and each row scrolls on its own. Make the browser source taller to match (72 px per row at the default size).</p>
+    <label class="row"><span style="min-width:150px">Rows</span><select id="tk-rows"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></label>
+    <label class="row"><span style="min-width:150px">Title</span><input id="tk-title" placeholder="GIFT EFFECTS (empty: no title)" style="width:220px"></label>
+    <label class="row"><span style="min-width:150px">Speed</span><input id="tk-speed" type="number" min="10" max="400" style="width:90px"> pixels a second</label>
+    <div class="row" style="flex-wrap:wrap;gap:6px 18px"><span class="muted" style="min-width:150px">Also show</span>
+      <label class="check" style="margin:0"><input type="checkbox" id="tk-likes"> like triggers</label>
+      <label class="check" style="margin:0"><input type="checkbox" id="tk-social"> follows, shares, Super Fans, community</label>
+      <label class="check" style="margin:0"><input type="checkbox" id="tk-tiers"> big donation levels</label>
+      <label class="check" style="margin:0"><input type="checkbox" id="tk-timer"> subathon time per coin</label></div>
+    <p class="hint">Untick <b>On ticker</b> on a gift above to leave it out of the list. It still works in the game.</p>
   </div>
 
   <h2>TEST ANY EFFECT</h2>
@@ -167,13 +185,15 @@
   <div class="card"><table><thead><tr><th>Coins</th><th>Effect</th><th>Name on the gift list</th><th></th></tr></thead><tbody id="tier-rows"></tbody></table>
     <div class="bar"><button id="tier-add">Add a level</button></div></div>
 
-  <h2>LIKES, FOLLOWS, SHARES</h2>
+  <h2>LIKES, FOLLOWS, SHARES, SUPER FANS</h2>
   <div class="card">
     <div id="like-rows"></div>
     <div class="row"><button class="small" id="like-add">Add a like trigger</button> <span class="hint">Each one counts on its own, e.g. +1 heart every 300, magic every 500, full heal every 2000.</span></div>
     <div class="row"><span style="min-width:170px" class="muted">A follow</span><select id="follow-effect"></select></div>
     <div class="row"><span style="min-width:170px" class="muted">A share</span><select id="share-effect"></select></div>
-    <p class="hint">Follows and shares count once per viewer every 10 minutes.</p>
+    <div class="row"><span style="min-width:170px" class="muted">A new Super Fan</span><select id="superfan-effect"></select></div>
+    <div class="row"><span style="min-width:170px" class="muted">A new community member</span><select id="community-effect"></select></div>
+    <p class="hint">Follows, shares, Super Fans and community members count once per viewer every 10 minutes. Time they add to the subathon clock is set on the Subathon tab.</p>
   </div>
 
   <h2>TIMED EFFECTS</h2>
@@ -197,6 +217,8 @@
       <label class="row"><span>Show the game effect</span><input type="checkbox" data-s="alerts.showEffect"></label>
       <label class="row"><span>Alert for follows</span><input type="checkbox" data-s="alerts.follows"></label>
       <label class="row"><span>Alert for shares</span><input type="checkbox" data-s="alerts.shares"></label>
+      <label class="row"><span>Alert for new Super Fans</span><input type="checkbox" data-s="alerts.superfans"></label>
+      <label class="row"><span>Alert for new community members</span><input type="checkbox" data-s="alerts.community"></label>
       <label class="row"><span>Sound</span><input type="checkbox" data-s="alerts.sound"> <input type="range" min="0" max="1" step=".05" data-s="alerts.volume" style="width:140px"></label>
     </div>
     <div class="card">
@@ -212,7 +234,7 @@
 <!-- GOALS -->
 <section id="tab-goals">
   <h2>GOALS</h2>
-  <p class="hint">Goal bars fill up from the stream: coins, likes, follows, shares or gifts. Tick <b>On stream</b> for the ones the goal overlay should show (several stack).</p>
+  <p class="hint">Goal bars fill up from the stream: coins, likes, follows, shares or gifts. For a gifts goal, pick one gift (like 50 Roses) or leave it on <b>any gift</b>. Tick <b>On stream</b> for the ones the goal overlay should show (several stack).</p>
   <div class="grid g2" id="goals"></div>
   <div class="bar"><button id="goal-add">Add a goal</button></div>
 </section>
@@ -286,6 +308,16 @@
       <label class="row"><span>Coins per second</span><input id="tm-cps" type="number" min="0.05" step="0.05"></label>
       <p class="hint" id="tm-rate"></p>
       <label class="row"><span>Clock on</span><input type="checkbox" id="tm-enabled"></label>
+      <h3 style="margin-top:12px">Time from the crowd</h3>
+      <p class="hint">Seconds added to the clock. 0 = none. Likes add up: at 0.01 a like, 100 likes make a second.</p>
+      <label class="row"><span>Each like</span><input id="tm-like" type="number" min="0" step="0.01" style="width:90px"> s</label>
+      <label class="row"><span>A follow</span><input id="tm-follow" type="number" min="0" step="0.01" style="width:90px"> s</label>
+      <label class="row"><span>A share</span><input id="tm-share" type="number" min="0" step="0.01" style="width:90px"> s</label>
+      <label class="row"><span>A new Super Fan</span><input id="tm-superfan" type="number" min="0" step="0.01" style="width:90px"> s</label>
+      <label class="row"><span>A new community member</span><input id="tm-community" type="number" min="0" step="0.01" style="width:90px"> s</label>
+      <label class="row"><span>Each comment</span><input id="tm-chat" type="number" min="0" step="0.01" style="width:90px"> s</label>
+      <label class="row"><span>Same viewer's next comment counts after</span><input id="tm-chatcd" type="number" min="0" step="1" style="width:90px"> s</label>
+      <p class="hint">0 = every comment counts. A wait (say 30) stops one viewer spamming the clock up.</p>
       <div class="row"><button class="primary" id="tm-save">Save</button></div>
       <h3 style="margin-top:12px">Recent</h3>
       <div id="tm-log" class="muted" style="font-size:12.5px"></div>
@@ -379,15 +411,28 @@
   <h2>GT BIG KEY</h2>
   <div class="grid g2">
     <div class="card">
-      <p class="hint">Which Ganon's Tower chest has the big key? Chat types <span class="kbd" id="gt-cmd-show">!gt 9</span> (1 to 26: GT's 26 chests, not Bob's Torch). The game counts the GT chests you open; when the big key turns up, that chest's number wins. Exact guesses win, or the closest if nobody's exact. Needs Crowd effects on in the game. Not for shuffled big keys (keysanity).</p>
+      <p class="hint">Which Ganon's Tower chest has the big key? Chat types <span class="kbd" id="gt-cmd-show">!gt 9</span> (1 to 22: the 22 places GT's big key can be, Bob's Torch included; not the Big Chest or the four chests behind the big key door). The game counts the GT chests you open; when the big key turns up, that chest's number wins. Exact guesses win, or the closest if nobody's exact. Needs Crowd effects on in the game. Not for shuffled big keys (keysanity).</p>
       <label class="row"><span>Chat command</span><input data-s="gtGuess.command" style="width:110px"></label>
       <label class="check"><input type="checkbox" data-s="gtGuess.lockOnFirstChest"> Close guesses when the first GT chest is opened</label>
       <label class="check"><input type="checkbox" data-s="gtGuess.alert"> Show a "BIG KEY FOUND!" alert</label>
       <div class="row"><button class="primary" id="gt-start">Start guessing</button><button id="gt-lock">Close guesses</button><button class="danger" id="gt-cancel">Cancel</button></div>
-      <div class="row"><span class="muted">If the game couldn't count it: the big key was chest #</span><input id="gt-at" type="number" min="1" max="26" style="width:70px"><button id="gt-set">Set</button></div>
+      <div class="row"><span class="muted">If the game couldn't count it: the big key was chest #</span><input id="gt-at" type="number" min="1" max="22" style="width:70px"><button id="gt-set">Set</button></div>
       <div class="row"><button class="small" id="gt-test">Test (5 fake guesses, key in chest #9)</button></div>
     </div>
     <div class="card"><h3>Now</h3><div id="gt-now" class="muted">Not running.</div></div>
+  </div>
+  <h2>DIGGING GAME</h2>
+  <div class="grid g2">
+    <div class="card">
+      <p class="hint">Which dig gives the Digging Game's prize (Dark World, the shovel guy south of the Village of Outcasts)? Chat types <span class="kbd">!dig 15</span> (1 to 30). The randomizer picks the dig for each seed and the game counts the digs; when the prize is picked up, the game says which dig it came on. Exact guesses win, or the closest if nobody's exact. Needs Crowd effects on in the game.</p>
+      <label class="row"><span>Chat command</span><input data-s="digGuess.command" style="width:110px"></label>
+      <label class="check"><input type="checkbox" data-s="digGuess.lockOnFirstDig"> Close guesses at the first dig</label>
+      <label class="check"><input type="checkbox" data-s="digGuess.alert"> Show a "DIG PRIZE FOUND!" alert</label>
+      <div class="row"><button class="primary" id="dig-start">Start guessing</button><button id="dig-lock">Close guesses</button><button class="danger" id="dig-cancel">Cancel</button></div>
+      <div class="row"><span class="muted">If the game couldn't count it: the prize came on dig #</span><input id="dig-at" type="number" min="1" max="30" style="width:70px"><button id="dig-set">Set</button></div>
+      <div class="row"><button class="small" id="dig-test">Test (5 fake guesses, prize on dig #15)</button></div>
+    </div>
+    <div class="card"><h3>Now</h3><div id="dig-now" class="muted">Not running.</div></div>
   </div>
   <div class="savebar"><button class="primary" data-save-settings>Save settings</button><span class="dirty" data-dirty></span></div>
 </section>
@@ -424,6 +469,13 @@
     </div>
     <div class="row"><input id="cl-label" placeholder="What happened? (optional)" style="flex:1"><button class="primary" id="cl-add">Mark now</button><button id="cl-export">Download list</button><button class="danger" id="cl-clear">Clear</button></div>
     <div class="log" id="cl-list" style="max-height:340px"></div>
+  </div>
+
+  <h2>SEED HISTORY</h2>
+  <div class="card">
+    <p class="hint">Every seed played while the bridge was running, kept across streams (<span class="kbd">seeds.json</span> in the Crowd Control+ folder): when, the seed and its code, who rolled it and how (a gift, a random preset, CHAOS, the 🎲 button…) and a link to play it again. The hub keeps its own list too (⚙ Settings → Seed history).</p>
+    <div class="row"><button id="sd-export">Download (CSV)</button><button class="danger" id="sd-clear">Clear</button><span class="muted" id="sd-n"></span></div>
+    <div class="log" id="sd-list" style="max-height:340px"></div>
   </div>
 
   <h2>HALL OF FAME</h2>
@@ -528,10 +580,15 @@ CC.on('tick', (d) => {
     if (!w) { w = document.createElement('div'); w.id = 'tabs-warn'; w.style.cssText = 'background:#7a1d24;color:#fff;padding:8px 14px;font:600 13px system-ui;text-align:center'; document.body.prepend(w); }
     w.textContent = 'The control panel is open in ' + d.studioTabs + ' tabs. Close the extra ones: too many open pages can make buttons wait minutes before they work.';
   } else if (w) w.remove();
+  // The tick carries a fresh "remaining" (common.js merges it into S.timer), so
+  // count down from now. Keeping the older anchor took the time since the last
+  // full refresh off a second time: the clock here ran fast, jumped 2-3 s at a
+  // time and ended up an hour behind the real one (HydeOut, Oct 2026).
+  if (d.timer) tmAt = Date.now();
   chips(CC.state); if (S) paintConn(); const n = d.overlays || 0; $('chip-ov').className = 'chip ' + (n ? 'ok' : ''); $('chip-ov').lastElementChild.textContent = n + ' overlay' + (n === 1 ? '' : 's') + ' on stream'; paintClock(); });
 
 // ── dashboard ──
-const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', chat: '💬', death: '☠', music: '♪', detour: '⚔', 'detour-end': '⚔', 'detour-rescue': '🛟', boss: '🏆', gtkey: '🔑' };
+const ICON = { gift: '🎁', like: '❤', follow: '➕', share: '↗', superfan: '⭐', community: '🤝', chat: '💬', death: '☠', music: '♪', detour: '⚔', 'detour-end': '⚔', 'detour-rescue': '🛟', boss: '🏆', gtkey: '🔑', digprize: '⛏' };
 function paintStats() {
   const s = S.stats;
   $('stats').innerHTML = [['Coins', s.coins], ['Gifts', s.gifts], ['Likes', s.likes], ['Follows', s.follows], ['Shares', s.shares], ['Chat', s.chats]]
@@ -546,13 +603,15 @@ function evRow(e) {
   else if (e.type === 'like') what += 'liked x' + e.count;
   else if (e.type === 'follow') what += 'followed';
   else if (e.type === 'share') what += 'shared the LIVE';
+  else if (e.type === 'superfan') what += 'became a Super Fan';
+  else if (e.type === 'community') what += 'joined the community';
   else if (e.type === 'chat') what += '<span class="muted">' + esc(e.text) + '</span>' + (e.command ? ' <span class="pill">command</span>' : '') + (e.speak ? ' <span class="pill">read aloud</span>' : '') +
-    (e.vote ? ' <span class="pill">voted ' + e.vote + '</span>' : '') + (e.predict ? ' <span class="pill">' + esc(e.predict) + '</span>' : '') + (e.gtguess ? ' <span class="pill">GT guess #' + e.gtguess + '</span>' : '') + (e.team ? ' <span class="pill">joined ' + esc(e.team) + '</span>' : '') + (e.clipped ? ' <span class="pill">clip marked</span>' : '');
+    (e.vote ? ' <span class="pill">voted ' + e.vote + '</span>' : '') + (e.predict ? ' <span class="pill">' + esc(e.predict) + '</span>' : '') + (e.gtguess ? ' <span class="pill">GT guess #' + e.gtguess + '</span>' : '') + (e.digguess ? ' <span class="pill">dig guess #' + e.digguess + '</span>' : '') + (e.team ? ' <span class="pill">joined ' + esc(e.team) + '</span>' : '') + (e.clipped ? ' <span class="pill">clip marked</span>' : '');
   else if (e.type === 'death') what = '<b>Link</b> died (death #' + (e.deaths || '?') + ')' + (e.text ? ' <span class="muted">' + esc(e.text) + '</span>' : '');
   else if (e.type === 'music') what = '<b>Music</b> <span class="muted">now ' + esc(e.text) + '</span>';
   else if (e.type === 'detour') what = '<b>' + esc(CC.name(e)) + '</b> sent Link to fight ' + esc(e.text);
   else if (e.type === 'detour-end') what = '<b>Boss detour</b> ' + esc(e.text) + ': ' + esc(e.result) + (e.bonus ? ' <span class="muted">(bonus: ' + esc(e.bonus) + ')</span>' : '');
-  else if (e.type === 'gtkey') what = '<b>' + esc(e.text) + '</b>' + (e.bonus ? ' <span class="muted">' + esc(e.bonus) + '</span>' : '');
+  else if (e.type === 'gtkey' || e.type === 'digprize') what = '<b>' + esc(e.text) + '</b>' + (e.bonus ? ' <span class="muted">' + esc(e.bonus) + '</span>' : '');
   else if (e.type === 'boss') what = '<b>Link</b> beat ' + esc(e.text) + (e.bonus ? ' <span class="muted">(' + esc(e.bonus) + ')</span>' : '');
   else if (e.type === 'detour-rescue') what = '<b>' + esc(CC.name(e)) + '</b> rescued Link from the boss';
   if (e.welcome) what += ' <span class="pill">regular · stream #' + e.welcome.streams + '</span>';
@@ -576,7 +635,7 @@ $('t-send').onclick = () => {
   call('simulate', { kind: 'gift', user: $('t-user').value || 'TestViewer', gift: $('t-gift').value, count, coins, runEffect: $('t-run').checked });
 };
 document.querySelectorAll('[data-sim]').forEach((b) => b.onclick = () => call('simulate', { kind: b.dataset.sim, user: $('t-user').value || 'TestViewer', count: 50, runEffect: $('t-run').checked }));
-$('t-chat-send').onclick = () => { if ($('t-chat').value.trim()) call('simulate', { kind: 'chat', user: $('t-user').value || 'TestViewer', text: $('t-chat').value }); };
+$('t-chat-send').onclick = () => { if ($('t-chat').value.trim()) call('simulate', { kind: 'chat', user: $('t-user').value || 'TestViewer', text: $('t-chat').value, runEffect: $('t-run').checked }); };
 $('t-chat').onkeydown = (e) => { if (e.key === 'Enter') $('t-chat-send').click(); };
 $('clear-alerts').onclick = () => call('clear-alerts', {}, 'Cleared');
 $('reset-stats').onclick = () => { if (confirm('Reset coins, gifts, likes, the top-gifters board and the event log?')) call('reset-stats', {}, 'Stream stats reset'); };
@@ -607,7 +666,7 @@ document.addEventListener('change', (ev) => { if (ev.target.type === 'checkbox' 
 $('tts-banned').oninput = () => { draft.tts.bannedWords = $('tts-banned').value.split('\n').map((x) => x.trim()).filter(Boolean); markS(); };
 function markS() { sDirty = true; document.querySelectorAll('[data-dirty]').forEach((x) => x.textContent = 'Unsaved changes'); }
 document.querySelectorAll('[data-save-settings]').forEach((b) => b.onclick = async () => {
-  const keys = ['alerts', 'leaderboard', 'feed', 'tts', 'commands', 'votes', 'battle', 'mystery', 'combo', 'deathTax', 'runClock', 'predict', 'gtGuess', 'clips', 'hallOfFame', 'welcome', 'detour'];
+  const keys = ['alerts', 'leaderboard', 'feed', 'tts', 'commands', 'votes', 'battle', 'mystery', 'combo', 'deathTax', 'runClock', 'predict', 'gtGuess', 'digGuess', 'clips', 'hallOfFame', 'welcome', 'detour'];
   await call('settings', { settings: Object.fromEntries(keys.map((k) => [k, draft[k]])) }, 'Saved');
   sDirty = false; document.querySelectorAll('[data-dirty]').forEach((x) => x.textContent = '');
 });
@@ -663,16 +722,31 @@ $('tts-test').onclick = () => speak((draft.tts.readNames ? 'TestViewer says: ' :
 // ── gift setup editor ──
 function effectOptions(sel, none) {
   const eff = (S.effects || []);
-  return (none ? '<option value="">— nothing —</option>' : '') + eff.map((e) => '<option value="' + esc(e.id) + '"' + (e.id === sel ? ' selected' : '') + '>' + esc(e.name) + (e.secs ? ' (' + e.secs + 's)' : '') + '</option>').join('') +
+  return (none ? '<option value="">— nothing —</option>' : '') + eff.map((e) => '<option value="' + esc(e.id) + '"' + (e.id === sel ? ' selected' : '') + '>' + (e.warn ? '⚠ ' : '') + esc(e.name) + (e.secs ? ' (' + e.secs + 's)' : '') + (e.warn ? ' (can end the run)' : '') + '</option>').join('') +
     (sel && !eff.some((e) => e.id === sel) ? '<option value="' + esc(sel) + '" selected>' + esc(sel) + ' (?)</option>' : '');
 }
+// Effects that can hurt a run for good (the bridge sends a warning with
+// them): picking one anywhere, for a gift, a test, a level or the mystery
+// box, asks first. "Cancel" puts the old choice back.
+const effWarn = (id) => ((S.effects || []).find((e) => e.id === id) || {}).warn;
+document.addEventListener('focusin', (ev) => { const el = ev.target; if (el && el.tagName === 'SELECT') el.dataset.prev = el.value; }, true);
+document.addEventListener('change', (ev) => {
+  const el = ev.target; if (!el) return;
+  const id = el.tagName === 'SELECT' ? el.value : (el.type === 'checkbox' && el.checked ? el.dataset.mb : '');
+  const w = id && effWarn(id); if (!w) return;
+  if (confirm('⚠ ' + w + '\n\nUse it anyway?')) { if (el.tagName === 'SELECT') el.dataset.prev = el.value; return; }
+  ev.stopImmediatePropagation(); ev.preventDefault();
+  if (el.tagName === 'SELECT') el.value = el.dataset.prev ?? ''; else el.checked = false;
+}, true);
 function newGDraft() {
   const m = S.mapping;
   gdraft = {
-    gifts: Object.entries(m.gifts).map(([name, effect]) => ({ name, effect, coins: m.giftCoins[name] ?? '' })),
+    gifts: Object.entries(m.gifts).map(([name, effect]) => ({ name, effect, coins: m.giftCoins[name] ?? '',
+      tick: !((m.ticker && m.ticker.hidden) || []).some((h) => String(h).toLowerCase() === name.toLowerCase()) })),
     coinTiers: JSON.parse(JSON.stringify(m.coinTiers || [])),
     likes: (Array.isArray(m.likes) ? m.likes : m.likes && m.likes.every ? [m.likes] : []).map((t) => ({ every: +t.every || 0, effect: t.effect || '' })),
-    follow: m.follow || '', share: m.share || '', durations: { ...(m.durations || {}) }, maxPerGift: m.maxPerGift ?? 5,
+    follow: m.follow || '', share: m.share || '', superfan: m.superfan || '', community: m.community || '', durations: { ...(m.durations || {}) }, maxPerGift: m.maxPerGift ?? 5,
+    ticker: JSON.parse(JSON.stringify(m.ticker || {})),
   };
   gDirty = false; $('gifts-dirty').textContent = '';
 }
@@ -682,14 +756,48 @@ function paintGifts() {
   $('gift-rows').innerHTML = gdraft.gifts.map((g, i) => {
     const c = catalogFor(g.name);
     const icon = c && c.icon ? '<img class="gi" src="' + esc(c.icon) + '" alt="">' : '<div class="noicon">🎁</div>';
-    return '<tr><td>' + icon + '</td><td><input value="' + esc(g.name) + '" data-gi="' + i + '" data-k="name" style="width:200px"></td>' +
+    return '<tr draggable="true" data-row="' + i + '"><td class="drag" title="Drag to move">⠿</td><td>' + icon + '</td><td><input value="' + esc(g.name) + '" data-gi="' + i + '" data-k="name" style="width:200px"></td>' +
       '<td><input type="number" min="0" value="' + esc(g.coins) + '" placeholder="' + (c && c.coins ? c.coins : 'auto') + '" data-gi="' + i + '" data-k="coins"></td>' +
       '<td><select data-gi="' + i + '" data-k="effect">' + effectOptions(g.effect) + '</select></td>' +
-      '<td style="white-space:nowrap"><button class="small" data-gtest="' + i + '">Test</button> <button class="small danger" data-gdel="' + i + '">✕</button></td></tr>';
+      '<td style="text-align:center"><input type="checkbox" data-gtick="' + i + '"' + (g.tick !== false ? ' checked' : '') + ' title="Show this gift in the scrolling gift list (it works either way)"></td>' +
+      '<td style="white-space:nowrap"><button class="small" data-gmove="' + i + ',-1" title="Move up"' + (i ? '' : ' disabled') + '>▲</button><button class="small" data-gmove="' + i + ',1" title="Move down"' + (i < gdraft.gifts.length - 1 ? '' : ' disabled') + '>▼</button> ' +
+      '<button class="small" data-gtest="' + i + '">Test</button> <button class="small danger" data-gdel="' + i + '">✕</button></td></tr>';
   }).join('');
+  const moveGift = (from, to) => {
+    if (to < 0 || to >= gdraft.gifts.length || from === to) return;
+    const [g] = gdraft.gifts.splice(from, 1); gdraft.gifts.splice(to, 0, g); markG(); paintGifts();
+  };
+  $('gift-rows').querySelectorAll('[data-gmove]').forEach((b) => b.onclick = () => { const [i, d] = b.dataset.gmove.split(',').map(Number); moveGift(i, i + d); });
+  // drag and drop (by the row; inputs still take clicks and typing)
+  let dragFrom = -1;
+  $('gift-rows').querySelectorAll('tr[data-row]').forEach((tr) => {
+    tr.ondragstart = (e) => { if (/INPUT|SELECT/.test(document.activeElement && document.activeElement.tagName) && tr.contains(document.activeElement)) { e.preventDefault(); return; } dragFrom = +tr.dataset.row; tr.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', String(dragFrom)); } catch (x) {} };
+    tr.ondragend = () => { tr.classList.remove('dragging'); $('gift-rows').querySelectorAll('.drop-above,.drop-below').forEach((x) => x.classList.remove('drop-above', 'drop-below')); };
+    tr.ondragover = (e) => { if (dragFrom < 0) return; e.preventDefault(); const r = tr.getBoundingClientRect(), below = e.clientY > r.top + r.height / 2; tr.classList.toggle('drop-below', below); tr.classList.toggle('drop-above', !below); };
+    tr.ondragleave = () => tr.classList.remove('drop-above', 'drop-below');
+    tr.ondrop = (e) => {
+      e.preventDefault(); if (dragFrom < 0) return;
+      const r = tr.getBoundingClientRect(), below = e.clientY > r.top + r.height / 2;
+      let to = +tr.dataset.row + (below ? 1 : 0); if (to > dragFrom) to--;
+      const f = dragFrom; dragFrom = -1; moveGift(f, to);
+    };
+  });
+  // the ticker's own settings
+  const T = gdraft.ticker;
+  $('tk-rows').value = String(Math.max(1, Math.min(4, +T.rows || 1)));
+  $('tk-title').value = T.title ?? 'GIFT EFFECTS';
+  $('tk-speed').value = T.speed || 70;
+  $('tk-rows').onchange = () => { T.rows = +$('tk-rows').value; markG(); };
+  $('tk-title').oninput = () => { T.title = $('tk-title').value; markG(); };
+  $('tk-speed').oninput = () => { T.speed = Math.max(10, Math.min(400, +$('tk-speed').value || 70)); markG(); };
+  [['tk-likes', 'showLikes'], ['tk-social', 'showSocial'], ['tk-tiers', 'showTiers'], ['tk-timer', 'showTimer']].forEach(([id, k]) => {
+    $(id).checked = T[k] !== false;
+    $(id).onchange = () => { T[k] = $(id).checked; markG(); };
+  });
   $('gift-rows').querySelectorAll('[data-gi]').forEach((el) => el[el.tagName === 'SELECT' ? 'onchange' : 'oninput'] = () => { gdraft.gifts[+el.dataset.gi][el.dataset.k] = el.value; markG(); });
+  $('gift-rows').querySelectorAll('[data-gtick]').forEach((el) => el.onchange = () => { gdraft.gifts[+el.dataset.gtick].tick = el.checked; markG(); });
   $('gift-rows').querySelectorAll('[data-gdel]').forEach((b) => b.onclick = () => { gdraft.gifts.splice(+b.dataset.gdel, 1); markG(); paintGifts(); });
-  $('gift-rows').querySelectorAll('[data-gtest]').forEach((b) => b.onclick = () => { const g = gdraft.gifts[+b.dataset.gtest]; call('test-effect', { effect: g.effect, user: 'test' }, 'Sent ' + g.effect + ' to the game'); });
+  $('gift-rows').querySelectorAll('[data-gtest]').forEach((b) => b.onclick = () => { const g = gdraft.gifts[+b.dataset.gtest]; if (effWarn(g.effect) && !confirm('⚠ ' + effWarn(g.effect) + '\n\nRun it in the game now?')) return; call('test-effect', { effect: g.effect, user: 'test' }, 'Sent ' + g.effect + ' to the game'); });
   // tiers
   $('tier-rows').innerHTML = gdraft.coinTiers.map((t, i) => '<tr><td><input type="number" min="1" value="' + t.coins + '" data-ti="' + i + '" data-k="coins"></td>' +
     '<td><select data-ti="' + i + '" data-k="effect">' + effectOptions(t.effect) + '</select></td>' +
@@ -706,6 +814,8 @@ function paintGifts() {
   $('like-rows').querySelectorAll('[data-ldel]').forEach((b) => b.onclick = () => { gdraft.likes.splice(+b.dataset.ldel, 1); markG(); paintGifts(); });
   $('follow-effect').innerHTML = effectOptions(gdraft.follow, true);
   $('share-effect').innerHTML = effectOptions(gdraft.share, true);
+  $('superfan-effect').innerHTML = effectOptions(gdraft.superfan, true);
+  $('community-effect').innerHTML = effectOptions(gdraft.community, true);
   $('max-per').value = gdraft.maxPerGift;
   // durations
   $('durations').innerHTML = (S.effects || []).filter((e) => e.secs).map((e) => '<label class="row" style="margin:3px 0"><span style="min-width:150px" class="muted">' + esc(e.name) + '</span><input type="number" min="1" value="' + (gdraft.durations[e.id] ?? e.secs) + '" data-dur="' + esc(e.id) + '" style="width:72px"> s</label>').join('') || '<p class="hint">Open the game and turn on Crowd effects to list them.</p>';
@@ -720,6 +830,8 @@ function paintGifts() {
 $('like-add').onclick = () => { const last = gdraft.likes[gdraft.likes.length - 1]; gdraft.likes.push({ every: last ? last.every * 2 : 300, effect: 'heal_1' }); markG(); paintGifts(); };
 $('follow-effect').onchange = () => { gdraft.follow = $('follow-effect').value; markG(); };
 $('share-effect').onchange = () => { gdraft.share = $('share-effect').value; markG(); };
+$('superfan-effect').onchange = () => { gdraft.superfan = $('superfan-effect').value; markG(); };
+$('community-effect').onchange = () => { gdraft.community = $('community-effect').value; markG(); };
 $('max-per').oninput = () => { gdraft.maxPerGift = Math.max(1, +$('max-per').value || 1); markG(); };
 $('gift-add').onclick = () => { const n = $('gift-new').value.trim(); if (!n) return; if (gdraft.gifts.some((g) => g.name.toLowerCase() === n.toLowerCase())) { toast(n + ' is already in the list', true); return; } gdraft.gifts.push({ name: n, effect: (S.effects[0] || {}).id || '', coins: '' }); $('gift-new').value = ''; markG(); paintGifts(); };
 $('tier-add').onclick = () => { gdraft.coinTiers.push({ coins: 500, effect: 'seed_roll', label: '' }); markG(); paintGifts(); };
@@ -731,13 +843,19 @@ $('gifts-save').onclick = async () => {
   const mapping = {
     gifts, giftCoins, coinTiers: gdraft.coinTiers.filter((t) => +t.coins > 0 && t.effect).map((t) => ({ coins: +t.coins, effect: t.effect, ...(t.label ? { label: t.label } : {}) })),
     likes: gdraft.likes.filter((t) => +t.every > 0 && t.effect).map((t) => ({ every: +t.every, effect: t.effect })),
-    follow: gdraft.follow, share: gdraft.share, durations, maxPerGift: gdraft.maxPerGift,
+    follow: gdraft.follow, share: gdraft.share, superfan: gdraft.superfan, community: gdraft.community, durations, maxPerGift: gdraft.maxPerGift,
+    ticker: { ...gdraft.ticker, hidden: gdraft.gifts.filter((g) => g.tick === false && g.name.trim()).map((g) => g.name.trim()) },
   };
   await call('mapping', { mapping }, 'Gift setup saved. The bridge uses it right away.');
   gDirty = false; $('gifts-dirty').textContent = ''; gdraft = null;
 };
 
 // ── goals ──
+function giftOpts(cur) {
+  const names = (S.catalog || []).map((g) => g.name);
+  if (cur && !names.some((n) => n.toLowerCase() === cur.toLowerCase())) names.unshift(cur);
+  return '<option value="">any gift</option>' + names.map((n) => '<option value="' + esc(n) + '"' + (cur && n.toLowerCase() === cur.toLowerCase() ? ' selected' : '') + '>' + esc(n) + '</option>').join('');
+}
 function paintGoals() {
   $('goals').innerHTML = S.settings.goals.map((g) => {
     const pct = Math.min(100, (g.current / g.target) * 100 || 0);
@@ -745,13 +863,20 @@ function paintGoals() {
       '<div class="row" style="margin:0"><input value="' + esc(g.label) + '" data-gk="label" style="flex:1;font-weight:700">' +
       '<label><input type="checkbox" data-gk="show"' + (g.show ? ' checked' : '') + '> On stream</label></div>' +
       '<div class="row" style="margin:0"><select data-gk="type">' + ['coins', 'likes', 'follows', 'shares', 'gifts'].map((t) => '<option' + (t === g.type ? ' selected' : '') + '>' + t + '</option>').join('') + '</select>' +
-      '<span class="muted">target</span><input type="number" min="1" value="' + g.target + '" data-gk="target">' +
+      '<select data-gk="gift" title="Which gift counts"' + (g.type === 'gifts' ? '' : ' hidden') + '>' + giftOpts(g.gift) + '</select>' +
+      '<span class="muted">' + (g.type === 'gifts' ? 'how many' : 'target') + '</span><input type="number" min="1" value="' + g.target + '" data-gk="target">' +
       '<span class="muted">now</span><input type="number" min="0" value="' + g.current + '" data-gk="current"></div>' +
       '<div class="meter"><i style="width:' + pct + '%"></i></div>' +
       '<div class="row" style="margin:0"><b>' + CC.num(g.current) + ' / ' + CC.num(g.target) + '</b><span class="muted">' + Math.floor(pct) + '%</span>' +
       '<span style="margin-left:auto"></span><button class="small" data-gop="adjust" data-amt="100">+100</button><button class="small" data-gop="adjust" data-amt="-100">−100</button>' +
       '<button class="small" data-gop="reset">Reset</button><button class="small primary" data-gop="update">Save</button><button class="small danger" data-gop="remove">✕</button></div></div>';
   }).join('');
+  // the gift menu only matters for a gifts goal
+  $('goals').querySelectorAll('[data-gk="type"]').forEach((sel) => sel.onchange = () => {
+    const card = sel.closest('[data-goal]'), gifts = sel.value === 'gifts';
+    card.querySelector('[data-gk="gift"]').hidden = !gifts;
+    card.querySelector('[data-gk="target"]').previousElementSibling.textContent = gifts ? 'how many' : 'target';
+  });
   $('goals').querySelectorAll('[data-gop]').forEach((b) => b.onclick = () => {
     const card = b.closest('[data-goal]'), id = card.dataset.goal, op = b.dataset.gop;
     if (op === 'remove' && !confirm('Remove this goal?')) return;
@@ -770,6 +895,7 @@ const OVS = [
   ['combo', 'Combo meter', 'The gift combo while it lasts.', '360 x 200'],
   ['predict', 'Prediction', 'The question, the votes, and who called it.', '620 x 300'],
   ['gtkey', 'GT big key', 'Which Ganon\'s Tower chest has the big key: the guesses, the chests opened, and who called it.', '620 x 300'],
+  ['dig', 'Digging Game', 'Which dig gives the Digging Game\'s prize: the guesses, the digs so far, and who called it.', '620 x 300'],
   ['halloffame', 'Hall of fame', 'All-time top gifters.', '420 x 420'],
   ['welcome', 'Welcome back', 'Pops up when a regular shows up.', '520 x 140'],
   ['alerts', 'Gift alerts', 'Pops up with the viewer, the gift and what it did in the game, with a sound. Bigger donations get bigger alerts.', '1920 x 1080 (full screen, it centers itself)'],
@@ -777,7 +903,7 @@ const OVS = [
   ['leaderboard', 'Top gifters', 'This stream\'s biggest gifters.', '420 x 420'],
   ['feed', 'Recent events', 'The latest gifts, follows and shares, newest on top.', '460 x 420'],
   ['commands', 'Chat commands', 'Shows the reply when a viewer types a command like !rules.', '900 x 220'],
-  ['ticker', 'Scrolling gift list', 'Every gift and what it does, scrolling.', '1920 x 72'],
+  ['ticker', 'Scrolling gift list', 'Every gift and what it does, scrolling (rows and order: Gifts tab).', '1920 x 72 per row'],
   ['timer', 'Subathon clock', 'The subathon countdown.', '600 x 190'],
 ];
 function paintOverlays() {
@@ -805,6 +931,7 @@ function paintTimerSide() {
   const t = S.timer || {};
   if (document.activeElement !== $('tm-cps')) $('tm-cps').value = t.coinsPerSecond ?? (S.mapping.timer.coinsPerSecond || 1);
   $('tm-enabled').checked = S.mapping.timer.enabled !== false;
+  TM_CROWD.forEach(([id, k]) => { if (document.activeElement !== $(id)) $(id).value = +(S.mapping.timer[k] || 0); });
   $('tm-rate').textContent = (t.rate || '') + (t.coinsPerSecond ? ' · ' + CC.num(Math.round(3600 * t.coinsPerSecond)) + ' coins per hour' : '');
   $('tm-log').innerHTML = (t.log || []).slice(0, 8).map((l) => '<div>' + esc(l.user || '') + ' <b style="color:' + (l.seconds < 0 ? '#ff8a92' : '#3fb950') + '">' + (l.seconds < 0 ? '−' : '+') + CC.fmt(Math.abs(l.seconds)) + '</b> <span>' + esc(l.why || '') + '</span></div>').join('') || 'Nothing yet';
 }
@@ -814,7 +941,12 @@ $('tm-start').onclick = () => tm('start');
 $('tm-pause').onclick = () => tm('pause');
 $('tm-off').onclick = () => { if (confirm('Turn the clock off? It disappears from the stream.')) tm('off'); };
 document.querySelectorAll('[data-tm]').forEach((b) => b.onclick = () => tm('add', +b.dataset.tm));
-$('tm-save').onclick = () => call('mapping', { mapping: { timer: { ...(S.mapping.timer || {}), enabled: $('tm-enabled').checked, coinsPerSecond: Math.max(0.05, +$('tm-cps').value || 1) } } }, 'Saved');
+const TM_CROWD = [['tm-like', 'likeSeconds'], ['tm-follow', 'followSeconds'], ['tm-share', 'shareSeconds'], ['tm-superfan', 'superfanSeconds'], ['tm-community', 'communitySeconds'], ['tm-chat', 'chatSeconds'], ['tm-chatcd', 'chatCooldown']];
+$('tm-save').onclick = () => {
+  const crowd = {};
+  TM_CROWD.forEach(([id, k]) => { crowd[k] = Math.max(0, Math.round((+$(id).value || 0) * 100) / 100); });
+  call('mapping', { mapping: { timer: { ...(S.mapping.timer || {}), ...crowd, enabled: $('tm-enabled').checked, coinsPerSecond: Math.max(0.05, +$('tm-cps').value || 1) } } }, 'Saved');
+};
 
 // ── profiles ──
 function paintProfiles() {
@@ -884,14 +1016,28 @@ $('pd-cancel').onclick = () => call('predict-cancel', {}, 'Prediction cancelled'
 $('gt-start').onclick = () => call('gt-start', {}, 'GT guessing open');
 $('gt-lock').onclick = () => call('gt-lock', {}, 'Guesses closed');
 $('gt-cancel').onclick = () => call('gt-cancel', {}, 'Cancelled');
-$('gt-set').onclick = () => { const n = +$('gt-at').value; if (n >= 1 && n <= 26) call('gt-resolve', { at: n }, 'Set'); };
+$('gt-set').onclick = () => { const n = +$('gt-at').value; if (n >= 1 && n <= 22) call('gt-resolve', { at: n }, 'Set'); };
 $('gt-test').onclick = () => call('gt-test', {}, 'Test running');
+$('dig-start').onclick = () => call('dig-start', {}, 'Dig guessing open');
+$('dig-lock').onclick = () => call('dig-lock', {}, 'Guesses closed');
+$('dig-cancel').onclick = () => call('dig-cancel', {}, 'Cancelled');
+$('dig-set').onclick = () => { const n = +$('dig-at').value; if (n >= 1 && n <= 30) call('dig-resolve', { at: n }, 'Set'); };
+$('dig-test').onclick = () => call('dig-test', {}, 'Test running');
+function paintDigNow(G, live) {
+  const L = live || {};
+  const now = '<p class="hint">' + (L.here ? 'Digging now: <b>' + (L.digs || 0) + '</b> digs' : 'Not at the Digging Game') + (L.found ? ' · prize found' + (L.at != null ? ' on dig #' + L.at : '') : '') + '</p>';
+  if (!G) { $('dig-now').innerHTML = '<span class="muted">Not running.</span>' + now; return; }
+  const top = Object.entries(G.counts || {}).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8).map(([n, c]) => '<span class="pill">#' + n + ' × ' + c + '</span>').join(' ');
+  let h = '<span class="pill">' + (G.result ? 'done' : G.open ? 'open: chat types ' + esc(G.command) + ' 1-30' : 'guesses closed') + '</span> <b>' + G.guesses + '</b> guesses<div style="margin:6px 0">' + (top || '<span class="muted">No guesses yet.</span>') + '</div>';
+  if (G.result) h += '<p><b>Prize: dig #' + G.result.at + '</b>. ' + (G.result.winners.length ? (G.result.exact ? 'Called it: ' : 'Closest (' + G.result.off + ' off): ') + G.result.winners.map(esc).join(', ') : 'Nobody guessed.') + '</p>';
+  $('dig-now').innerHTML = h + now;
+}
 function paintGtNow(G, live) {
   const L = live || {};
-  const opened = '<p class="hint">GT chests opened: <b>' + (L.opened || 0) + '</b> / 26' + (L.found ? ' · big key found' + (L.at != null ? ' in chest #' + L.at : '') : '') + '</p>';
+  const opened = '<p class="hint">GT chests opened: <b>' + (L.opened || 0) + '</b> / 22' + (L.found ? ' · big key found' + (L.at != null ? ' in chest #' + L.at : '') : '') + '</p>';
   if (!G) { $('gt-now').innerHTML = '<span class="muted">Not running.</span>' + opened; return; }
   const top = Object.entries(G.counts || {}).sort((a, b) => b[1] - a[1] || a[0] - b[0]).slice(0, 8).map(([n, c]) => '<span class="pill">#' + n + ' × ' + c + '</span>').join(' ');
-  let h = '<span class="pill">' + (G.result ? 'done' : G.open ? 'open: chat types ' + esc(G.command) + ' 1-26' : 'guesses closed') + '</span> <b>' + G.guesses + '</b> guesses<div style="margin:6px 0">' + (top || '<span class="muted">No guesses yet.</span>') + '</div>';
+  let h = '<span class="pill">' + (G.result ? 'done' : G.open ? 'open: chat types ' + esc(G.command) + ' 1-22' : 'guesses closed') + '</span> <b>' + G.guesses + '</b> guesses<div style="margin:6px 0">' + (top || '<span class="muted">No guesses yet.</span>') + '</div>';
   if (G.result) h += '<p><b>Big key: chest #' + G.result.at + '</b>. ' + (G.result.winners.length ? (G.result.exact ? 'Called it: ' : 'Closest (' + G.result.off + ' off): ') + G.result.winners.map(esc).join(', ') : 'Nobody guessed.') + '</p>';
   $('gt-now').innerHTML = h + opened;
 }
@@ -914,7 +1060,7 @@ $('dt-test').onclick = () => call('death-test', {}, 'Test death sent');
 $('rc-test-check').onclick = () => call('run-test', {}, '7 test checks sent');
 $('rc-test-boss').onclick = () => call('boss-test', {}, 'Test boss sent');
 const fmtElapsed = (s) => Math.floor(s / 3600) + ':' + String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-const CLIP_ICON = { detour: '⚔', gift: '🎁', seed: '🎲', death: '☠', vote: '🗳', battle: '⚔', combo: '🔥', predict: '🔮', chat: '💬', manual: '📌' };
+const CLIP_ICON = { reveal: '🔮', dig: '⛏', gtkey: '🔑', detour: '⚔', gift: '🎁', seed: '🎲', death: '☠', vote: '🗳', battle: '⚔', combo: '🔥', predict: '🔮', chat: '💬', manual: '📌' };
 function paintClips() {
   const list = ((S.live && S.live.clips) || []).slice().reverse();
   $('cl-list').innerHTML = list.length ? list.map((c) => '<div class="ev" style="grid-template-columns:80px 26px 1fr auto"><time title="' + new Date(c.at).toLocaleString() + '">' + fmtElapsed(c.elapsed) + '</time><span class="ic">' + (CLIP_ICON[c.kind] || '📌') + '</span><div>' + esc(c.label) +
@@ -929,6 +1075,26 @@ $('cl-export').onclick = () => {
   const txt = 'Stream time\tClock time\tWhat\n' + list.map((c) => fmtElapsed(c.elapsed) + '\t' + new Date(c.at).toLocaleString() + '\t' + c.label).join('\n') + '\n';
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' })); a.download = 'clip-markers-' + new Date().toISOString().slice(0, 10) + '.txt'; a.click();
 };
+function paintSeeds() {
+  const all = (S.live && S.live.seeds) || [], list = all.slice().reverse();
+  $('sd-n').textContent = all.length ? all.length + ' seed' + (all.length === 1 ? '' : 's') : '';
+  $('sd-list').innerHTML = list.length ? list.map((e, i) => '<div class="ev" style="grid-template-columns:88px 26px 1fr auto"><time title="' + new Date(e.at).toLocaleString() + '">' +
+    new Date(e.at).toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + new Date(e.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) + '</time><span class="ic">🎲</span><div><b>' + esc(e.what || e.name) + '</b> <span class="muted">' + esc(e.game || '') + (e.code ? ' · code ' + esc(e.code) : '') + (e.race ? ' · race' : '') + '</span>' +
+    ((e.how || e.by || e.preset || e.pick) ? '<div class="muted" style="font-size:11.5px">' + [e.how, e.by ? 'by ' + e.by : '', e.preset, e.pick].filter(Boolean).map(esc).join(' · ') + '</div>' : '') + '</div>' +
+    (e.link ? '<button class="small" data-sdlink="' + (all.length - 1 - i) + '">Copy link</button>' : '<span></span>') + '</div>').join('') : '<p class="muted">No seeds yet. They show up here when a game starts.</p>';
+  $('sd-list').querySelectorAll('[data-sdlink]').forEach((b) => b.onclick = () => {
+    const e = all[+b.dataset.sdlink]; if (!e || !e.link) return;
+    navigator.clipboard.writeText(e.link).then(() => { b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy link', 1500); }, () => prompt('Seed link:', e.link));
+  });
+}
+$('sd-clear').onclick = () => { if (confirm('Clear the whole seed history (seeds.json)?')) call('seeds-clear', {}); };
+$('sd-export').onclick = () => {
+  const cell = (v) => { v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const rows = [['When', 'Game', 'Seed', 'Generator', 'Preset', 'Picked', 'Code', 'How', 'Who', 'Race', 'Link', 'File']]
+    .concat(((S.live && S.live.seeds) || []).map((e) => [new Date(e.at).toLocaleString(), e.game, e.what || '', e.generator || '', e.preset || '', e.pick || '', e.code || '', e.how || '', e.by || '', e.race ? 'yes' : '', e.link || '', e.name]));
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n'], { type: 'text/csv' }));
+  a.download = 'seed-history-' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
+};
 function paintFame() {
   const f = (S.live && S.live.fame) || [];
   $('hf-list').innerHTML = f.length ? f.map((g, i) => '<tr><td class="muted">' + (i + 1) + '</td><td><b>' + esc(g.nickname || g.user) + '</b></td><td style="text-align:right">' + CC.num(g.coins) + ' coins</td><td class="muted" style="text-align:right">' + g.gifts + ' gifts</td><td><button class="small danger" data-hfdel="' + esc(g.user) + '">✕</button></td></tr>').join('') : '<tr><td class="muted">Nobody yet.</td></tr>';
@@ -937,11 +1103,14 @@ function paintFame() {
 }
 $('hf-reset').onclick = () => { if (confirm('Reset the all-time hall of fame? This can\'t be undone.')) call('fame-reset', {}, 'Hall of fame reset'); };
 $('wb-test').onclick = () => call('welcome-test', { user: $('t-user').value || 'RegularViewer' });
-function paintLive() { const L = S.live || {}; paintPollNow(L.poll); paintBattleNow(L.battle); paintPredNow(L.predict); paintGtNow(L.gtguess, L.gt); paintRunNow(L.run); paintClips(); paintFame(); }
+function paintLive() { const L = S.live || {}; paintPollNow(L.poll); paintBattleNow(L.battle); paintPredNow(L.predict); paintGtNow(L.gtguess, L.gt); paintDigNow(L.digguess, L.dig); paintRunNow(L.run); paintClips(); paintSeeds(); paintFame(); }
 setInterval(() => { if (S && S.live) { paintPollNow(S.live.poll); paintPredNow(S.live.predict); } }, 1000);
 CC.on('live', (d) => {
   if (!S || !S.live) return;
   if (d.fame) S.live.fame = d.fame;
+  if ('gtguess' in d) S.live.gtguess = d.gtguess; if (d.gt) S.live.gt = d.gt;
+  if ('digguess' in d) S.live.digguess = d.digguess; if (d.dig) S.live.dig = d.dig;
+  if (d.seeds) S.live.seeds = d.seeds;
   paintLive();
 });
 let pvPainted = false;
@@ -953,7 +1122,7 @@ function paintFxTests() {
   const el = $('fx-tests');
   el.innerHTML = list.length ? list.map((e) => '<button class="small" data-fxtest="' + esc(e.id) + '" title="' + esc(e.id) + '">' + esc(e.name) + '</button>').join('')
     : '<span class="hint">Open the game and turn on Crowd effects to list them.</span>';
-  el.querySelectorAll('[data-fxtest]').forEach((b) => b.onclick = () => call('test-effect', { effect: b.dataset.fxtest, user: ($('t-user') && $('t-user').value) || 'TestViewer' }, 'Sent ' + effName(b.dataset.fxtest) + ' to the game'));
+  el.querySelectorAll('[data-fxtest]').forEach((b) => b.onclick = () => (effWarn(b.dataset.fxtest) && !confirm('⚠ ' + effWarn(b.dataset.fxtest) + '\n\nRun it in the game now?')) || call('test-effect', { effect: b.dataset.fxtest, user: ($('t-user') && $('t-user').value) || 'TestViewer' }, 'Sent ' + effName(b.dataset.fxtest) + ' to the game'));
 }
 
 // ── wiring ──

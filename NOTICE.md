@@ -39,10 +39,19 @@ under their own licenses, and nothing here restricts what those licenses allow:
 | Part | Author | License |
 | --- | --- | --- |
 | `tracker/` (item tracker and map) | Hutch (hutchch) | MIT, `tracker/LICENSE` |
+| Muffins' Tracker 2.0 (`mfns-tracker/app/`, built unchanged) | Muffins / Kristofer Davie (MFNS) | MIT, `mfns-tracker/LICENSE` |
+| Mudora's logic (`mudora/`, read from `tracker/` as it runs) | Hutch (hutchch) | MIT, `tracker/LICENSE` |
+| Entrance names and table layout (`mudora/entrances.json`, made by `tools/entrances.py` from the game ROM and her generator's entrance tables) | Kara, LLCoolDave, Aerinon, codemann8 (alttpr-python) | MIT, `randomizer/kara/alttpr-python/LICENSE` |
+| Mudora 2.0's logic and square list (`mudora2/`, read from `mfns-tracker/` as it runs; `mfns-tracker/data.json` extracted from his source) | Muffins / Kristofer Davie (MFNS) | MIT, `mfns-tracker/LICENSE` |
 | Snes9x emulator core (`emu/`) | Snes9x team | Snes9x non-commercial license, `emu/build/LICENSES/snes9x-LICENSE` |
 | Shaders (`emu/`) | libretro contributors | each file's header (xBRZ: GPL-3.0) |
 | Randomizer logic and base patch (`randomizer/`) | sporchia; KatDevsGames | MIT, `randomizer/LICENSE-THIRD-PARTY.md` |
 | Kara's branch (`randomizer/kara/`) | Kara, LLCoolDave, Aerinon, codemann8 | MIT, `randomizer/kara/alttpr-python/LICENSE` |
+| EmoTracker web runtime's model (`emotracker/`) | follows EmoTracker by EmoSaru and the EmoTracker Community | MIT, `emotracker/LICENSE-EmoTracker.txt` |
+| Official ALTTPR EmoTracker pack (`emotracker/packs/alttpr_emosaru/`) | EmoSaru | MIT, its `LICENSE` |
+| Overworld map formats and tileset tables (`emotracker/romap.js`) | snesrev (zelda3) | MIT |
+| Dungeon floor tables, boss rooms, RAM/VRAM layout (`emotracker/dungeons.js`, `dgworker.js`) | snesrev (zelda3) | MIT |
+| fengari-web (`emotracker/fengari-web.js`) | Benoit Giannangeli, Daurnimator | MIT, `emotracker/LICENSE-fengari-web.txt` |
 | Pyodide | Pyodide contributors | MPL-2.0 |
 | Press Start 2P font (`fonts/`) | CodeMan38 | SIL Open Font License, `fonts/PressStart2P-OFL.txt` |
 

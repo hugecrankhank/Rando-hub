@@ -61,9 +61,10 @@ Rando Hub puts everything you need for an ALttP Randomizer run in one page:
   Customizer, saved presets, Reroll, seed links and race seeds.
 - **Layouts for every screen:** Phone, iPad, Tablet, Desktop (tracker pieces
   pop out into their own windows) and Classic. **Layout → Auto** picks one for you.
-- **More games:** the **Zelda 1** randomizer (Z1R, seeds by ZORA) and **The Guardian
-  Legend** randomizer (GLR), each with its own emulator and tracker, a click away.
-  Both seed generators are in beta.
+- **More games:** the **Zelda 1** randomizer (Z1R, seeds by ZORA), **The Guardian
+  Legend** randomizer (GLR), **FF6 Worlds Collide**, and trackers for **FF1R**, **FF4
+  Free Enterprise** and **FF5 Career Day** seeds, each with its own emulator, a click
+  away. The seed generators are in beta.
 - **Extras:** Link sprites from the alttpr.com library, MSU-1 music packs, item sound
   packs, Resume last game, a seed history, offline play.
 - **TikTok LIVE crowd control:** viewers' gifts change your game, roll new
@@ -107,6 +108,22 @@ windows for OBS. It checks for updates by itself; when there's a new version the
 the top right turns green (**Update vX.Y.Z**) and **Download update** gets it. Unzip the new
 version over the old folder: saves stay in `%APPDATA%\Rando Hub`. **Menu → Version** switches
 to the live website instead. How it's built: [`desktop/README.md`](desktop/README.md).
+
+## Patched games
+
+**Patched ▸** (next to Zelda 1 and GLR) opens [`patched/`](patched/): ROM hacks for the NES and
+SNES, played on Rando Hub's emulators (FCEUmm and Snes9x). **＋ Add a game**, pick your own
+original ROM and the hack's patch (**.ips**, **.bps**, **.ups**, or the **.zip** it came in;
+romhacking.net has thousands), name it, **Add & play**. It's patched in the browser and kept
+in the library there; nothing is uploaded and no games or patches come with the app.
+
+- BPS and UPS patches check the ROM: the wrong one gets a message with the CRC32 the hack
+  wants. IPS can't check; a garbled game means the hack wants another version.
+- SNES copier headers are taken off or added to match the patch by themselves.
+- The title screen becomes the game's cover by itself the first time you play (in the
+  library, and beside the game where the trackers usually are). **📸 Use this screen as
+  cover** or **🖼 Choose a picture…** to change it.
+- In-game saves, save states (F5 / F8), controllers, filters: as in the rest of the app.
 
 ## Quick start
 
@@ -167,8 +184,9 @@ attacks, instant death and one-hit KO, random sprites or music, and brand-new se
 
 There's also a **subathon clock** (gifts, likes, follows, shares, comments, checks and
 bosses add time) and a **scrolling gift list** for OBS / TikTok LIVE Studio. With
-*Rerolls can land on either game*, new-seed gifts can switch between Zelda 3 and
-Zelda 1 (never The Guardian Legend). The ROM is never changed; any seed works.
+*Rerolls can land on* (tick the games in the Game row), new-seed gifts can switch
+between Zelda 3, Zelda 1, The Guardian Legend and FF6 Worlds Collide. The ROM is
+never changed; any seed works.
 
 ```
 TikTok LIVE ──► your LIVE page (Chrome/Edge window) ──► Crowd Control+ ──ws://localhost:21214──► Rando Hub ──► Snes9x
@@ -458,21 +476,39 @@ work without touching Hutch's code:
   Mudora, `mudora-stack.js` lays Mudora out the same way around the game.
 - *Classic:* the original layout, with the game and both trackers on one page.
 
-## Other games: Zelda 1 and The Guardian Legend
+## Other games: Zelda 1, The Guardian Legend and Final Fantasy I, IV, V and VI
 
-The **Game** row at the top of the Randomizer bar (and **Zelda 1 ▸** / **GLR ▸** in the
-header) switches games. Each is its own app inside the hub, with its own emulator,
+The **Game** row at the top of the Randomizer bar (and **Zelda 1 ▸** / **GLR ▸** / **FF6 ▸** /
+**FF1·4·5 ▾** in the header) switches games. **Games shown ▾** in that row picks which games
+appear anywhere (Game row, headers, menus, the reroll list): Zelda 3 and Zelda 1 to start,
+tick the others you play. Each is its own app inside the hub, with its own emulator,
 seed generator, tracker and saves, and buttons back to the others.
 
 - **Zelda 1** (`z1r/`):
   seeds made by [ZORA](https://github.com/tetraly/zora) from your own Legend of Zelda
   (USA) ROM. Crowd control works there too: effects both games have keep their names,
-  ALTTP-only ones are skipped. **Rerolls can land on either game** lets 🎲 Reroll and
-  Crowd Control's random preset / CHAOS seeds pick Zelda 3 or Zelda 1 at random
-  (*New seed (same settings)* always stays in the game being played).
+  ALTTP-only ones are skipped. **Rerolls can land on** (tick Zelda 3, Zelda 1, Guardian
+  Legend, FF6 in the Game row) lets 🎲 Reroll and Crowd Control's random preset / CHAOS
+  seeds pick one of the ticked games at random, so you can keep it to the Zelda series,
+  or mix in Final Fantasy, as you like (*New seed (same settings)* always stays in the
+  game being played). FF1, FF4 and FF5 are rolled on their own sites, so rerolls can't
+  land there.
 - **The Guardian Legend** (`glr/`):
   seeds from your own Guardian Legend (USA) ROM, with the labyrinth map drawn from the
-  ROM. Only ever picked by hand: rerolls and crowd control never switch to it.
+  ROM. Has its own 🎲 Reroll.
+- **Final Fantasy VI: Worlds Collide** (`ff6wc/`):
+  seeds made by [Worlds Collide](https://github.com/ff6wc/WorldsCollide) itself (the
+  open-worlds FF6 randomizer, run in your browser with Pyodide) from your own Final
+  Fantasy III (USA) v1.0 ROM, played on the hub's Snes9x. The tracker reads the game's
+  memory: characters, espers, the 62 checks by area, dragons, bosses, Kefka's Tower,
+  plus the seed's objectives and hash. Presets: the Ultros League flags (character
+  gating or open world) or any flag string from ff6worldscollide.com.
+- **Final Fantasy Randomizer (FF1), FF4 Free Enterprise, FF5 Career Day** (`ffr/`):
+  seeds are rolled on each randomizer's own site (FF1R and FE generate in your
+  browser there), then played here on the hub's NES or SNES with a tracker that reads
+  the game: FF1's key items, orbs and vehicles; FE's key items (found and used),
+  characters, bosses and the seed's objectives with live progress (read from the ROM);
+  Career Day's key items, jobs and every check by area.
 
 Both seed generators are **beta**: new and not fully vetted yet, so a seed may have
 mistakes; please report anything odd. Both live in this repository (each folder is a
@@ -925,8 +961,8 @@ Gumby" and so on (`randomizer/hub-credits.js`; the captions that hint at items s
 - Zelda 1: seeds by [ZORA](https://github.com/tetraly/zora) by Tetra (MIT, `z1r/zora/LICENSE`);
   Zelda 1 and The Guardian Legend run on [libretro FCEUmm](https://github.com/libretro/libretro-fceumm)
   (GPL-2.0, `z1r/core/LICENSES/`). See `z1r/README.md` and `glr/README.md`.
-- An earlier web EmoTracker (the official ALTTPR pack by EmoSaru, MIT, on
-  [fengari](https://fengari.io)) is kept in `emotracker/` but no longer offered as a tracker.
+- The earlier web EmoTracker is gone (1.14.2); its overworld and dungeon map code lives on in
+  `mudora/romap.js` and `mudora/dungeons.js`.
 - Link sprites: the [alttpr.com sprite library](https://alttpr.com/en/sprites) and its artists.
 - TikTok connection: [TikFinity](https://tikfinity.zerody.one).
 - Logo lettering: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38,

@@ -16,7 +16,7 @@
  */
 (function () {
   'use strict';
-  var KEY = 'unified-tracker';
+  var KEY = 'rhb-tracker';   // (this beta's own key: the main app's choice is left alone)
   var V = window.HUTCH_TRACKERS || { release: { path: 'tracker/', version: '' }, beta: null };
   // Muffins' Tracker 2.0 and Mudora 2.0: offered to everyone now that his MIT
   // license is out (they were test-only behind ?mfns-test=1 before).
@@ -38,7 +38,7 @@
 
   function off() { return mode === 'off'; }
   // emo(): a tracker in its own frame (emo-host.js) — EmoTracker, or Mudora
-  function emo() { return mode === 'emo' || mode === 'mudora' || mode === 'mudora2' || mode === 'mfns'; }
+  function emo() { return mode === 'mudora' || mode === 'mudora2' || mode === 'mfns'; }
   // Muffins' Tracker 2.0 (mfns-tracker/): his own logic and autotracking
   function mfns() { return mode === 'mfns'; }
   // Mudora (mudora/): Rando Hub's own tracker. Hutch's release still runs,

@@ -5,6 +5,196 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.3 (2026-10-27)
+
+- **Games shown starts with Zelda 3 and Zelda 1 only.** The Guardian Legend, the Final
+  Fantasy games and Patched games are off until you tick them in **Games shown ▾**.
+
+## 1.14.2 (2026-10-27)
+
+- **Games shown.** A **Games shown ▾** list in the Game row: untick the games you don't
+  play and they disappear from the Game row, the header buttons, the other games'
+  headers and menus, and the "Rerolls can land on" list (a hidden game can't be rolled
+  into). Zelda 3 always stays. Hidden games still open by address.
+- **EmoTracker removed** (18 MB): the web EmoTracker runtime and its ALTTPR pack, which
+  hadn't been offered as a tracker since Mudora 2.0 took over. The overworld and dungeon
+  map modules it shared with Mudora moved to `mudora/` (`romap.js`, `dungeons.js`,
+  `dgworker.js`); nothing changes on screen.
+- **Muffins' Tracker trimmed** (33 MB → 6 MB): it isn't a tracker you can pick any more,
+  only the logic engine Mudora 2.0 runs out of sight, so his build no longer ships the old
+  overlay images (his build never loaded them) or the 3,000 Link sprite previews for his
+  own sprite picker (the hub has its own sprites). His launch page, presets, settings and
+  logic are untouched; future builds (`mfns-build.yml`) stay trimmed.
+- Download sizes: the site zip and the Windows app are about 45 MB smaller.
+
+## 1.14.1 (2026-10-27)
+
+- **Rerolls can land on: your pick of games.** The old "either game" checkbox is now one
+  tick per game in the Game row: Zelda 3, Zelda 1, Guardian Legend, FF6 Worlds Collide.
+  🎲 Reroll and Crowd Control's random preset / CHAOS seeds pick one of the ticked games
+  at random (the game you're playing counts too), so you can keep rerolls inside the
+  Zelda series, or open them up to Final Fantasy. *New seed (same settings)* always stays
+  put. FF1, FF4 and FF5 are rolled on their own sites, so they can't be landed on. GLR
+  and FF6 now take a reroll that lands on them (GLR gained a 🎲 Reroll button of its own)
+  and roll a random preset for Crowd Control's preset / CHAOS kinds. Your old "either
+  game" setting carries over.
+- **Phone headers:** in Zelda 1, GLR and FF6 the row of game links folds into one
+  **Games ▾** menu on narrow screens, so **New seed** is back on screen (it had been
+  pushed off the right edge on iPhone).
+
+## 1.14.0 (2026-10-27)
+
+- **Three more Final Fantasy randomizers** (`ffr/`): **FF1 Randomizer**, **FF4 Free
+  Enterprise** and **FF5 Career Day**, in the Game row (**FF1 ▸ FF4 ▸ FF5 ▸**), the header
+  (**FF1·4·5 ▾**) and every other game's header (**FF ▾**).
+  - Seeds are rolled on each randomizer's own site (a **Roll a seed** button explains the
+    three steps; FF1R and Free Enterprise generate in your browser there), then **Play
+    ROM file** here: the hub's NES for FF1, Snes9x for FF4 and FF5. The ROM is kept in
+    this browser so **Continue** brings it back; saves, states (F5 / F8), autosave.
+  - **Trackers read the running game:** FF1's 17 key items, orbs, ship/airship/bridge/
+    canal, gold and shards; FE's 18 key items (found, and struck through once used),
+    characters found, 35 bosses, chests, the key-item check count, and the seed's
+    objectives with live progress and flags, read from the ROM; Career Day's 20 key
+    items, 22 jobs, the key-item bosses and the event rewards, by area. Anything the
+    game can't tell you, tick by hand.
+  - Same screen rule as FF6: the picture at exactly its size, the tracker gets the rest,
+    on desktop, iPad, tablets and phones.
+  - *Caveat:* built from the randomizers' own source and tracker tools, tested against
+    simulated memory (no real seeds here). FF4's "characters found" and FF5's key
+    items are the two readings I'd check first on a real seed.
+  - Not yet: in-page generators (FF1R's is .NET; Free Enterprise's API needs a key
+    from its author; Career Day's runs on its server) and crowd control.
+
+## 1.13.0 (2026-10-26)
+
+- **New game: Final Fantasy VI: Worlds Collide** (`ff6wc/`, **FF6 ▸** in the Game row and
+  the header). Roll a seed from your own Final Fantasy III (USA) v1.0 ROM, play it on the
+  hub's Snes9x, and the tracker follows along.
+  - **The generator is Worlds Collide itself** (MIT), run in your browser with Pyodide,
+    the way Z1R runs ZORA: the same seed and flags give the same game as a computer
+    would. Downloaded the first time you roll, then cached. Nothing is uploaded.
+  - **Presets:** the Ultros League flags (character gating), the same with an open
+    world, or any flag string pasted from ff6worldscollide.com. Download the ROM and
+    the spoiler log, or play straight away.
+  - **Tracker, read from the game's memory:** characters, espers, the 62 checks by
+    area, dragons, bosses, Kefka's Tower open or not, the game's own counters, plus
+    the seed's objectives and hash. Tick by hand what the game can't tell.
+  - **Layout:** the picture gets exactly its size and the tracker the rest, on every
+    screen: sideways (desktop, iPad and tablets held sideways) the picture is as tall
+    as the page with the tracker on the right; upright (phones and tablets) it is as
+    wide as the page with the tracker under it; narrow trackers show one tab at a time.
+  - Saves, states (F5 / F8), Continue after the app was closed, Reroll (same flags),
+    seed history, installable app. Picked by hand only: rerolls and Crowd Control
+    never switch to it.
+  - *Caveat:* built and tested against Worlds Collide's code with a stand-in ROM (no
+    FF6 ROM here), so the first real seeds are the real test. The generator runs
+    unchanged, so a seed's contents are Worlds Collide's; the page's job is the plumbing.
+  - Not yet: FF6 crowd control effects and an FF6 item/shop reference. Say the word.
+
+## 1.12.5 (2026-10-26)
+
+- **Zelda 1 crowd control: 17 new effects** (mapped like the others in Crowd Control+; the
+  bridge gets the new list when Zelda 1 connects):
+  - **Whirlwind: random level / Level 1 / Level 8:** the recorder's whirlwind, summoned by chat.
+    It sweeps in along Link's row, carries him off and drops him at that level's entrance, using
+    the game's own tables, so shuffled entrances land right. Overworld only; one at a time.
+  - **Sword gone / Sword downgrade (30 s), Sword upgrade:** the sword held at nothing or one
+    grade lower for a while, or stepped up for good (Wooden → White → Magical).
+  - **Ring gone / Ring downgrade (30 s), Ring upgrade:** the same for the Blue and Red Rings.
+    Link's colour changes right away, as when a ring is picked up.
+  - **Item gone (random)** and **Candle / Bow / Boomerang / Magical Rod / Ladder / Raft gone**
+    (30 s): the item is taken for a while and comes back by itself. An item Link finds again
+    (or upgrades) during the loan is his to keep. Each says why when Link doesn't have the item.
+
+## 1.12.4 (2026-10-26)
+
+- **Lighter on the PC, less input lag** (the SNES emulator):
+  - **Filter → Auto** (the new default): starts at 6xBRZ and, if frames keep running long,
+    steps down to 4xBRZ, then Sharp, and says so. Software rendering (no usable graphics
+    driver) goes straight to Sharp. The level it settles on is remembered. Picking a filter by
+    hand still works as before.
+  - **Run-ahead** (⋯ → Graphics, off by default): shows each frame one frame early, like
+    RetroArch's run-ahead, so a press shows up about 16 ms sooner. It runs the game twice per
+    frame (about double the CPU): for computers, not phones.
+  - **Sound 20 ms sooner on computers:** the sound queue is 40 ms there instead of 60 (phones
+    and tablets keep 60, which they need), and each frame's sound is handed to the output
+    without an extra copy.
+  - **Windows app:** the GPU is used for the picture even where Chromium's driver blocklist
+    would fall back to software rendering, and the page is rasterized on it too.
+
+## 1.12.3 (2026-10-26)
+
+- **Live games without Crowd Control** (HydeOut): the **GT big key game** (which Ganon's
+  Tower chest has the big key, 1-22) and the **Digging Game** (which dig gives the prize,
+  1-30), run right in Rando Hub. **🗝** and **⛏** at the right end of Mudora's map bar (by the
+  maps, in every layout), and **🗝 Key game** / **⛏ Dig game** in the Desktop layout's window
+  bar. Start a round, type in the guesses (a name and a number; one guess per name), and play:
+  guesses close at the first GT chest / first dig, the game counts the chests and digs, and when
+  the big key or the prize turns up the result shows over the game: exact guesses win, otherwise
+  the closest. If the game can't tell (the big key came from outside GT), enter the number by
+  hand. Rounds are kept per seed through a reload.
+
+## 1.12.2 (2026-10-26)
+
+- **Auto layout:** iPads get the iPad layout; every other touch tablet (Android) gets the Tablet
+  layout, sideways and upright, with either tracker. Upright with Hutch's tracker, Auto now uses
+  the upright arrangement like Tablet picked by hand (it squeezed the game between the maps).
+
+## 1.12.1 (2026-10-26)
+
+- **Tablet layout fits wide tablets** (16:10, like the Galaxy Tab S9 FE), using the whole screen:
+  - **Mudora / Mudora 2.0, sideways:** a new arrangement. The game top left at exactly its
+    picture's shape (no black bars), the counters (Checks, Deaths, Bonks, GT chests, dig game) in
+    the strip under it, the items and dungeons in a column beside it, and Light World over Dark
+    World filling the right side full height. Before, Tablet with Mudora fell back to the
+    classic layout (two-row header, Mudora's options taking room, cramped maps). Auto picks it on
+    Android tablets too.
+  - **Upright (and on iPads):** the game box is cut to the picture's width, with the counters
+    in the space beside it instead of black bars; the items get the full width again.
+  - **Hutch's tracker, sideways:** the gap between the maps is sized for the screen (the game
+    fills it at the maps' height, 24% bigger on a Tab S9 FE) until you set it with −/+; the
+    bands no longer scale into two rows of dungeons on wide screens. **Upright**, Tablet now uses
+    the upright arrangement (game on top) instead of squeezing the game between the maps.
+  - The compact header fits on one row on an upright tablet.
+
+## 1.12.0 (2026-10-26)
+
+- **Patched games** (new page, `patched/`; **Patched ▸** next to Zelda 1 and GLR): play NES and
+  SNES ROM hacks on Rando Hub's own emulators. Pick your original ROM and the hack's patch
+  (**.ips**, **.bps**, **.ups**, or the **.zip** it came in): it's patched right in the browser
+  and kept in a library, nothing uploaded and no games or patches shipped with the app.
+  BPS / UPS patches check the ROM is the right one and say which one they want if not; SNES
+  copier headers are added or taken off to match. Each game's **title screen becomes its
+  cover** (picked by itself the first time you play), shown in the library and beside the
+  game where the trackers usually are; **📸 Use this screen as cover** or **🖼 Choose a picture**
+  to change it. Original ROMs can be remembered for the next hack. In-game saves and save
+  states (F5 / F8) work as everywhere else.
+
+## 1.11.4 (2026-10-26)
+
+- **Zelda Classic button removed** (from 1.11.3): ZQuest Classic is better used as its own
+  program. Everything else is unchanged.
+
+## 1.11.3 (2026-10-26)
+
+- **Zelda Classic ↗** next to the other games (the header and the Randomizer bar's Game row,
+  on the hub, Zelda 1 and GLR): opens **ZQuest Classic**, Zelda Classic's engine (renamed and
+  still developed since zeldaclassic.com closed), in its official web player with the original
+  Zelda and its whole quest database. It runs in its own window: a pop-up in a browser, a
+  window of its own in the Windows app, which stays open if you close Rando Hub. Its saves are
+  its own.
+
+## 1.11.2 (2026-10-26)
+
+- **Z1R Training** (Zelda 1, beta): **🎯 Training** in Zelda 1's header. Record a speedrun
+  route by playing it once (for example along with a run video), then **Guide** draws it
+  over the game: an arrow at the edge to leave by, GO IN / EXIT / STAIRS / WARP where the
+  route goes into a cave or level, the bush, wall, rock, grave or armos outlined with what
+  to do (BURN, BOMB, PUSH, TOUCH), where to drop bombs, a dotted trail of the line to walk,
+  and your own notes per screen. It follows you as you play and says where the route
+  continues if you leave it. Routes export to a file to share, and import on any computer.
+  Works with the normal game and with seeds. See `z1r/README.md` → Z1R Training.
+
 ## 1.11.1 (2026-10-26)
 
 - **Counters under the dungeons on computers.** Mudora 2.0 and Mudora now show the counters

@@ -52,5 +52,5 @@ checked against Electron's published SHA-256 sums.
   switches to the live site.
 - **Menu → Version:** the built-in copy (offline) or the live website (separate
   saves).
-- The beta repository has its own `config.json` (Rando Hub Beta, port 47068,
+- The main repository (Rando-hub) has its own `config.json` (Rando Hub, port 47067,
   its own releases), so both apps can be installed side by side.

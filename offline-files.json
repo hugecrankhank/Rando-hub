@@ -1,6 +1,6 @@
 {
  "edition": "full",
- "version": "b10a089275aa",
+ "version": "833c40b560b5",
  "cache": "rando-hub-v1",
  "files": [
   "./",
@@ -331,6 +331,7 @@
   "seed-log.js",
   "games.js",
   "addons/hub-items.js",
+  "addons/live-games.js",
   "addons/keys-client.js",
   "tracker-settings.js",
   "credits.js",

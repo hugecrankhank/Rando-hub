@@ -27,7 +27,7 @@ const $ = (id) => document.getElementById(id);
 // ── tiny IndexedDB key/value store (ROMs never leave the device) ──────────────
 function idb() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('alttpr-s9x-kara', 1);
+    const req = indexedDB.open('rhb-beta-s9x-kara', 1);
     req.onupgradeneeded = () => req.result.createObjectStore('kv');
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);

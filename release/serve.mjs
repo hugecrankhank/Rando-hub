@@ -39,9 +39,6 @@ if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
 const server = http.createServer((req, res) => {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch (e) { res.writeHead(400).end(); return; }
-  // Muffins' tracker (mfns-tracker/app/) is built for the website's address,
-  // /Rando-hub/…; here the app is at /, so that part is dropped.
-  if (p.startsWith('/Rando-hub/')) p = p.slice('/Rando-hub'.length);
   let file = path.normalize(path.join(ROOT, p));
   if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
   fs.stat(file, (err, st) => {

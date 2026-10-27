@@ -1,8 +1,8 @@
 # Windows app
 
 `desktop/` turns a Rando Hub release into a Windows program: a folder with
-`Rando Hub.exe` (its own icon, its own windows, no browser or Node.js), zipped
-as `Rando-Hub-Windows-v<version>.zip` and attached to every GitHub Release by
+`Rando Hub Beta.exe` (its own icon, its own windows, no browser or Node.js), zipped
+as `Rando-Hub-Beta-Windows-v<version>.zip` and attached to every GitHub Release by
 the Release workflow. Nothing to do by hand: bump the version as usual
 (`tools/set-version.py`), push, and the release gets the Windows zip too.
 

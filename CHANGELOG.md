@@ -5,6 +5,51 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.6 (2026-10-27)
+
+- **Crowd Control+: Direct is the default way to connect, with no key.** Crowd Control+
+  joins your TikTok LIVE itself (tiktok-live-connector): type your name and Connect;
+  nothing to install, log in to or keep open. Its connections are signed by Euler
+  Stream's free sign server without a key; a free Community-plan key is optional
+  (a signing limit of your own) and is pasted on the Dashboard. When the free
+  server is busy the bridge waits 3 minutes and retries; a missing library makes it
+  use TikFinity for that run instead of failing.
+- The Start scripts (Windows, Mac, Linux) run `npm install` the first time, so the
+  library arrives on its own (about a minute). Anyone who already picked a source
+  keeps it; TikFinity and the local signer stay one click away.
+- `DIRECT-SETUP.txt`, `INSTRUCTIONS.txt`, `WHATS-NEW.txt` and the README rewritten
+  for Direct-by-default.
+
+## 1.14.5 (2026-10-27)
+
+- **Crowd Control+: TikFinity is the default way to connect.** The Dashboard's TikTok
+  connection now reads TikFinity (recommended), Local signer (your LIVE page in a
+  Chrome / Edge window) and Direct. Anyone who already picked a source keeps it; new
+  setups start on TikFinity. The instructions and README follow.
+- **Direct can be set up from the panel:** your TikTok name and a free Euler Stream key,
+  no editing mapping.json; and a missing key or package no longer stops the bridge, it
+  reports what's wrong so you can switch. Switching away from Direct now closes its
+  connection.
+
+## 1.14.4 (2026-10-27)
+
+- **Mudora 2.0 runs Muffins' logic as a library.** His tracker used to run whole, out of
+  sight, in a hidden frame; now his source is built as a library (`mfns-tracker/lib/`,
+  his logic engine, store, data and sessions, no React, no pages) and Mudora 2.0 drives it
+  directly. What you see is the same; what changed:
+  - **New game** starts from one of his presets right in ⚙ Settings (his launch page is
+    gone), a seed rolled in the hub starts a game with its settings at once, and
+    **Earlier games** lists his sessions to go back to. Games already started carry on
+    (same sessions, same storage, shared with his own tracker).
+  - **Autotracking** is his processing fed the emulator's memory directly, twice a
+    second: no QUsb2snes shim, no reconnecting watchdog.
+  - 33 MB → 2.8 MB for his part of the app; it loads in well under a second.
+  - His entrance menu (connectors, notes, scouting) needed his pages, so it's not
+    offered; setting where a door leads, and the emulator filling it in, work as before.
+  - His logic stays his: the library is built from his commit unchanged by
+    `mfns-lib.yml`, which also checks weekly whether his branch moved and opens an issue
+    with the diff to take.
+
 ## 1.14.3 (2026-10-27)
 
 - **Games shown starts with Zelda 3 and Zelda 1 only.** The Guardian Legend, the Final
@@ -206,8 +251,8 @@ played again later.
 ## 1.11.0 (2026-10-26)
 
 - **Windows app.** Rando Hub now comes as a Windows program too:
-  **`Rando-Hub-Windows-v1.11.0.zip`** on the [Releases page](https://github.com/hugecrankhank/Rando-hub/releases/latest). Unzip it anywhere and double-click
-  **`Rando Hub.exe`**. Nothing to install: no browser, no Node.js. It's the same app as the
+  **`Rando-Hub-Beta-Windows-v1.11.0.zip`** on the [Releases page](https://github.com/hugecrankhank/Rando-hub-Beta/releases/latest). Unzip it anywhere and double-click
+  **`Rando Hub Beta.exe`**. Nothing to install: no browser, no Node.js. It's the same app as the
   website, in its own window with its own icon, and it plays offline (Kara's generator and
   its Python are built in).
   - Pop-out trackers, Stream windows, Timer and Broadcast open as real windows you can
@@ -217,14 +262,14 @@ played again later.
     (otherwise the button reads **Check for updates**). **Download update** saves the new
     zip to Downloads; unzip it over the old folder and your saves stay.
   - **Menu → Version** switches between the built-in copy and the live website.
-  - Saves stay in `%APPDATA%\Rando Hub`; a `data` folder next to the .exe makes it portable.
+  - Saves stay in `%APPDATA%\Rando Hub Beta`; a `data` folder next to the .exe makes it portable.
   - Seed links shared from the app point at the website, so anyone can open them.
   - Windows may say "Windows protected your PC" the first time (the app isn't
     code-signed): **More info → Run anyway**.
   - Built from each release by the Release workflow (`desktop/`, see `desktop/README.md`),
     so every new version gets its Windows zip automatically.
 
-## 1.10.3 (2026-10-25)
+## 1.10.18 (2026-10-25)
 
 - **Zelda 1's overworld map works like Mudora's:** drawn from the ROM at full detail (sharp
   pixels when zoomed in), zoom with the wheel or a pinch, drag to move, double-tap or ⟲ for the
@@ -234,73 +279,695 @@ played again later.
   view follows him to a new screen. On phones the map takes the panel's height. Tap a pin (or a
   screen) for the same menu as before.
 
-## 1.10.2 (2026-10-25)
+## 1.10.17 (2026-10-25)
 
+- **No "Light World" / "Dark World" names over Mudora's maps** any more, on any device.
 - **Black and white Home Screen icon on iPhone** (the die, white on black, to sit with a
   monochrome Home Screen). iPad, Android and computers keep the colour icon, and the app itself
   keeps its colours. ⚙ Settings → **Home Screen icon**: Auto, Colour or Black & white. iOS reads
   the icon when you Add to Home Screen, so an icon already there changes once it's removed and
   added again.
-- **No "Light World" / "Dark World" names over Mudora's maps** any more, on any device.
 
-## 1.10.1 (2026-10-25)
+## 1.10.16 (2026-10-25)
 
-- **Zelda 1 and The Guardian Legend live in Rando Hub now** (`z1r/`, `glr/`, each a complete
-  app with its README). The separate repositories they started in were for beta testing and
-  are archived, so deploys no longer copy them in.
+- **Zelda 1 and The Guardian Legend live in Rando Hub now.** `z1r/` and `glr/` are the apps
+  themselves (complete, each with its README); the separate repositories they started in were
+  for beta testing and are archived. Deploys no longer copy them in (`tools/update-z1r.py`,
+  `tools/update-glr.py` and the `z1r-hub/` / `glr-hub/` folders are gone; `hub.js` in each
+  app is where the hub glue lives).
 - **"◂ Zelda 3" is now just "Zelda 3"** in Zelda 1 and GLR: with three games, the buttons are
   plain names.
 
-## 1.10.0 (2026-10-25)
+## 1.10.15 (2026-10-25)
 
-Everything from the beta since 1.9.0 (its full notes are in the
-[beta's changelog](https://github.com/hugecrankhank/Rando-hub-Beta/blob/main/CHANGELOG.md)).
+- **Mudora / Mudora 2.0 maps on phones and iPads: press and hold works as a right click again.**
+  Holding a check opened its card but, on letting go, also marked it (or unmarked it) as if
+  it had been tapped. The hold now only opens the card; a tap still marks.
+- **Zelda 1 and GLR say their seed generators are beta** (not fully vetted yet), on their
+  start screen and in New seed. Zelda 1's start screen says "Zelda 1 Randomizer".
+- README brought up to date with everything since 1.9.0.
 
-Trackers:
-- **Mudora 2.0 is the new default tracker:** Rando Hub's own tracker, drawn from the game
-  itself (items cut from its pause menu, both worlds from the ROM, checks on their real
-  spots), running the logic and settings of Muffins' Tracker 2.0 (with his permission, MIT).
-  Each seed rolled here starts a game in it with the seed's settings; ⚙ Settings has his game
-  and logic settings mid-game, all 67 of his presets with search, and Autotracking details.
-- **Mudora (Hutch logic):** the same look with Hutch's logic.
-- **Tracker choices:** Hutch, Hutch Beta, Mudora 2.0, Mudora, Off. Anyone who never picked one
-  starts on Mudora 2.0; a choice made before is kept.
-- Mudora: click a check to mark it, right click / press and hold for its card; dungeon prizes in
-  their own colours (copied from the game's own world map, or picked); boss, keys and chests of
-  the dungeon Link is in (and a pop-out card for OBS); dungeon maps (Explore, Map, Full);
-  entrances on entrance-shuffle seeds, filled in as you walk through them; visible (orange)
-  checks; counters for checks, deaths, bonks, the GT big key game and the Digging Game;
-  icon styles (game pixels, smooth, or your own pictures).
-- **⚙ Settings** in the header: Tracker world, Tracker dungeon items, Tracker keys (found / in
-  hand / both), **Item sounds** (sound packs that play with every tracker), **Seed history**
-  and **Credits**.
+## 1.10.14 (2026-10-25)
 
-Games and layouts:
-- **Zelda 1 (Z1R)** and **The Guardian Legend (GLR)** randomizers are in the hub (Game row in
-  the Randomizer bar, or Zelda 1 ▸ / GLR ▸ in the header). Both seed generators are beta.
-  "Rerolls can land on either game" mixes Zelda 3 and Zelda 1; GLR is only picked by hand.
-- **iPad layout** (was "Stacked"), the starting layout on an iPad; other tablets start on Tablet.
-- **Seed history:** every seed started here, with who rolled it and how, and a link to replay.
-- **Playtesters in the ending** of every ALTTP randomizer seed played here.
-- The seed's type and every generator setting shown under the seed code.
+- **The Guardian Legend (GLR) is in Rando Hub** at glr/, a copy of the GLR app kept up to date
+  with it on every deploy. Pick it from the Randomizer bar's Game row ("Guardian Legend ▸") or
+  the GLR ▸ button by Zelda 1 ▸; GLR has ◂ Zelda 3 and Zelda 1 buttons to come back, and Zelda 1
+  has a GLR button. It's only ever picked by hand: 🎲 Reroll, "Rerolls can land on either game"
+  and Crowd Control's preset / CHAOS seeds stay on Zelda 3 and Zelda 1. GLR seeds go into
+  Seed history.
 
-Crowd Control+ (download it again from this release):
-- New effects: shield, sword (gone / down / up / stolen, which asks first) and tunic up / down,
-  +1 / −1 heart container, item gone, any enemy (74 of them, anywhere), Lights on / Lights out,
-  reveal a go-mode item, item sound pack switches, and Halloween effects (Blood drip,
-  Spiderwebs, Monster mash, Spooky night, Ghost Link, Pumpkin Link and more).
-- Instant death can't be blocked any more; one-hit KO kills through any mail.
-- Live games: the GT big key game counts the 22 places the key can be; new **Digging Game**
-  guessing (`!dig`).
-- Subathon clock: likes, follows, shares, Super Fans, community members and comments add time;
-  the control panel's clock no longer runs fast.
-- Gift goals for a single gift; scrolling gift list rows, order and per-gift hide; new Super
-  Fan and community member alerts.
+## 1.10.13 (2026-10-25)
 
-Fixes:
-- Installed apps on this site no longer get mixed up (an installed app could open another game).
-- Double tap no longer zooms the page on iPhone / iPad; controller buttons can be remapped one
-  after another; long press on a tracker no longer selects text.
+- **Installed apps no longer get mixed up.** Rando Hub, Zelda 1 and GLR all live on the same
+  site (hugecrankhank.github.io) and all named themselves the same app, so installing or
+  opening one could turn another's desktop / home screen app into it (an installed Rando Hub
+  opening GLR). Each one is now its own app. An install that already got switched has to be
+  removed and installed again.
+- **Zelda 1 no longer clears other apps' offline copies** when it updates (it cleared every
+  saved copy on the site, Rando Hub's offline download included); it only clears its own.
+
+## 1.10.12 (2026-10-25)
+
+- **iPad layout with Mudora and Mudora 2.0** looks like it does with Hutch's tracker: the game
+  on top, items and dungeons under it, and the maps below (upright) or in a column beside it
+  (sideways). Mudora fills the area and the game sits over the space it leaves; Mudora's options
+  are behind its ⚙. (`mudora-stack.js`)
+  Under the game, as in Hutch's: the items in two long rows across, and the 13 dungeons as a
+  row of small cards (name, prize, big key / map / compass, keys, chests left), so the game gets
+  most of the height.
+  The items sit at the left, and right of them the counters: checks out of the places there are
+  (45/216), deaths, bonks, the GT big key game (chests opened, which had the big key) and the
+  digging game (digs, which dig gave the prize).
+  The counters stay up while the game's map or a menu is open, are a little smaller and shrink
+  to fit an upright iPad, and never make the items smaller (they're back to full size).
+- **"Stacked" is now called "iPad"** and is the starting layout on an iPad. Every other tablet
+  starts on **Tablet**. Picking a layout by hand still wins.
+- **Prizes on the game's map:** whatever crystal or pendant the game itself draws on its world map
+  is copied to the tracker on its own (HydeOut: a click per step had marked three crystals as
+  green pendants). The game's prize pictures are read from its sprite list: crystal ($64) or
+  pendant ($60/$62), its colour from the palette (red, blue, green). Red X's and crystal numbers
+  are small sprites and never count; a change made by hand afterwards stays. Tapping a dungeon's
+  button now opens a picker (green pendant, pendant, crystal, red crystal, ?) instead of stepping.
+- **Trackers:** Hutch, Hutch Beta, Mudora 2.0 (Muffins logic), Mudora (Hutch logic), Off.
+  EmoTracker and Muffins' own tracker are no longer offered: Mudora 2.0 already runs Muffins'
+  logic with Mudora's items and maps. Anyone on either is moved to Mudora 2.0. (His tracker is
+  still there inside Mudora 2.0, for his launch page, settings and entrance menu.)
+
+## 1.10.11 (2026-10-25)
+
+Mudora and Mudora 2.0, from HydeOut's notes:
+
+- **Crystals and pendants look right and stand out.** Their pictures no longer bring bits of the
+  crystals next to them in the game's menu, the crystals' dark facets aren't see-through holes,
+  and they're cropped to fill a bigger box. Not yet got: grey. Got: bright, with a glow in their
+  own colour. (The pictures are drawn again from the game once, on the next start.)
+- **This dungeon:** a card under the dungeon list for the dungeon Link is in: its boss (click /
+  right click to pick another, for boss shuffle; ticked when beaten), its prize (click / right
+  click: which it is), small keys and big key, and a chest for every check, open once found.
+  Blank outside dungeons. **List → This dungeon only** shows just the card, compact for stream;
+  **Ready first** puts the dungeons you can clear on top, crystals first.
+- **Follow into dungeons** (off unless ticked): the tracker no longer switches to a dungeon's
+  map when Link goes in, so the world map stays up to plan the way on.
+- **The maps show each dungeon's prize** once marked, inside its circle (bright once you have it).
+- **Mark prizes on the game's own map.** While the world map is open in the game (X), a button
+  sits by each dungeon: click for the next prize, right click for the one before (hold on a
+  phone), and the tracker changes with it. Placed with the game's own sum for its map markers,
+  both zoom levels. ⚙ Settings → "Prize marks on the game's map" turns it off. Mudora and
+  Mudora 2.0 only.
+- **The dungeon card no longer makes the side panel scroll** (HydeOut): in the panel it only shows
+  with List → This dungeon only. **⧉ Dungeon card** puts it in a small window of its own, kept up
+  to date, for OBS window capture.
+- **Quick clicks on the tracker no longer select the pictures** (the blue highlight).
+- **Icons: Game pixels / Smooth / Custom pictures.** Smooth enlarges each picture with Scale2x
+  twice (stairs on diagonals and curves become smooth lines, the game's colours) and draws it
+  smoothly. Custom pictures: PNG files named after the item (hookshot.png, crystal_red.png…)
+  replace the game's, item by item; "Use the game's again" forgets them.
+- **Bigger prizes on the maps:** the crystal or pendant now sits beside each dungeon's circle, larger.
+- **Every one of Muffins' presets in Mudora 2.0** (⚙ Settings → New game from a preset): all 67
+  of his, not just the 21 his launch page has buttons for. His groups come first, then
+  "More presets". A **search box** above the list finds them by name, mode or description
+  ("keys", "inverted", "hunt"…); Enter starts the one picked. Presets without a button on his
+  page are picked from his own "Browse all presets…" list. (Mystery stays on his page: its
+  settings aren't known up front.)
+
+## 1.10.10 (2026-10-25)
+
+- **Any enemy** (`enemy_any`): one of 74 enemies appears near Link, anywhere, even in an empty
+  room or a screen with no enemies of its own (an idea from JynxCast). The area's sprite
+  graphics are swapped for the ones it needs: unpacked from the ROM and sent through the game's
+  own graphics upload, 4 frames a sheet. Slots enemies on screen are using are left alone when
+  another way works; the next screen loads its own graphics as usual.
+  - Enemies and their graphics needs come from the enemizer in Kara's branch; bosses, NPCs,
+    and the Mimics (they freeze the game) are left out. Water and sand ones are in, out of
+    their element: a Zora's ripple on dry land, Debirandos and Swamolas anywhere.
+  - From the browser console: `CrowdEffects.spawnEnemy('Lynel')`.
+
+## 1.10.9 (2026-10-25)
+
+- **Item gone** (`item_off`, 30 s): a random item Link has is gone for the time, then comes
+  back. Anything in the item menu (all four bottles count as one), the gloves, boots
+  (and dashing), flippers (and swimming) or Moon Pearl. The gift alert says which one.
+  - The game uses the item on Y without checking Link still has it, so Y does nothing while
+    the gone item is the one equipped; the HUD keeps showing it until the menu is opened.
+  - One found meanwhile is added when it comes back (bombs and gloves add up). It comes
+    back after a reload too.
+  - Skipped while it'd get stuck: the cape while it's on, the Cane of Byrna while its shield
+    is up, the flippers while Link swims.
+  - Without the pearl in the Dark World Link turns into a bunny at the next screen, and turns
+    back at the next screen after it's back.
+- **+1 / −1 heart container** (`heart_add` / `heart_remove`), for good: up to 20 hearts, never
+  below 1. A new container fills itself, like one picked up; one taken away takes its health
+  with it and leaves the HUD.
+- **Tunic upgrade / Tunic downgrade** (`tunic_up` / `tunic_down`): one step along green, blue,
+  red mail. Hits hurt accordingly, and Link's colors change straight away (from the ROM, so a
+  custom sprite gets its own tunic colors).
+- **Fixed:** Shield gone, Sword gone and Sword downgrade gave the gear back on the first frame
+  (1.10.7, 1.10.8), so they did nothing. A timed effect now counts as running before it
+  starts.
+
+## 1.10.8 (2026-10-25)
+
+- **Sword effects for Crowd Control:**
+  - **Sword gone** (`sword_off`, 30 s) and **Sword downgrade** (`sword_down`, 30 s, one step
+    worse): the sword comes back when time's up, even after a reload. A sword found meanwhile
+    is added on, since swords are progressive: found while the Tempered is down to the
+    Master, it gives the Golden back.
+  - **Sword upgrade** (`sword_up`): one step along Fighter's, Master, Tempered, Golden.
+  - **Sword stolen** (`sword_steal`): gone until Link finds another. It can make a seed
+    unbeatable, so it's marked "⚠ can end the run" in Crowd Control+, and the control panel
+    asks before it's put on a gift, a level or the mystery box, or tested.
+  - The new sword looks right straight away (its picture and colors come from the ROM), and
+    swordless seeds skip all of them.
+- **Shield gone** counts a shield found during it as one more level, as the game does.
+
+## 1.10.7 (2026-10-25)
+
+- **Four shield effects for Crowd Control:**
+  - **Shield gone** (`shield_off`, 30 s): Link loses his shield, and the same one comes back
+    when time's up. A better shield found meanwhile is the one he gets back. The loan is kept
+    in the browser with the seed it belongs to, so a reload mid-effect still returns it.
+  - **Shield stolen** (`shield_steal`): gone until Link finds another, like a Pikit eating it.
+  - **Shield downgrade** / **Shield upgrade** (`shield_down` / `shield_up`): one step along
+    Fighter's, Fire, Mirror. Downgrade stops at the Fighter's Shield.
+  - A changed shield looks right straight away: its picture and colors are made from the
+    ROM's own graphics, the way the game does when Link picks one up.
+  - Gifts that can't do anything (no shield to take, Mirror Shield already) say so in the feed
+    instead of running.
+
+## 1.10.6 (2026-10-25)
+
+- **Crowd Control's Instant death can't be blocked any more.** It used to hand Link a hit
+  worth all his hearts, so the Magic Cape, the Cane of Byrna and the blink after a hit
+  stopped it. It now starts the game's death right away. A bottled fairy still revives
+  Link, as on any death.
+
+## 1.10.5 (2026-10-24)
+
+- **The playtesters are in the ending of every ALTTP randomizer seed played here**, not just
+  the ones the hub makes: a ROM loaded from a file, a resumed game, a seed handed over after
+  a reload. The copy being played gets the names when it starts (the file itself is never
+  changed); a ROM whose ending isn't laid out like a randomizer's (the plain game) is left
+  alone. Seeds in progress get the names the next time they're started; Mudora counts the
+  patched ROM as a new game once, so marks on a seed already in progress start fresh.
+
+## 1.10.4 (2026-10-24)
+
+- **The playtesters are in the ending of every seed the hub starts** (HydeOut's stream
+  showed the old captions): seeds from Kara's branch, AVIANART and alttpr.com bring their
+  own ending, which 1.9.17 didn't touch. Now the finished ROM's ending is patched: our seven
+  scenes are drawn again, the other nine (item hints, the seed's own jokes) are kept byte
+  for byte, and only when it fits the space the generator used.
+
+## 1.10.3 (2026-10-24)
+
+- **Hide gifts from the scrolling gift list** (Crowd Control+ 1.10.3): an "On ticker"
+  checkbox on every gift row (the gift keeps working in the game), and "Also show"
+  switches for the like, follow / share, big donation and subathon lines.
+
+## 1.10.2 (2026-10-24)
+
+- **Mudora: Half Magic has a picture** (HydeOut): a pixel "½" in the magic meter's green,
+  in the item grid and in "Mark an item…" (it was text only, so it couldn't be marked).
+  The game itself only writes a 3-tile label over the magic meter, too wide to cut out.
+
+## 1.10.1 (2026-10-24)
+
+- **Go-mode reveal marks dungeons**: an item revealed inside a dungeon now shows on that
+  dungeon's square on the map (up to two pictures), next to its name in the dungeon list,
+  and on its card ("Revealed inside", with Clear). Before, only overworld squares got a
+  mark in Mudora 2.0.
+- **Mudora (Hutch's logic) shows reveals too**: dungeons by name, overworld spots on
+  Hutch's square of the same name ("Kakariko Well - Top" → Kakariko Well). A reveal that
+  arrives before the tracker is ready waits for it. Hutch's own tracker, EmoTracker and
+  Muffins' Tracker 2.0 on its own still only get the banner on the game.
+
+## 1.10.0 (2026-10-24)
+
+- **Zelda 1 seeds: ZORA 2.0 beta 8** (from beta 5). Nearly every setting in the New seed
+  popup can now be chosen: 13 choices across 7 settings are still "Not produced by ZORA
+  yet", down from 275 across 77. That includes vanilla dungeon room layouts (Dungeon Room
+  Shuffle: Vanilla), Level 9 entry and triforce counts, armos / coast / white sword items,
+  starting items and hearts, swords, hint types, OHKO, Permanent Sword Beam and more, plus
+  a "Vanilla" preset. Same popup and look.
+- **Mudora: the boots showed a hammer** (HydeOut). Finding the boots' picture in the
+  pause menu took away the hammer ($7EF34B) instead of the boots ($7EF355). Fixed;
+  Mudora draws its pictures again once.
+
+## 1.9.20 (2026-10-24)
+
+- **More Halloween effects** (Crowd Control+ 1.9.20): *Blood drip* (blood runs down from the
+  top of the game screen, 20 s), *Spiderwebs* (webs in three corners and a spider on its
+  thread, 30 s) and *Monster mash* (every ordinary enemy on screen turns into a bat or a
+  mummy, or another spooky monster where those graphics aren't loaded; they keep their
+  place and their slot in the room). All three can come up in Trick or treat.
+
+## 1.9.19 (2026-10-24)
+
+- **One-hit KO** (Crowd Control+ 1.9.19): `one_hit` kills on any hit, green, blue or red
+  mail alike (it used to only drop Link to one heart, so mail could let him survive).
+  The hit's damage, after the mail, is turned into all of Link's hearts; a bottled fairy
+  and the cape / Cane of Byrna still save him.
+
+## 1.9.18 (2026-10-23)
+
+- **Seed type and settings under the seed code** (Randomizer bar): what kind of seed it
+  was (Generate & Play, 🎲 Reroll, Crowd Control's random preset / CHAOS, the preset or
+  pick, who rolled it), every setting the generator used (Kara's: all of them, defaults
+  dimmed), and what the tracker was set to for it (Mudora 2.0: Muffins' settings), side by
+  side, to check whether the tracker's logic matches the seed.
+- **Scrolling gift list rows** (Crowd Control+ 1.9.18): 1-4 rows, each scrolling on its
+  own, set on the Gifts & effects tab with the list's title and speed.
+- **Gift order**: drag the gifts (or use ▲ ▼) on the Gifts & effects tab; the scrolling
+  gift list shows them in that order.
+
+## 1.9.17 (2026-10-23)
+
+- **Credits**: ⚙ Settings → Credits lists Rando Hub's playtesters (Gumby @gumby.oo7,
+  HydeOutGaming @jennkevden, Heffie's Homies @heffie638), shout-outs (Hutch, Kara,
+  Muffins) and what the hub builds on. They're also in the game's own ending on every
+  seed made in the hub ("playtested by Gumby"…), in the ending's joke captions only, so
+  the item-hint captions and the seeds themselves don't change.
+
+## 1.9.16 (2026-10-23)
+
+- **Room lights** (Crowd Control+ 1.9.16): *Lights on!* lights up a dark room as if every
+  torch were lit (60 s, waits for the next dungeon if given outside); *Lights out!* makes
+  any room nearly black (30 s; outdoors the screen dims). Uses the game's own dark-room
+  colour math, and the room's own lighting comes back when they end.
+
+## 1.9.15 (2026-10-23)
+
+- **Reveal a go-mode item** (Crowd Control+ 1.9.15, HydeOut's idea): a gift shows where one
+  item the run still needs is, from the seed's spoiler (its playthrough). Skips items Link
+  already has and spots already shown; a banner on the game and a mark on Mudora 2.0's
+  map. Seeds made in the hub only; race seeds keep their spoiler hidden.
+
+## 1.9.14 (2026-10-23)
+
+- **Seed history**: every seed the hub starts (Zelda 3 and Zelda 1) is logged with when,
+  the seed and its code, generator and preset, who rolled it and how (Generate & Play,
+  🎲 Reroll, Crowd Control's new seed / random preset / CHAOS, or handed over from the
+  other game) and a link to play it again. ⚙ Settings → Seed history, with Download
+  (CSV). Crowd Control+ 1.9.14 keeps the same list on the streaming PC (seeds.json, Live
+  games tab).
+
+## 1.9.13 (2026-10-23)
+
+- **Halloween effects** (Crowd Control+ 1.9.13): Spooky night, Ghost Link, Pumpkin Link,
+  Haunted lights, Spooky monster, Haunting (three monsters), Trick or treat and Spooky
+  sprite. Link's colour effects (Pink, Ghost, Pumpkin) take turns instead of fighting.
+
+## 1.9.12 (2026-10-23)
+
+- **Mudora 2.0 shows the check counter** (the game's own count, as in Mudora and the run
+  stats overlay) next to Locations, Deaths and Bonks.
+
+## 1.9.11 (2026-10-23)
+
+- **Digging Game guessing** (Crowd Control+ 1.9.11, Live games tab): chat guesses which
+  dig gives the Digging Game's prize (`!dig 1-30`); the game reads the seed's dig number
+  and says which it was when the prize is picked up. New "Digging Game" overlay.
+- **The seed reroll banner moved to the top of the game** (over the HUD) so it no longer
+  covers the play area.
+
+## 1.9.10 (2026-10-23)
+
+- **Mudora's crystal pictures**: the crystal was found by taking away Misery Mire's,
+  a red one, so the crystal came out red. It's now found with Palace of Darkness's
+  (blue), and the red crystal is the game's own red one. Pictures are drawn again once.
+
+## 1.9.9 (2026-10-23)
+
+- **Mudora's item pictures with the randomizer's newer pause menu**: boots, gloves,
+  flippers and Moon Pearl showed as check marks, and pendants as pieces. Their place
+  in the menu is now found from the game itself (the menu with and without each item)
+  instead of fixed spots. Pictures are drawn again once.
+
+## 1.9.8 (2026-10-23)
+
+- **Mudora and Mudora 2.0: a + on the red crystal and green pendant** in the dungeon
+  list (red and green), so they can be told apart while still grayed out.
+
+## 1.9.7 (2026-10-23)
+
+- **Mudora 2.0 is the default tracker** (anyone still on Mudora is moved over once;
+  the Tracker menu still has every choice).
+- **Mudora 2.0 follows each new seed**: a seed rolled in the hub (the bar, a reroll,
+  a random preset or CHAOS seed from Crowd Control) starts a new game in Muffins'
+  tracker with the seed's settings: world state, goal and crystals, logic, swords,
+  dungeon item shuffle, entrance shuffle, boss/enemy shuffle, pottery, drops, shops,
+  pseudoboots, mirror scroll, prizes and followers. A ROM loaded from a file keeps the
+  game in progress.
+
+## 1.9.6 (2026-10-23)
+
+- **Which rerolls can switch games** (with "Rerolls can land on either game"): Crowd
+  Control's *New seed (same settings)* always stays in the game being played; *Random
+  preset seed* and *CHAOS seed* can switch, and stay that kind in the other game (a
+  random preset there). Zelda 1 gets Random preset and CHAOS seed effects too.
+- **The scrolling gift list follows the game**: after a switch it lists only what the
+  new game can do, with that game's names. Crowd Control+ 1.9.6.
+
+## 1.9.5 (2026-10-23)
+
+- **Gift goals for one gift**: a gifts goal can count a single gift (like 50 Roses)
+  instead of any gift. Pick the gift and how many on the Goals tab; the goal bar
+  overlay shows that gift's picture and name. Crowd Control+ 1.9.5.
+
+## 1.9.4 (2026-10-23)
+
+- **GT big key game counts 1-22**: only the places the big key can be (Bob's Torch and
+  every GT chest except the Big Chest and the four behind the big key door), so the
+  chest numbers match what chat can guess. Crowd Control+ 1.9.4 and the game both updated.
+
+## 1.9.3 (2026-10-23)
+
+- **Crowd Control+ 1.9.3: comments add time to the subathon clock**, with an optional
+  per-viewer wait so one viewer can't spam it up (control panel → Subathon).
+
+## 1.9.2 (2026-10-22)
+
+- **Mudora 2.0: "Visible" (orange) checks.** Muffins' logic has no visible state, so
+  items you can see but not reach yet (Lake Hylia Island, Lumberjack Tree, Zora's Ledge,
+  Desert Ledge, Spectacle Rock, Floating Island, Bumper Cave Ledge) stayed red. Rando Hub
+  now turns them orange using Hutch's rules for when each one is visible. Our addition,
+  not Muffins' logic; off in inverted and entrance shuffle.
+- **Fixed (Mudora, Mudora 2.0): the map and big key pictures were swapped** on the
+  dungeon rows, so a dungeon's map lit up looking like its big key.
+- Mudora's small-key count turns **green** once every key in the dungeon is found.
+- **⚙ Settings in the header** holds the tracker settings: Tracker world and Tracker
+  dungeon items (only shown with trackers that use Hutch's logic: Hutch's, Mudora,
+  EmoTracker), Tracker keys and Item sounds. On iPad and phone headers they sit in
+  the existing ⚙ menu.
+- **Zelda 1 ▸** button in the header, next to Reroll.
+- **Mudora 2.0 shows deaths, bonks and the GT big key game** (GT chests opened, and
+  which one had the big key), read from the game like Mudora's.
+- **Fixed: long press on a check selected text on iPad / iPhone** (Mudora, Mudora 2.0,
+  EmoTracker). Holding a finger on a check opens its card again.
+- **Fixed: a double tap zoomed the page in on iPad / iPhone** (Zelda 1 and Zelda 3),
+  with no easy way back out.
+- **Fixed: controller buttons couldn't be remapped one after another** (Zelda 1 and
+  Zelda 3 emulators): only every other box took a press. Now each one does.
+- **Crowd Control+ 1.9.2: the crowd adds time to the subathon clock.** Seconds for
+  each like (down to 0.01), follow, share, new Super Fan and new community member,
+  set on the control panel's Subathon tab. Likes add up until they make a whole second.
+- **Effects and alerts for new Super Fans and new community members** (Gifts &
+  effects and Alerts tabs), with test buttons.
+- Item sounds and keys in hand on every tracker (below).
+
+## 1.9.1 (2026-10-22)
+
+Everything below down to "Mudora 2.0 autotracking fix", plus Crowd Control+ 1.9.1
+(the subathon clock fix). Download: Crowd-Control-Plus-v1.9.1.zip on this repository's
+Releases page.
+
+## Beta: item sounds and keys in hand on every tracker (2026-10-22)
+
+- **Item sound packs now play with every tracker** (Hutch's, Mudora, Mudora 2.0,
+  Muffins', EmoTracker): the hub reads new items straight from the game. Pick a
+  pack, or import a pack folder, with the new **Item sounds** menu in the header.
+  Hutch's broadcast view no longer plays pack sounds itself while the hub is
+  open, so nothing plays twice.
+- **Tracker keys** in the header: Found `1/6`, In hand `0/6` or Both `1(0)/6`,
+  on Hutch's tracker, Mudora, Mudora 2.0 and EmoTracker. (Muffins' own tracker
+  keeps its usual count; its code is his.)
+
+## Beta: subathon clock fix (2026-10-22)
+
+- **Fixed: the control panel's subathon clock ran fast.** It counted down about
+  twice as fast as the real clock (one second, then a jump of two or three), so
+  after a while it showed far less time than the game and the stream overlay.
+  Only the control panel's display was wrong: the real clock, the clock on the
+  game and the /timer overlay were right all along.
+
+## Beta: Zelda 1 joins the hub (2026-10-22)
+
+- **Zelda 1 (Z1R) is in the hub** at `z1r/`: roll, play and track Zelda 1
+  randomizer seeds. Switch games from the new **Game** row at the top of the
+  Randomizer bar; Zelda 1 has a **◂ Zelda 3** button to come back.
+- **Rerolls can land on either game** (checkbox in the same row): the 🎲 Reroll
+  button and Crowd Control's *New seed!* pick Zelda 3 or Zelda 1 at random,
+  both ways. A Zelda 1 roll uses the flags last used in its New seed dialog;
+  a Zelda 3 roll uses the Randomizer bar's settings.
+- **Crowd Control in Zelda 1:** the same Crowd Control+ bridge and mapping.json.
+  Effects that exist in both games keep their names; ALTTP-only ones are skipped
+  while Zelda 1 is playing. On/off and the bridge address carry over from here.
+- Zelda 1 needs your own Legend of Zelda (USA) ROM, picked once in its New seed
+  dialog.
+
+## Beta: item sound packs and keys in hand (2026-10-22)
+
+- **Item sound packs.** A pack is a folder with one folder per item (hookshot,
+  fire rod, master sword…) holding as many sounds as you like; every pickup plays
+  one at random, never the same one twice in a row. In the broadcast view:
+  **♪ Item Sounds → Sound Pack** to pick a pack, import a pack folder from your
+  computer, or set the pack volume, and a **♪ Pack** button that steps through
+  Off → each pack → Mix. Items a pack doesn't cover use your profile's sound.
+  Built-in packs go in `sounds/packs/` (see the README there).
+- **Crowd Control:** `sound_pack_next` and `sound_pack_random` switch the item
+  sound pack from a gift.
+- **Small keys in hand.** Item tracker ⚙ → Dungeon Background → **Small keys:**
+  Found `1/6` (as before), In hand `0/6`, or Both `1(0)/6` — found, (in hand),
+  total. In hand drops as you open doors; it's read from the game while
+  autotracking.
+
+## Beta: Mudora 2.0 autotracking fix (2026-10-22)
+
+- **Fixed: autotracking looked dead after starting a game from a preset (or New game).**
+  Muffins' tracker was tracking fine, but Mudora 2.0 kept showing the page it had
+  before the new game, so nothing changed on the map. It now follows his new page
+  as soon as it loads. (This is also why a preset seemed to need starting twice.)
+
+## Beta: Mudora 2.0 autotracking details (2026-10-21)
+
+- **⚙ Settings → Autotracking details:** what autotracking is doing right now (on/off,
+  connection, the game mode and ROM name Muffins' tracker last read, how many reads,
+  any errors on his page, and a log of anything the watchdog did). For a screenshot
+  when autotracking doesn't pick things up.
+- The watchdog now also notices when his tracker keeps reading but never gets as far
+  as the items and checks while you're playing, logs why, and reloads his tracker.
+
+## Beta: text boxes keep the dungeon map; autotracking self-repair (2026-10-20)
+
+- **Text boxes and the pause menu** no longer flip Mudora's map back to the overworld
+  while you're in a dungeon (the game is in its "message" mode then; Link hasn't moved).
+- **Mudora 2.0 autotracking watchdog:** while you're playing (overworld or inside), Muffins'
+  tracker reads the game a couple of times a second. If those reads stop for 8 seconds,
+  Mudora 2.0 reloads his tracker on the same game ("Reconnecting autotracking…"), so
+  nothing is lost.
+
+## Beta: faster autotracking replies (2026-10-20)
+
+- The built-in emulator now answers the trackers' memory reads straight away instead of
+  waiting a turn per read, which mattered most on phones where the game keeps the page
+  busy (a tracker reads a dozen ranges per update). It also handles one-shot listeners
+  the way a real connection does. Both Hutch's and Muffins' trackers checked after.
+
+## Beta: Mudora 2.0 launch and autotracking fixes (2026-10-20)
+
+- **Presets/Launch needing two tries:** launching saves the new game first, and with the
+  game running that took several seconds with nothing on screen, so it looked like the
+  first click did nothing (and a second click started a second game). Launch now shows
+  "Launching…" straight away and ignores repeat clicks.
+- **Autotracking:** Muffins' tracker is now always pointed at Rando Hub's emulator (a
+  leftover SNI choice from his launch page could leave it unconnected). Mudora 2.0's
+  status line says whether autotracking is on, waiting for the game, or switched off,
+  and ⚙ Settings has an Autotracking switch.
+
+## Beta: dungeon maps without the magic meter (2026-10-20)
+
+- **Explore dungeon maps** no longer pick up the magic meter: it was copied from the game's
+  screen with each room, and smeared into a long bar in rooms that scroll. Rooms already
+  drawn with it are dropped once and drawn again, clean, on your next visit. (Map and
+  Full modes weren't affected.)
+
+## Beta: Mudora on phones: more room for the map (2026-10-20)
+
+- The options (dungeon maps, item size, grid, Settings, Reset maps, help, and on Mudora 2.0
+  Muffins' tracker / New game) and the colour key now sit behind the ⚙ at the bottom
+  right and open over the map instead of pushing it down; tap anywhere else to close
+  them. The map gets the whole width.
+- Entrance tags (where each door leads) show once you zoom in a little, so the zoomed-out
+  map isn't covered in labels.
+
+## Beta: Mudora 2.0 presets in Settings (2026-10-20)
+
+- **⚙ Settings → New game from a preset:** pick any of Muffins' presets (OnlyADKD is
+  "ADKDF") and Start: his launch page picks it and launches for you, so the preset's
+  known entrances and left-out checks come with it. (On his launch page the "ADKDF" next
+  to the Tournament Presets title is a Discord link; the preset is the button below.)
+
+## Beta: entrance tracking in Mudora and Mudora 2.0 (2026-10-20)
+
+- **Entrances on the map:** on entrance-shuffle seeds every shuffled door and hole shows at
+  its real spot in the game (from the ROM), in its tracker's logic colour, with a tag for
+  where it leads. Mudora uses Hutch's entrance system, Mudora 2.0 uses Muffins' (set his
+  Entrance Mode in ⚙ Settings); each stays in step with its own tracker.
+- **Automatic:** walk through a door (or drop down a hole) and Rando Hub reads where it
+  took you from the game and fills it in, the same way items are autotracked. Leaving a
+  cave by another exit fills in that door too, and in Mudora the two doors of a cave get
+  joined with a connector. Only the door you used is read, so nothing is given away
+  early. (Checked against a full entrance-shuffle seed from Kara's generator: every door
+  matched its spoiler.)
+- **By hand:** click an entrance to mark it done; right click (hold on a phone) to set
+  where it leads: Hutch's codes in Mudora, Muffins' destination list in Mudora 2.0 (his
+  rules for which can go where), "Pick on map…" to point at another entrance, Clear, and
+  in Mudora a connector to another door. Mudora 2.0's "Muffins' menu" opens his own
+  menu for connectors, notes and scouting.
+
+## Beta: Mudora 2.0 settings mid-game (2026-10-20)
+
+- **⚙ Settings** in Mudora 2.0's bar: all of Muffins' game and logic settings (world
+  state, logic mode, goal, crystals, keys, pottery, shuffles, logic breaks and his two
+  logic-related tracker options), changeable any time, mid-game too. The logic updates
+  straight away and the settings stay with the game. The choices are read from his own
+  launch page's source (`tools/mfns-settings.py`), so they match his.
+
+## Beta: Mudora map controls (2026-10-20)
+
+Suggestions from HydeOutGaming, for Mudora and Mudora 2.0:
+
+- **Reset maps:** a ⟲ button on each world map, and "Reset maps" at the top, put the
+  maps back as they started (whole world, no zoom), so a stream layout can be restored.
+- **A map can't be lost any more:** dragging keeps part of the world on screen, and a
+  broken zoom snaps back to the whole world.
+- **Clicking a check marks it done** (click again to open it again). Right click (hold
+  on a phone) opens its card to mark which item is there, and in Mudora 2.0 to tick
+  off the places in a square one by one. Nothing pops up on mouse-over any more.
+
+## Beta: Muffins' Tracker 2.0 and Mudora 2.0 (2026-10-20)
+
+- **Tracker → Muffins Tracker 2.0 (beta):** Muffins' (MFNS) new tracker, with his
+  permission, built unchanged from his `react_rewrite` source and run inside Rando Hub:
+  his launch page, presets and settings, his logic, maps and layouts. Autotracking
+  comes from the built-in emulator. Tip: his Map mode "Vertical" suits the side
+  panel. Under his MIT license (`mfns-tracker/LICENSE`), now offered to everyone.
+- **Tracker → Mudora 2.0 (beta, Muffins logic):** Mudora's look (the game's own items,
+  maps drawn from the ROM, dungeon maps, squares moved onto the game's real door and
+  item spots) with Muffins' logic and settings. Pick settings on his launch page (it
+  opens inside Mudora 2.0; "Muffins' tracker" and "New game" bring it back), then his
+  tracker runs out of sight and Mudora 2.0 shows its answers and sends clicks back as
+  his own buttons do. His squares hold several places each: the card lists them to
+  tick off one by one, and a darker green means some are available. Entrance shuffle
+  isn't drawn yet (use his tracker for that).
+  Logic problems: Muffins' Discord; how it looks here: Rando Hub.
+- **Mudora: Full dungeon maps** now draw (the page was looking for the drawing worker
+  in its own folder).
+
+## Beta: fixes (2026-10-19)
+
+- **Boss detour to Thieves' Town: Blind now appears.** He only shows up after the
+  maiden has turned into him (a flag on his room) and with no maiden following Link;
+  the detour now sets that for the trip (the save state puts it back afterwards).
+  Tested on a vanilla and a randomized ROM: Blind spawns in his room.
+
+## Beta: Mudora (2026-10-19)
+
+- **Tracker → Mudora (beta):** Rando Hub's own tracker, named after the Book of Mudora
+  (the one that reads the old writing; this one reads your game).
+  - **Logic: Hutch's, unchanged.** His item tracker and map still run, out of sight,
+    and Mudora shows their answers: which checks are in logic, cleared checks, dungeon
+    colours, items, keys and prizes. Clicks go back to his tracker, so both stay in
+    step, and his updates come in through the usual Hutch updater. None of his
+    pictures are shown.
+  - **Everything you see comes from the game:** item icons are cut from the game's own
+    pause menu by a hidden copy of the emulator (randomizer menus too), the two worlds
+    are drawn from the ROM, and the dungeon maps are the Explore / Map / Full ones.
+  - **Checks where they really are:** each pin sits on the door, cave, hole, item or
+    person in the game (read from the ROM); a few spots that aren't one place keep
+    Hutch's position.
+  - Items (click up, right click / hold back; right click a medallion for MM / TR),
+    a dungeons panel (prize, big key, map, compass, small keys, chests left: click to
+    count, right click to undo; click a dungeon for its map), hover cards with Done /
+    Not done and marking which item is at a check, counters (checks, deaths, bonks,
+    Ganon's Tower chests and where its big key was), the colour key, and the phone
+    tabs (Items / Light World / Dark World). "⧉ Mudora" opens it in its own window.
+  - Fixed: zooming the map could crash iPhone Safari (out of memory). The worlds are now
+    drawn on a canvas the size of the screen: a small copy of the whole world when
+    zoomed out, only the screens in view at full detail when zoomed in. Dungeon maps
+    zoom in at most 2.5×.
+  - Phone: a **Keys** tab of its own (the dungeons panel), so Items no longer scrolls.
+  - Pins: Blind's Hut on its own doorway (the gap in the hedge left of the house), the Race Game on its heart piece,
+    and a second Purple Chest pin on the man by the sign who opens it (Light World).
+  - Death Mountain's open sky is drawn in the game's dark teal instead of grass green
+    (the maps from the game, both trackers), and King Zora / Zora's Ledge sit where the
+    river leads north into Zora's area.
+
+## Beta: EmoTracker (2026-10-19)
+
+- **Tracker → EmoTracker (beta):** the official EmoTracker ALTTPR pack, running in the
+  browser with autotracking from the game: items, map with logic colors, location
+  popups (click a chest when collected), pinned locations, and the pack's own views
+  (items beside or below the map, broadcast, items only). Its trackers follow the
+  Tracker world / dungeon items settings (standard, keysanity, inverted, inverted
+  keysanity), or pick one in its own menu. Marks are kept per game.
+- Desktop layout: "⧉ EmoTracker" opens it in its own window.
+- The beta keeps its own saves and tracker choice, apart from the main app.
+- EmoTracker additions:
+  - **Bombs logic for today's randomizer:** the pack (2019) assumed bombs are always on
+    hand. Now the spots behind bombable walls need bombs (Chicken House, Brewery,
+    Aginah's Cave, Kakariko Well and Blind's Hut top chests, Hype Cave, Mini Moldorm
+    Cave, Ice Rod Cave), or bombs or boots (Sahasrahla's back room, Race Game), as in
+    Hutch's tracker. Running out of bombs turns them red again.
+  - **Point at a square** to see its checks (tap on touch screens); the card stays while
+    you use it. Click a chest to mark it.
+  - **Mark which item is at a location:** right click a square, or hold it on a phone or
+    tablet (also the + on each check in the card). The item shows on the square.
+  - **Map key** (what each color means), and **counters** from the game: checks,
+    deaths, bonks.
+  - **Dungeons panel** under the items: chests left per dungeon (click to count down),
+    small keys and big keys.
+  - **Ganon's Tower**: chests opened (of 26) and which chest had the big key.
+  - **Dungeon maps (Explore / fog of war):** World and a button per dungeon above the
+    maps. Each dungeon room is captured from the game's picture as you walk through it
+    and laid out where the game keeps it, so the dungeon fills in as you explore; Link
+    shows as a dot. Entering a dungeon switches to its map, leaving switches back.
+    Zoom with the wheel or a pinch, drag to move, double-click/double-tap to fit. Kept
+    per game in the browser.
+  - **Map pins where they really are:** 69 of the pack's map pins moved onto the spot in
+    the game itself (the door, cave mouth, hole, or the item/person on the screen), read
+    from the ROM. They were placed by eye on a small map and showed slightly off on the
+    sharp map drawn from the game. Spots that aren't one place (Lost Woods, the race,
+    digging spots, Spectacle Rock's cave + top, Zora, the bridge, …) stay where they were.
+  - **Test: warp to a dungeon** (emulator menu ⋯ → Game): pick a dungeon from the list
+    and Warp drops Link in at its entrance. The game is saved in memory first, so
+    "Back to before the warp" undoes it.
+  - **Dungeon maps, three kinds** (Dungeons menu in the tracker's bar):
+    - *Explore (fog of war)*: as above, now by floor (B1, 1F, 2F…) and cropped to what
+      you've seen.
+    - *Map (like the game)*: each floor as a grid of rooms, like the pause map. Rooms
+      you've been in are filled in; with the dungeon's map the rest show as outlines;
+      with its compass the boss room gets a skull. Works on phones.
+    - *Full (every room)*, desktop only, with a warning first: every room of the
+      dungeon drawn whole up front, for players new to rando (finding the way to each
+      check, and pots in pot shuffle). A hidden copy of the emulator builds the rooms
+      with the game's own code the first time you open each dungeon (a few seconds),
+      and the pictures are kept per game. Your own game isn't touched.
+  - **Phone map fixes:** the maps drawn from the game are now 64 screen-sized pictures
+    per world instead of one huge one (iPhone Safari wouldn't draw the big one, so the
+    map showed black), and touch zoom forgets fingers lifted off the map (a leftover
+    one made the next touch zoom all the way in). Double-tap resets the zoom.
+  - **Phone layout:** EmoTracker uses the same Items / Light World / Dark World tabs as
+    Hutch's tracker on phones: one panel at a time, fitted below the game with no page
+    scrolling (upright or sideways). − / + zoom the map; the tracker's own menu folds
+    behind its ⚙.
+  - **Location cards:** fixed cards that wouldn't close while autotracking was running
+    (they were rebuilt on every update, which swallowed clicks); buttons now act the
+    moment you press them, and Esc closes. New **↺ Reopen** button marks everything at a
+    location not collected again (right click a single chest to reopen just that one).
+  - **Maps drawn from the game:** both worlds are drawn pixel for pixel from the ROM
+    being played (the full 4096 x 4096 overworld), so they're sharp, and a seed that
+    changes the overworld shows its own map. Saved in the browser after the first time.
+    "Game maps" turns it off (the pack's pictures).
+  - **Zoom:** mouse wheel or pinch on a map, drag to move around, double-click to see the
+    whole world. The squares keep their size.
+  - **Grid:** the game's screens drawn on the maps (Grid checkbox).
+  - **Bigger, sharper item icons:** an Items size menu (Small / Medium / Large; Auto
+    picks Medium on a wide window), always at whole-pixel scales.
+  - Item placement (the tracker's logic setting) starts on **Advanced**, the
+    randomizer's default, and follows the Randomizer bar's Item placement.
+- Also in this beta: Crowd Control+ 1.8.0 (checks and bosses on the subathon clock)
+  and 1.9.0 (GT big key guessing game).
 
 ## 1.9.0 (2026-10-19)
 

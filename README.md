@@ -204,14 +204,15 @@ top gifters, chat votes, team battles, mystery box, boss detours, read-aloud and
 1. Download **`Crowd-Control-Plus-v<version>.zip`** from the
    [latest release](https://github.com/hugecrankhank/Rando-hub/releases/latest) and unzip it.
 2. Install [Node.js](https://nodejs.org) (LTS). You also need Chrome or Edge.
-3. Double-click **`Start Crowd Control+.bat`** (Mac: the `.command` file). The control
-   panel opens in your browser at `http://localhost:21214/studio`.
-4. **Dashboard → TikTok connection:** type your TikTok name and click **Connect**. This
-   is the **local signer** (recommended): Crowd Control+ opens your LIVE page in its own
-   Chrome / Edge window (log in to TikTok there once, keep it open; it's muted) and reads
-   gifts, likes, follows, shares and chat from it. Free, no other apps, no keys.
-   If a TikTok update ever breaks it, pick **TikFinity (backup)** there instead: the
-   free [TikFinity](https://tikfinity.zerody.one) app does the listening.
+3. Double-click **`Start Crowd Control+.bat`** (Mac: the `.command` file). The first time
+   it installs the TikTok connection library (about a minute), then the control panel
+   opens in your browser at `http://localhost:21214/studio`.
+4. **Dashboard → TikTok connection** is on **Direct (recommended)**: type your TikTok
+   name and click **Connect**. Crowd Control+ joins your LIVE itself: no key, no login,
+   no other app (an optional free [Euler Stream](https://www.eulerstream.com) key gives
+   you a signing limit of your own). Two other ways are in the same menu: the free
+   [TikFinity](https://tikfinity.zerody.one) app (the backup) and the **local signer**
+   (Crowd Control+ opens your LIVE page in its own Chrome / Edge window and reads it).
 5. In Rando Hub on the **same PC**: **⋯ → Crowd effects** → turn on, address
    `ws://localhost:21214`. Allow local-network access if the browser asks.
 6. Test effects from either place (the game's **⋯ → Crowd effects** or the control
@@ -318,11 +319,11 @@ away, mid-game too:
 
 - **Mudora 2.0 (Muffins logic)**, the default: Mudora's look with the logic and
   settings of [Muffins' Tracker 2.0](https://github.com/KrisDavie/alttptracker)
-  (`mudora2/`). His tracker runs out of sight (`mfns-tracker/`, built unchanged from
-  his source) and Mudora 2.0 shows its answers. Each seed rolled in the hub starts a
-  new game in it with the seed's settings; **⚙ Settings** has all his game and logic
-  settings (changeable mid-game), every one of his 67 presets with a search box, his
-  launch page and entrance menu, and Autotracking details. Logic problems: Muffins'
+  (`mudora2/`). His logic engine, store and sessions are built from his source,
+  unchanged, as a library (`mfns-tracker/lib/`) that Mudora 2.0 drives directly. Each
+  seed rolled in the hub starts a new game with the seed's settings; **⚙ Settings** has
+  all his game and logic settings (changeable mid-game), every one of his 67 presets
+  with a search box, his earlier games, and Autotracking details. Logic problems: Muffins'
   Discord; how it looks or runs here: Rando Hub.
 - **Mudora (Hutch logic)**: the same look with Hutch's logic (`mudora/`); his tracker
   runs out of sight and both stay in step.
@@ -762,7 +763,7 @@ emu/                    Snes9x compiled to WebAssembly and its player, input, vi
 bridge/                 memory bridge to the tracker (sni-bridge.js) and the fake-SNI shim
 tracker/                Hutch's tracker (refreshed from his repository on every deploy)
 mudora/, mudora2/       Mudora (Hutch's logic) and Mudora 2.0 (Muffins' logic)
-mfns-tracker/           Muffins' Tracker 2.0, built unchanged; Mudora 2.0 runs it out of sight
+mfns-tracker/           Muffins' logic as a library (built unchanged from his source), his data and settings
 addons/                 item sounds, keys in hand, map prizes and other additions to the trackers
 z1r/, glr/              the Zelda 1 and Guardian Legend apps (each complete, with its own README)
 sounds/                 item sound packs
@@ -964,7 +965,7 @@ Gumby" and so on (`randomizer/hub-credits.js`; the captions that hint at items s
 - The earlier web EmoTracker is gone (1.14.2); its overworld and dungeon map code lives on in
   `mudora/romap.js` and `mudora/dungeons.js`.
 - Link sprites: the [alttpr.com sprite library](https://alttpr.com/en/sprites) and its artists.
-- TikTok connection: [TikFinity](https://tikfinity.zerody.one).
+- TikTok connection: [tiktok-live-connector](https://github.com/zerodytrash/TikTok-Live-Connector) (MIT; signing by [Euler Stream](https://www.eulerstream.com)), or [TikFinity](https://tikfinity.zerody.one).
 - Logo lettering: [Press Start 2P](https://fonts.google.com/specimen/Press+Start+2P) by CodeMan38,
   SIL Open Font License (`fonts/PressStart2P-OFL.txt`).
 

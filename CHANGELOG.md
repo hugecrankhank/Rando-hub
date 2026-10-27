@@ -5,6 +5,22 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.7 (2026-10-27)
+
+- **Zelda 1, Guardian Legend and the FF NES pages: run-ahead, on by default with a
+  keyboard or controller.** The NES emulator now does what RetroArch's run-ahead does:
+  each frame is shown one frame early, so a press shows up about 16 ms sooner and
+  movement feels tighter. It runs the game twice per frame (about 1–3 ms on the NES), and
+  is off on touch screens; ⋯ → Graphics → Run-ahead turns it on or off. The tracker and
+  crowd effects still see the real game state. **Zelda 3's run-ahead (there since 1.10) is
+  now on by default too** with a keyboard or controller; a saved "off" from before, when off
+  was the default, is treated as "automatic". Phones and tablets stay off; the box turns it
+  on or off either way.
+- **Diagnostics that explain "it feels off"** (⋯ → Diagnostics, every emulator): the
+  screen's refresh rate and whether the game runs one frame per refresh or paced by the
+  clock, how many refreshes were missed, and run-ahead's cost per frame. A 120/144 Hz
+  monitor, a throttled tab or a busy page shows up there.
+
 ## 1.14.6 (2026-10-27)
 
 - **Crowd Control+: Direct is the default way to connect, with no key.** Crowd Control+

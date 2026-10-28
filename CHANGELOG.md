@@ -5,6 +5,38 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.10 (2026-10-27)
+
+- **Check for updates on the website** (computers): a button at the top right, like the
+  Windows app's. It asks the server for the newest version on a click, a few seconds
+  after opening, and every hour; a newer one turns it green ("Update v…") and a click
+  reloads into it. Phones and tablets don't get the button: the start screen says, under
+  Resume, that closing the app fully and opening it again brings the latest version,
+  and shows which version this is.
+
+## 1.14.9 (2026-10-27)
+
+- **A seed loaded from a file tells the tracker what it was rolled with.** Load ROM used
+  to drop the seed's flags, and Hutch's map then assumed bosses were shuffled (his
+  default), so Eastern Palace went green with no bow (HydeOut). Now the ROM itself is
+  read: boss shuffle from the Eastern Palace boss room's sprite list (the Armos Knights
+  there means vanilla bosses), swordless and the GT crystal count from the randomizer's
+  flag bytes. With vanilla bosses the map wants the bow for EP (yellow without it), as
+  it already did for seeds rolled here. Mudora 2.0 starts a new game set to match the
+  seed too (boss shuffle, swordless, GT crystals, plus the World and Dungeon items
+  selectors), as it does for seeds rolled here. Not an alttpr ROM: as before.
+
+## 1.14.8 (2026-10-27)
+
+- **Pop out the crystals and pendants on their own** (Desktop layout, Hutch's tracker:
+  ⋯ → Pop out → **Prizes**, for HydeOut). A window with just the ten dungeons' prizes in
+  a row, EP to TR, each labelled: no keys, chests or bosses. It scales to whatever size
+  the window is dragged to (crisp pixels), the obtained ones light up, and it works like
+  the dungeon boxes: click for the next prize, right-click for got it / not yet. The
+  dungeons stay in the main window (or their own) and always agree with it. It can also
+  be added to any Items / Dungeons window from that window's options, and takes the
+  same plain or green-screen backgrounds for capture.
+
 ## 1.14.7 (2026-10-27)
 
 - **Zelda 1, Guardian Legend and the FF NES pages: run-ahead, on by default with a

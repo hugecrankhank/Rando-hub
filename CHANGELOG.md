@@ -5,6 +5,21 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.19 (2026-10-28)
+
+- **Go-mode alert.** The moment the tracker says Link can go beat Ganon, "GO MODE!" flashes
+  over the game and a pulsing green frame goes tight around the picture itself (not the
+  black bars beside it) and stays there, so a stream capture of the game shows it, until the tracker says
+  otherwise. Mudora 2.0: Muffins' logic has the Ganon check available. Hutch's tracker: his
+  GO tile set to green. ⚙ Settings → "Go-mode alert" turns it off, and its Test button
+  shows it for eight seconds.
+
+## 1.14.18 (2026-10-28)
+
+- **The gift alert no longer hides under the reveal / reroll banner.** While that banner is
+  up at the top of the game, the gift card (over the hearts) sits just below it instead;
+  it moves down if the banner appears while it's showing, and back up when it goes.
+
 ## 1.14.17 (2026-10-27)
 
 - **Crowd Control+: the local signer says what it sees.** The black window now logs when

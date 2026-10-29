@@ -324,6 +324,8 @@ const effectNames = {
   blood_drip: 'Blood drip', spider_web: 'Spiderwebs', monster_mash: 'Monster mash (enemies → bats / mummies)',
   follower_random: 'Random follower (stays)', reveal_item: 'Reveal a go-mode item', lights_on: 'Lights on!', lights_out: 'Lights out!', spooky_monster: 'Spooky monster', haunting: 'Haunting! (3 spooky monsters)', trick_or_treat: 'Trick or treat!', spooky_sprite: 'Spooky sprite',
   boss_ganon: 'Boss detour: Ganon', boss_aga: 'Boss detour: Agahnim', boss_random: 'Boss detour: random boss', detour_rescue: 'Rescue Link from a boss detour',
+  // Zelda 1 (z1r/js/crowd.js): a boss appears on the current screen, overworld included; boss_random there too
+  boss_aquamentus: 'Boss: Aquamentus', boss_dodongo: 'Boss: Dodongo', boss_manhandla: 'Boss: Manhandla', boss_gleeok: 'Boss: Gleeok', boss_digdogger: 'Boss: Digdogger', boss_gohma: 'Boss: Gohma', boss_patra: 'Boss: Patra', boss_moldorm: 'Boss: Moldorm',
 };
 // Effects that can hurt a run for good: the panel asks before one goes on a gift.
 const effectWarnings = {
@@ -1022,6 +1024,9 @@ async function startTikTok(current = () => true) {
       } else if (/plan|api key|apikey|unauthori[sz]ed|forbidden|\b40[123]\b/i.test(msg)) {
         text = 'Sign server refused, retrying';
         log(`the sign server refused the connection (${msg}). ${key ? 'Check "signApiKey" on the panel.' : 'Paste a free Euler Stream key on the panel, or switch to TikFinity meanwhile.'} Retrying in ${wait / 1000}s.`);
+      } else if (/room ?id/i.test(msg)) {
+        text = 'Direct can\u2019t find the LIVE, retrying';
+        log(`TikTok wouldn't say which room @${cfg.username} is live in (${msg}). Its page has changed, or it turns away lookups from this PC. A free Euler Stream key asks their server for it instead (paste it on the panel); the Local signer and TikFinity don't need it. Retrying in ${wait / 1000}s.`);
       } else {
         log(`couldn't join @${cfg.username}'s LIVE (${msg}). Are you live? Retrying in ${wait / 1000}s.`);
       }

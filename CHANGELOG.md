@@ -5,6 +5,30 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.26 (2026-10-28)
+
+- **Dungeon card: where, and the boss.** ⚙ Settings → Dungeon card now has three choices:
+  when (Off / On entry / While inside), where (over the game, or beside the trackers — a
+  strip at the top of the tracker column under the items, with the maps below it), and the
+  boss (shown; hidden until seen — a ? until Link has been in that dungeon's boss room this
+  seed, so boss shuffle isn't spoiled; or no boss at all). Hidden-until-seen is the default.
+- **Boss detour: the boss is always there.** Gumby's Skull Woods detour landed in an empty
+  arena. The game keeps a "sprites that died here" word per room for the last four rooms,
+  and Mothula, Helmasaur, Blind and Ganon obey it; it's cleared before the warp now. And if
+  there's still no boss two seconds after landing, the detour spawns the one the ROM lists
+  for that room itself (boss shuffle included) — Blind with his "maiden revealed" flag set
+  so he fights without her.
+
+## 1.14.25 (2026-10-28)
+
+- **Dungeon card on entry (HydeOut).** When Link walks into a dungeon, a card slides down
+  over the top-left of the game for eight seconds: the dungeon's name, its boss (ticked
+  once beaten), a chest for every check (open ones found) with how many are left, small
+  keys in hand / total, big key, map, compass and the prize. It uses whichever tracker is
+  up (Hutch's counts, or Muffins' logic under Mudora 2.0) and sits on the game picture so a
+  stream capture of the game has it. ⚙ Settings → "Dungeon card": Off / On entry (8 s) /
+  While inside (stays up, counts live), with a Test button.
+
 ## 1.14.24 (2026-10-28)
 
 - **Crowd Control+: the local signer finds TikTok's new live feed.** TikTok's LIVE page

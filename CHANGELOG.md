@@ -5,6 +5,17 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.60 (2026-10-30)
+
+- Super Mario RPG: **bosses are tracked on their own.** Every boss fight is its own battle pack, so when a fight with one ends with the party standing, that boss is beaten, and the seed's spoiler says which spot it sat in, so that spot is ticked (a tap still works for anything the game can't tell). A seed with no spoiler lists the beaten bosses by name instead.
+
+## 1.14.59 (2026-10-30)
+
+- **Super Mario RPG** (`smrpg/`, in the Game row and every games menu): roll [Open World Randomizer](https://randomizer.smrpgspeedruns.com/) seeds from your own Super Mario RPG (USA) ROM, play them here, and track them, all in one page.
+  - The generator is the randomizer itself (its Python, MIT, unchanged), run in your browser with Pyodide like FF6 Worlds Collide; a seed takes a few seconds and nothing is uploaded. The site's presets (Casual to Expert, Quick, the 2021 Fall Async Tournament and Standard Bingo sets), its whole flag list to tick through with the site's descriptions, or any pasted flag string; open world or linear mode; the site's seed rules and file-select hash. Download the ROM or the spoiler, or play straight away.
+  - The tracker reads the game: Star Pieces, the 19 key items, the party with levels and HP, coins and Frog Coins. Bosses are ticked by hand. The spoiler (where the Star Pieces, bosses and key items are) sits behind a Reveal switch, off by default.
+  - The emulator now exposes the SA-1 chip's I-RAM to trackers (the party and the current area live there); the Snes9x core was rebuilt from the same source.
+
 ## 1.14.58 (2026-10-30)
 
 - Crowd effects **Home** and **Jail** (from Kuba's Ocarina of Time stream), Zelda 3 and Zelda 1:

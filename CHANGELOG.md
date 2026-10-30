@@ -5,6 +5,25 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.58 (2026-10-30)
+
+- Crowd effects **Home** and **Jail** (from Kuba's Ocarina of Time stream), Zelda 3 and Zelda 1:
+  - **Home**: Zelda 3, the flute bird drops Link at his front door. It only flies outside in the Light World, so anywhere else it comes for him the moment he's back out there. Zelda 1: back to the start screen, from anywhere.
+  - **Jail** (20 s): iron bars slam down around Link where he stands; he can't walk (or dash), but the sword, items and shield still work.
+- Zelda 1: effects and warps wait half a second after a screen change, so a warp sent as Link walks into a level no longer leaves the next screen drawn with the level's tiles.
+
+## 1.14.57 (2026-10-30)
+
+- Zelda 3: **Fog & rain: outdoors only** in ⚙ Settings (on by default): no fog or rain inside houses, caves or dungeons. The crowd effects follow it too. Turn it off to have them everywhere.
+
+## 1.14.56 (2026-10-30)
+
+- Zelda 3: **🌧️ Rain**, the storm from the night of the escape: slanting rain moving with the camera, a darker world and a soft flash of lightning now and then outdoors (the hearts and items stay clear). A switch in ⚙ Settings next to 🌫️ Fog, and a crowd effect, **Rain** (45 s; also one of Trick or treat's tricks). Not where the game already rains (the escape night, Misery Mire).
+
+## 1.14.55 (2026-10-30)
+
+- Zelda 3: **🌫️ Fog**, mist like the Lost Woods' drifting over the whole game and moving with the camera (the hearts and items stay clear). A switch in ⚙ Settings next to 🎃 Halloween decorations, and a crowd effect, **Fog** (45 s; also one of Trick or treat's tricks). Not in the Lost Woods or Skull Woods, which have their own.
+
 ## 1.14.54 (2026-10-30)
 
 - Crowd Control+: the Zelda 1 warps (Whirlwind: Level 1–8, Warp: Level 9 entrance / inside Level 9) are in its effect list even before the game connects.

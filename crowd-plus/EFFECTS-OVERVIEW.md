@@ -64,6 +64,8 @@ even unmapped ones, with a one-click "add".
 | `warp_dungeon` | Drop into a random dungeon's entrance (keeps the current dungeon's keys) | | | |
 | `warp_flute` | Flute bird to a random flute spot (Light World outdoors; otherwise a random dungeon) | | | |
 | `warp_random` | Flute spot or dungeon, 50/50 | | | |
+| `home` | The flute bird takes Link to his front door (waits until he's outside in the Light World). Zelda 1: back to the start screen | | | |
+| `jail` | Link is locked behind bars where he stands for 20 s: no walking or dashing, sword and items still work. Zelda 1 too | | | |
 | `insta_kill` | Instant death; the cape and Cane of Byrna don't block it (a bottled fairy still saves you) | | | |
 | `shield_steal` | Shield stolen: gone until Link finds another (like a Pikit eating it) | | `shield_off` | Shield gone, 30 s: the same shield comes back at the end (a better one found meanwhile is kept) |
 | `shield_down` / `shield_up` | Shield one step worse / better (Fighter's, Fire, Mirror); down stops at the Fighter's Shield | | `sword_off` | Sword gone, 30 s: the same sword comes back (one found meanwhile counts) |
@@ -107,6 +109,8 @@ speed ones, so they work on any seed):
 | id | effect |
 |---|---|
 | `spooky_night` | Every colour on screen but Link's turned purple and orange, 45 s |
+| `fog` | Mist like the Lost Woods' drifts over the whole game, 45 s |
+| `rain` | The escape night's storm: slanting rain, a darker world, lightning now and then, 45 s |
 | `ghost_link` / `pumpkin_link` | Pale ghostly Link / orange Link, 60 s |
 | `haunted_lights` | Screen dims and flickers, a lightning flash now and then (at most one every ~2 s), 20 s |
 | `spooky_monster` | A Poe, Keese, Gibdo, Stalfos, Stalfos Knight, Raven or Vulture near Link (flying ones outdoors only; a random enemy if none fits) |

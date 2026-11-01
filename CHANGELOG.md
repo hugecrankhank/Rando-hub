@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.84 (2026-11-01)
+
+- **Save ROM file:** every game's ⚙ Settings (the emulator menu, next to Restart) has **💾 Save ROM file**, which saves the ROM being played as the emulator has it: a seed, a patched game, or a plain ROM. On iPhone and iPad it opens the share sheet so you can pick **Save to Files** (a download link does nothing in the home-screen app); the seed dialogs' Download ROM and Patched games' "Save the patched ROM…" work the same way now.
+- **Guardian Legend hacks get the GLR map and tracker** (TGL Secret Edition 3.3, and other hacks built on the game's own room tables). Playing one in Patched games opens it in the GLR page, the way Allhallows Eve gets its map: the labyrinth map is drawn from the hack's own ROM (all of its screens, items, bosses, corridors and key doors) and tracks live (where you are, health, chips, items, keys, corridors cleared), with the run timer. Play ROM file on the GLR page does the same with a hack's .nes.
+
 ## 1.14.82 (2026-11-01)
 
 - **Run timer for streaming on every game:** GLR, Super Metroid, Mario RPG, FF6, FF1, FF4, FF5 and Patched get the timer Zelda 1 has. ⏱ in the header has Start / Pause, Reset and **Pop out for stream**: a window with just the timer for OBS / TikTok LIVE Studio (window capture or a Browser source; add `&bg=0` for a transparent background). Each game keeps its own run, through reloads.

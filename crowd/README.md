@@ -4,9 +4,10 @@ Viewers' gifts, likes, follows and shares change your game: hearts, magic,
 rupees, bombs, arrows, inverted controls, no sword and more. The ROM is never
 changed; any seed works.
 
-It needs **Crowd Control+** on the PC you stream from, which hears your LIVE
-and sends the effects (Hank shares it directly rather than as a public
-download). In the game: ⋯ menu → **Crowd effects** → tick *TikTok effects on*.
+It needs a bridge on the PC you stream from, which hears your LIVE and sends
+the effects: **Crowd Control+** (Hank's, shared directly rather than as a
+public download) or **JinxCast** (Snack OS). In the game: ⋯ menu → **Crowd
+effects** → **Connect to** the one you run, and tick *TikTok effects on*.
 The game's menu also has a test button for every effect, no bridge needed.
 
 Not for races: this changes the game mid-run.

@@ -151,9 +151,9 @@ stream: hearts, rupees, inverted controls, ice physics, cucco attacks,
 even a brand-new seed. There's also a subathon clock and a scrolling gift
 list for OBS / TikTok LIVE Studio.
 
-Crowd control needs Crowd Control+ on your PC (shared directly by
-Hank, not a public download). In the game: ... menu -> Crowd effects
--> turn on.
+Crowd control needs a bridge on your PC: Crowd Control+ (shared
+directly by Hank, not a public download) or JinxCast (Snack OS).
+In the game: ... menu -> Crowd effects -> Connect to the one you run.
 Every effect can be tested from that menu without a bridge.
 
 

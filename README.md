@@ -112,7 +112,7 @@ to the live website instead. How it's built: [`desktop/README.md`](desktop/READM
 
 ## Patched games
 
-**Patched ▸** (next to Zelda 1 and GLR) opens [`patched/`](patched/): ROM hacks for the NES and
+**Patched games** (in the Games menu) opens [`patched/`](patched/): ROM hacks for the NES and
 SNES, played on Rando Hub's emulators (FCEUmm and Snes9x). **＋ Add a game**, pick your own
 original ROM and the hack's patch (**.ips**, **.bps**, **.ups**, or the **.zip** it came in;
 romhacking.net has thousands), name it, **Add & play**. It's patched in the browser and kept
@@ -125,6 +125,26 @@ in the library there; nothing is uploaded and no games or patches come with the 
   library, and beside the game where the trackers usually are). **📸 Use this screen as
   cover** or **🖼 Choose a picture…** to change it.
 - In-game saves, save states (F5 / F8), controllers, filters: as in the rest of the app.
+- **Zelda 3 hacks get a map** (on the Zelda 3 page too, see below). When the game running is a Link to the Past hack (Allhallows
+  Eve, Parallel Worlds, anything made with ZScream), a map appears beside it: the hack's
+  own world map (the one its pause screen shows), Light and Dark World, drawn from the ROM
+  as it runs, with Link on it as a green dot. **Follow** keeps him in view; **📍 Pin** drops
+  a pin where you tap (or **⌖ Pin at Link**) with a note, kept for that game; tap a pin to
+  read or remove it. Pinch, scroll or double-tap to zoom. Nothing about the hack is known in
+  advance, so there are no item spots: it's a map to find your way and mark things on.
+
+## Playing a Zelda 3 hack on the hub
+
+**Load ROM…** takes a Link to the Past hack too (Allhallows Eve, Parallel Worlds, anything
+made with ZScream). Mudora's map is the wrong one for a new world, so a **🗺 Hack map**
+button appears instead (bottom right; the top right on phones): the hack's own world map,
+Light and Dark World, drawn from its ROM, with Link as a green dot (**Follow** keeps him in
+view), its **Dungeons** too (the game's own dungeon maps from the ROM: a floor at a time, the rooms
+you've seen, all of them once you have the map, the boss with the compass, or **All rooms**;
+Follow switches to Link's dungeon and floor), and **📍 Pin** to mark spots with a note, kept per hack. **⧉ Pop out** puts the map in
+a window of its own for a stream capture (`hackmap.html`). Crowd Control works on a hack as
+far as the hack keeps the game's memory layout, which ZScream hacks do; the item tracker and
+the dungeon map are vanilla's and won't match.
 
 ## Quick start
 
@@ -189,9 +209,10 @@ bosses add time) and a **scrolling gift list** for OBS / TikTok LIVE Studio. Wit
 between Zelda 3, Zelda 1, The Guardian Legend and FF6 Worlds Collide. The ROM is
 never changed; any seed works.
 
-Crowd control runs through **Crowd Control+**, Hank's gift bridge, control panel
-and stream overlays, on the PC you stream from. It isn't a public download: Hank
-shares it directly. In Rando Hub, **⋯ → Crowd effects** connects to it.
+Crowd control runs through a bridge on the PC you stream from: **Crowd Control+**
+(Hank's gift bridge, control panel and stream overlays) or **JinxCast** (Snack OS).
+Crowd Control+ isn't a public download: Hank shares it directly. In Rando Hub,
+**⋯ → Crowd effects** connects to whichever one is running on the same PC.
 The effects themselves are listed in [`crowd/README.md`](crowd/README.md).
 
 ## Downloads and versions
@@ -439,11 +460,13 @@ work without touching Hutch's code:
 
 ## Other games: Zelda 1, The Guardian Legend and Final Fantasy I, IV, V and VI
 
-The **Game** row at the top of the Randomizer bar (and **Zelda 1 ▸** / **GLR ▸** / **FF6 ▸** /
-**FF1·4·5 ▾** in the header) switches games. **Games shown ▾** in that row picks which games
-appear anywhere (Game row, headers, menus, the reroll list): Zelda 3 and Zelda 1 to start,
-tick the others you play. Each is its own app inside the hub, with its own emulator,
-seed generator, tracker and saves, and buttons back to the others.
+**Games ▾** in the header (a 🎮 on phones; every page has it) switches games: the games
+you've ticked, the rest under *Add a game*, and **Manage games…**, which picks which games
+appear anywhere (Game row, menus, the reroll list; Zelda 3 and Zelda 1 to start) and can
+**Offload** a game you're done with: its stored ROM and seed are cleared to free space,
+its saves stay, and it's back once you add it again and pick the ROM. The **Game** row at
+the top of the Randomizer bar has the same links and switches. Each game is its own app
+inside the hub, with its own emulator, seed generator, tracker and saves.
 
 - **Zelda 1** (`z1r/`):
   seeds made by [ZORA](https://github.com/tetraly/zora) from your own Legend of Zelda
@@ -888,7 +911,7 @@ AlttpBridge.peek(0x7EF340, 32)   // dump inventory bytes ($7EF340+)
 - **Changing ROMs reloads the page.** Your game is stashed first, so nothing is lost.
 - **Mudora 2.0 doesn't follow door shuffle or overworld shuffle** (neither do the other
   trackers); its logic is Muffins', so a logic question goes to him.
-- **Crowd control needs a PC** running Crowd Control+. It changes the game mid-run, so it's not for races.
+- **Crowd control needs a PC** running a crowd control bridge (Crowd Control+ or JinxCast). It changes the game mid-run, so it's not for races.
 - Saves live in the browser's storage on the site you play from (the website and a
   zip copy are separate). On iPhone/iPad, install it to the Home Screen to keep them safe.
 

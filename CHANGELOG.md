@@ -5,6 +5,80 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.79 (2026-10-31)
+
+- **Guardian Legend fixes:**
+  - **Corridors 17–21 tick themselves when cleared.** The tracker read only the first two bytes of the game's cleared-corridor flags (corridors 1–16); the game keeps 17–21 in the third ($04AB), as its own code works it out.
+  - **New seed rolls a new seed.** The dialog kept the last seed number, so New seed → Generate made the same seed again (same corridor rewards, same keys) until 🎲 or a reload. It now starts with a fresh number every time; type one over it to replay a seed. (The randomizer itself was fine: across 200 seeds corridor 1 gave all seven keys and over ten different first rewards.)
+
+## 1.14.78 (2026-10-31)
+
+- **Fixed: Link's dot on Allhallows Eve's map was in the wrong place.** The hack draws its whole world at half scale in the middle of its map (the parchment), where the original game fills the map edge to edge. Measured against the game's own map screen at several spots, a world position there is world ÷ 16 + 128, not world ÷ 8; the dot now uses that whenever a map's drawing sits in the middle like this, and lands where the game's own marker does.
+
+## 1.14.77 (2026-10-31)
+
+- **Hack map on phones: the controls no longer cover the map.** Dungeons, Pin, Follow and ⟲ sit in a slim row under the map instead of floating over it.
+
+## 1.14.76 (2026-10-31)
+
+- **Zelda 3 hacks in the tracker:**
+  - **Item pictures** were cut from the running game's pause menu, and a hack lays its menu out its own way (Allhallows Eve's came out jumbled). For a hack they're now cut from the plain game: the base ROM kept for rolling seeds (Randomizer bar → Base ROM…).
+  - **Keys** shows the hack's own dungeons instead of the original game's (Allhallows Eve: six), from its ROM: map, compass, big key, small keys held, and how much of each Link has seen. Tap one to open its map.
+  - **⟲** on the map (top right, like Mudora's) re-centers and fits it.
+  - An empty dungeon floor says why (no rooms seen yet; All rooms shows them).
+
+## 1.14.75 (2026-10-31)
+
+- **Hack map: one set of buttons.** On a phone the tracker's own **Light World / Dark World** tabs now show the hack's maps (Items / Keys stay the tracker's), and one button where − / + sit swaps those tabs between the hack map (**Tracker ⇄**) and the tracker's map (**🗺 Map ⇄**). The map's extra rows are gone: Dungeons, Pin and Follow sit in a small bar in the map's corner, and Follow moves the tab along when Link changes worlds. On a computer it's one row too (Pop out and Tracker ⇄ joined the map's own row).
+
+## 1.14.74 (2026-10-31)
+
+- **Hack map: the real pictures, in the tracker's place.** Allhallows Eve keeps its world maps somewhere else than the original game (its own map loader, hooked in at $00:E399 and $00:8E54, reads each world's tiles and tilemap from banks $36 / $37); the map now follows the hack's loader, so Light World ("Land of Allhallow") and Dark World ("Land of Shadows") show as the game shows them instead of noise, cropped to the drawn part. On the Zelda 3 page the map takes the tracker's place by itself when such a hack is loaded, at the tracker's size; **Tracker ⇄** swaps back, the 🗺 button swaps to the map again. With the tracker off it opens over the game as before.
+
+## 1.14.73 (2026-10-31)
+
+- **Fixed: Load ROM… in the 🎮 menu did nothing on iPhone.** iOS only opens a file picker from a tap on the page itself, and a choice in a drop-down list doesn't count. The Zelda 3 page's Games menu is now a menu of buttons, and Load ROM… in it opens the picker directly.
+
+## 1.14.72 (2026-10-31)
+
+- **Hack map: the dungeon maps.** A **Dungeons** tab beside Light and Dark World (the hub's 🗺 Hack map, its pop-out window, and Patched games): the hack's own dungeon maps, read from its ROM where ZScream keeps them, a floor at a time (B2…3F buttons, a dungeon picker). As the game shows them: the rooms you've seen, every room once you have that dungeon's map, the boss's room (☠) with its compass; **All rooms** shows everything. Link is on it in his room, and **Follow** switches to his dungeon and floor as he goes. Pins work there too.
+
+## 1.14.71 (2026-10-31)
+
+- **Crowd Control+ is now shared privately.** It's no longer a download on the Releases page or in this repository; Hank sends it directly. The game side is unchanged: ⋯ menu → Crowd effects still connects to Crowd Control+ or JinxCast running on your PC, and every effect can still be tested from that menu. The JinxCast connector moved with it.
+
+## 1.14.70 (2026-10-31)
+
+- **Crowd effects: JinxCast.** Rando Hub's crowd effects can now come from **JinxCast** (Snack OS) as well as Crowd Control+: ⋯ menu → Crowd effects → **Connect to: JinxCast** (the **Crowd Control+** button switches back). Snack OS does the TikTok and Twitch side; Rando Hub still runs every effect itself, in ALTTPR and Z1R, so any seed works. Each effect Snack OS sends gets an answer back: queued, landed, or refused with the reason ("No empty bottle"). Crowd Control+ works exactly as before. Setup: [crowd/README.md](crowd/README.md#jinxcast-snack-os).
+- **The Snack OS side** is in the new `jinxcast/` folder: the connector Rando Hub's pages dial in to, and all 114 effects (ALTTPR and Z1R) as a JinxCast catalogue.
+- **Fix (Zelda 3):** an app effect that couldn't happen (seed reroll off, no MSU pack, no spoiler for Reveal) still showed a gift card and told the bridge it had landed. It now just says why in the feed, as Zelda 1 already did.
+
+## 1.14.69 (2026-10-31)
+
+- **Phones: Load ROM… in the 🎮 menu** on the Zelda 3 page, first entry ("Load ROM… (seed or vanilla)"): a rolled seed or the plain game, no seed to generate. It was only behind ⚙ on a phone (the header's Load ROM… button folds away there).
+
+## 1.14.68 (2026-10-31)
+
+- **Zelda 3 page: the hack map.** Load a Link to the Past hack with **Load ROM…** (Allhallows Eve, say) and a **🗺 Hack map** button appears (bottom right; top right on phones): the same map Patched games got in 1.14.67, the hack's own world map from its ROM with Link on it and your pins, in a panel over the game. **⧉ Pop out** puts it in a window of its own for a stream capture. Vanilla and randomizer seeds keep Mudora's map and show nothing new; a hack is told by its world map not being the original's.
+
+## 1.14.67 (2026-10-31)
+
+- **Patched games: a map for Zelda 3 hacks.** When the game running is a Link to the Past hack (Allhallows Eve, Parallel Worlds, anything built with ZScream), a map appears beside it: the hack's own world map, the one its pause screen shows, Light and Dark World, drawn from the ROM as it runs (nothing of it ships with the hub), with Link on it. **Follow** keeps him in view; **📍 Pin** drops a pin where you tap (or **⌖ Pin at Link**) with a note, kept for that game; tap a pin to read or remove it. Pinch, scroll or double-tap to zoom.
+- **Patched games** has the Games ▾ menu on phones too (one menu instead of the row of links), and its links follow Manage games.
+
+## 1.14.66 (2026-10-30)
+
+- **Games ▾ on the Zelda 3 page too.** The header's Zelda 1 ▸ / GLR ▸ / FF6 ▸ / FF1·4·5 ▾ / Patched ▸ buttons are now one **Games ▾** menu (a 🎮 on phones, next to 🎲), the same as the other game pages: the games you've ticked, the rest under *Add a game*. On the narrowest phones the header drops the "RANDO HUB" text to make room.
+- **Manage games… / Offload.** At the bottom of every Games menu: tick the games you play (what "Games shown" did), and **Offload** a game you're done with: its stored ROM and seed are cleared to free space (the dialog shows what each game holds and what the site uses in all); its saves stay, and it's back once you add it again and pick the ROM.
+
+## 1.14.65 (2026-10-30)
+
+- **Super Mario RPG: a map.** New Map tab in the tracker: the world laid out as the game's map screen lays it out, every place a marker with its count of spots done (boss fights and key-item spots): grey, gold (some) or green (all). Tap a place for its spots and to tick one by hand; a key-item spot ticks itself once the seed says what's there and Mario has it. With Reveal on, the spots say who's really there, ★ where a Star Piece is and which key item sits where. Pinch, scroll or double-tap to zoom (the names appear as you zoom in), drag to pan.
+
+## 1.14.64 (2026-10-30)
+
+- **Super Metroid: a map.** New Map tab in the tracker: the game's own area maps (Crateria, Brinstar, Norfair, Wrecked Ship, Maridia, Tourian) with a pin on every item spot, exactly where the item is, ticked as the game hands the item out, and Samus on it. Pinch, scroll or double-tap to zoom, drag to pan; tap a pin for its name (and its item with Reveal on) and to mark it by hand. **Follow** switches to the area Samus is in and keeps her in view. A diamond marks a spot that comes right after a shuffled boss. The picture is drawn from your ROM when the page runs (the pause-screen map tiles), so nothing of it ships with the hub; the pins are worked out from the room headers (`tools/sm-map-pins.py`).
+
 ## 1.14.63 (2026-10-30)
 
 - **Zelda 3 crowd effects: Master Sword lock / unlock** (`master_lock`, `master_unlock`, permanent). The lock puts the Master Sword in Link's hands and keeps it there: swords he finds in the game are swallowed (the pickup is spent, the sword stays the Master Sword), and only a crowd **Sword upgrade** moves it up, the lock moving with it. The timed sword effects (Sword gone, Sword downgrade, Master Sword) still lend it out on top and give the locked level back. Sword stolen takes the lock with the sword; unlock lets go. Kept in this browser with the ROM, like the sword loans, so a reload keeps it. Crowd Control+ shows a warning before it goes on a gift.

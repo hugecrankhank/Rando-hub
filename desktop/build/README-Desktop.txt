@@ -60,7 +60,7 @@ TROUBLESHOOTING
   - Controller not detected: press a button on it once with the game window
     focused (the app only sees a pad after a button press).
   - Crowd effects (TikTok gifts) need a bridge running on this PC
-    (Crowd Control+); Crowd effects in the app connects to it.
+    (Crowd Control+ or JinxCast); Crowd effects in the app connects to it.
 
 LICENSES
   Rando Hub: LICENSE.md and NOTICE.md (and Credits inside the app).

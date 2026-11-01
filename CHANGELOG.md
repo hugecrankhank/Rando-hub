@@ -5,6 +5,15 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.86 (2026-11-01)
+
+- **Crowd effects for The Guardian Legend** (GLR, and hacks like TGL Secret Edition), through Crowd Control+ or JinxCast as in Zelda 1 and 3: ⚙ Settings → Crowd effects, with gift alerts, the feed, the subathon clock and a test button for every effect. 39 effects, using Zelda 3's effect ids so the same gift mapping works: hearts are health (1 heart = 8, an Energy Tank's worth), rupees and magic are power chips, the sword is Attack, the shield is Defense, an item is a sub-weapon.
+  - Health: full, +8, −16 (never kills), down to 8, instant death, one-hit KO, ±1 Energy Tank. Chips: +50, −50, to max, small refill, lose all, locked for a while.
+  - Inverted D-pad, no main gun, no sub-weapon, A/B swapped, freeze, jail (bars around the Guardian); mirror, upside down, wobble, tiny screen, retro CRT, speed up, slow motion.
+  - Attack and Defense up; Attack down or to minimum for a while; Defense down one step; either stolen (to minimum, stays); a sub-weapon gone for 30 s; a new GLR seed (off unless allowed).
+  - The Guardian Legend's emulator gained the speed and picture tricks the other games' emulators have.
+- The crowd effect files (crowd/effects.js, z1r/js/crowd.js, glr/js/crowd.js, jail.js) are synced from their master copy kept with Crowd Control+.
+
 ## 1.14.84 (2026-11-01)
 
 - **Save ROM file:** every game's ⚙ Settings (the emulator menu, next to Restart) has **💾 Save ROM file**, which saves the ROM being played as the emulator has it: a seed, a patched game, or a plain ROM. On iPhone and iPad it opens the share sheet so you can pick **Save to Files** (a download link does nothing in the home-screen app); the seed dialogs' Download ROM and Patched games' "Save the patched ROM…" work the same way now.

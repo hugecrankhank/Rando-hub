@@ -5,6 +5,13 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.82 (2026-11-01)
+
+- **Run timer for streaming on every game:** GLR, Super Metroid, Mario RPG, FF6, FF1, FF4, FF5 and Patched get the timer Zelda 1 has. ⏱ in the header has Start / Pause, Reset and **Pop out for stream**: a window with just the timer for OBS / TikTok LIVE Studio (window capture or a Browser source; add `&bg=0` for a transparent background). Each game keeps its own run, through reloads.
+  - **Auto** (on by default) starts it when a game is started from the title screen, only from 0:00, and stops it at the end in GLR (corridor 21 cleared), Super Metroid (Samus escapes Zebes) and FF4 Free Enterprise (the game is won). The others stop with ⏸.
+- **Phones: the timer is in the header,** next to ⚙ (just the time; the hour shows once a run passes one), on Zelda 1, GLR, Super Metroid, Mario RPG and FF6. GLR's 🎲 Reroll moves under New seed on phones to make room; the FF pages have ⏱ Timer in their Games list.
+- **iPhone: no more Now Playing card after closing the app.** The app now lets go of the audio session when it goes to the background or is closed, and nothing restarts the sound while it's hidden, so the lock screen doesn't keep showing it as playing. (If an old card is still there after updating, tap pause on it once.)
+
 ## 1.14.79 (2026-10-31)
 
 - **Guardian Legend fixes:**

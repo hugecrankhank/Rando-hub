@@ -5,6 +5,10 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.93 (2026-11-02)
+
+- **iPhone / iPad: the game no longer comes back black after closing and reopening the app.** iOS can free the game's graphics while the app is in the background without ever giving them back, so the picture stayed black (and tracker maps could come back blank). Coming back now redraws the picture, and if the graphics are gone, the emulator starts them again on a fresh canvas within a second; trackers are told to redraw too. Every game's emulator. (Settings → Diagnostics → Graphics counts it as "rebuilt".)
+
 ## 1.14.92 (2026-11-02)
 
 - **Credits screen before every game.** While the emulator loads, every game (Zelda 3, Zelda 1, GLR, Super Metroid, Mario RPG, the FF games, Patched games) shows a title card drawn like a console screen: Rando Hub, developed by Hank (@huge_crank_hank), play tested by Heffie, HydeOut, Gumby, Kallax and BulldogTimmy, with a loading bar. About 4 seconds, most of it while the game is loading anyway.

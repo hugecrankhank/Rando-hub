@@ -5,6 +5,10 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.99 (2026-11-04)
+
+- **FF6 Worlds Collide: the newest version** (Kallax). New seed now has a "Worlds Collide version" choice: **1.4.4 dev** (the default: the newest, with its latest flags like level cap -lc, require characters -rc, random starting levels -stlr, limited shops -sli, expensive restoratives -seri, no free heals -nfh, fully random commands, "Oops All <Boss>", Max HP objectives, plus its bug fixes), or **1.4.3 stable** (the release the hub had until now) for races and older flag strings. Flag strings from ff6worldscollide.com's current flag builder work again. The choice is remembered.
+
 ## 1.14.98 (2026-11-04)
 
 - **New: Metroid (NES, 1986) randomizer** (`metroid/`), Rando Hub's own. Roll a seed from your Metroid (USA) ROM, play it on the hub's NES emulator, and the tracker follows. All 38 power-up spots are shuffled (Bombs, High Jump, Screw Attack, Varia, the beams, 8 Energy Tanks, the missile packs); "Start with Maru Mari" (on by default) puts something else at its spot; the logic is careful (no bomb jumps or tricks) and every seed is checked to be finishable. Spoiler with the spheres. Tracker: gear, tanks, missiles, energy, the Kraid and Ridley statues, "Way out", and every spot by area, ticked by the game itself and coloured by what Samus can reach now; Reveal shows what's where. Map: the game's own world map, one area per tab, with pins, elevators and Samus on it. Play ROM file takes seeds from other Metroid randomizers too. Add it from the Games menu ("Add a game").

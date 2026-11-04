@@ -4,7 +4,8 @@
  * played here on the hub's Snes9x.
  *
  * Memory (WRAM, from Career Day's own source): key items are one bit each at
- * $7E:0A4A + id/8 (bit id%8; its reward_manager.asm sets them); jobs unlocked
+ * $7E:0A4A + id/8, bit $80 >> id%8 (its reward_manager.asm sets them through the
+ * game's bit table at $C0:C9B9, the one the Key items menu reads); jobs unlocked
  * are bits at $7E:0840-$0842 (Knight is $0840 bit $80, then down the byte);
  * each reward check sets (or, for a few, clears) an event flag, listed in its
  * tables/arch_event.csv: event rewards (crystals, espers, songs, NPCs) and
@@ -38,7 +39,10 @@
     tabs: [['items', 'Items'], ['checks', 'Checks']],
     sections: [
       { id: 'key', title: 'Key items', tab: 'items', kind: 'grid', cls: 'keys', cellCls: 'key',
-        items: KEY.map((k) => ({ name: k[1], read: (m) => !!(m.wram[0x0A4A + (k[0] >> 3)] & (1 << (k[0] & 7))) })) },
+        // bit $80 >> (id % 8): the game's own bit table ($C0:C9B9 is 80 40 20 10 08 04 02 01), checked in the game's Key
+        // items menu (Nov 2026: with the bits the other way round every key item ticked its mirror, and the Elder Branch,
+        // Bracelet and Moogle Suit, whose mirrors are empty slots, never ticked at all)
+        items: KEY.map((k) => ({ name: k[1], read: (m) => !!(m.wram[0x0A4A + (k[0] >> 3)] & (0x80 >> (k[0] & 7))) })) },
       { id: 'jobs', title: 'Jobs', tab: 'items', kind: 'grid', cls: 'espers',
         items: JOBS.map((n, i) => ({ name: n, read: (m) => !!(m.wram[0x0840 + (i >> 3)] & (0x80 >> (i & 7))) })) },
       { id: 'bosses', title: 'Key item bosses', tab: 'checks', kind: 'list',

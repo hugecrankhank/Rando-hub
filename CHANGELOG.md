@@ -5,6 +5,16 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.105 (2026-11-05)
+
+- **New game: Super Mario World** (`smw/`, in the Games menu and the Game row). Seeds are made by the [SMW Randomizer](https://github.com/authorblues/smwrandomizer) itself (authorblues + kaizoman666, v2.2, run in your browser unchanged) from your own Super Mario World (USA) ROM, then played right here on the hub's Snes9x, or downloaded. Its presets (Gnarly to Outrageous and Funky) and all 42 of its options, grouped as on its site, and share codes (`seed/preset`) to play the same seed as someone else.
+- **Tracker**: every exit on the overworld, normal and secret, ticks itself as the game marks it (the game's own event flags, read with the seed's own table, so swapped exits are right too); the four switch palaces, the seven Koopa Kids' castles and Bowser (when the ending starts); the exit count out of 96, lives and coins. Tap anything to tick it by hand. Pop-out tracker for a second screen or stream capture; the stream timer stops when Bowser falls.
+- Crash-proof autosave and Continue, the credits screen, phone and tablet layouts, as on the other games.
+- Rerolls can land on Super Mario World when it is ticked in the Game row.
+- **Super Mario World: the overworld map.** A Map tab in the tracker (and **⧉ Map** to pop it out): Dinosaur Land and the six submaps (Yoshi's Island, Vanilla Dome, Forest of Illusion, Valley of Bowser, Special Zone, Star World), drawn from the ROM being played the same way the game draws them, nothing shipped. It shows the map as your game has it: paths and levels appear as you open them (a new game shows just the start), castles crumble as you beat them, and the colours change after the Special Zone. A pin on every exit (two for a level with a secret exit), the switch palaces and Bowser's front door, ticked as the tracker ticks them (tap one to mark it by hand); Mario's dot where he is on the overworld (dimmed in a level), with Follow to switch to his submap. Each tab counts its exits done.
+- Phones: the map has its own tab in the tracker; its tabs are smaller there so more of the map shows.
+- **Re-center button on the maps.** Super Mario World's map now has the ⟲ button in its top-right corner, like Zelda 3's: one tap zooms back out and centers the whole map (or the submap you're on) after you've zoomed in or dragged it around. The other games' maps (FF6 Worlds Collide, FF1, FF4, FF5, Super Metroid, Metroid, Mario RPG) get the same button in the same place, in place of the small ⤢ in their tab bars.
+
 ## 1.14.102 (2026-11-04)
 
 - **FF6 Worlds Collide: ff6worldscollide.com** (Kallax). The page and the New seed dialog now point to the Worlds Collide website, not just its GitHub. A seed rolled there plays with **Play ROM file**: the tracker and the map follow it the same as one rolled here (they read the game itself), and the Objectives tab can now load that seed's spoiler log (.txt) to show its objectives, seed and hash (kept for Continue).

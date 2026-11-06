@@ -5,6 +5,10 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.124 (2026-11-05)
+
+- **Quad is now Rando Cross.** The four-game combo (Zelda 1, Metroid, Super Metroid, A Link to the Past) has its new name everywhere: its page, the Games menu and Game row, every game's header links, the run timer and the spoiler. Its address stays `quad/`, so bookmarks, the installed app, saves and Continue carry on as they were.
+
 ## 1.14.123 (2026-11-05)
 
 - **New game: Quad** (`quad/`, in the Games menu and the Game row): Zelda 1, Metroid, Super Metroid and A Link to the Past in one seed, Rando Hub's own. One item pool and one logic across all four (SMZ3's generator with the NES games' 55 item spots and rules in its single fill), so any game's item can be anywhere and every seed can reach all four final bosses.

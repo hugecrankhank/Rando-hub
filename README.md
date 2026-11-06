@@ -536,7 +536,7 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   instead (Mudora 2.0 by default, Mudora, Hutch), reading the Zelda half of the combo as they
   would a plain Zelda 3. A samus.link seed plays with Play ROM file. 🎨 Sprite & music picks
   Link's sprite (the Zelda 3 page's library, favourites and files, or the same sprite as there) and an
-  MSU-1 pack (SMZ3 packs play in both worlds; Quad has the same button).
+  MSU-1 pack (SMZ3 packs play in both worlds; Rando Cross has the same button).
 - **Zelda 1 + Metroid** (`zm/`): Rando Hub's own linked randomizer, nothing of anyone else's.
   Both games run in the hub's NES emulator, one at a time: Hyrule's four "take any road"
   caves are portals to Zebes, and Zebes' elevator rooms lead back (the ⇄ button). One item
@@ -551,7 +551,7 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   Metroid (USA) ROMs; both ROMs the generator writes carry the combined title (Zelda's with
   "METROID" carved under the box, Metroid's with "THE LEGEND OF ZELDA" in gold above its
   logo), and every portal plays a transition between the two worlds' frames.
-- **Quad** (`quad/`): Zelda 1, Metroid, Super Metroid and A Link to the Past in one seed,
+- **Rando Cross** (`quad/`): Zelda 1, Metroid, Super Metroid and A Link to the Past in one seed,
   Rando Hub's own. One item pool and one logic across the four: SMZ3's generator (the port
   above) with the NES games' 55 item spots and rules added to its single fill, so any game's
   item can be anywhere and every seed can reach all four final bosses. Hyrule (ALttP) is the

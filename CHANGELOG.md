@@ -5,6 +5,11 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.119 (2026-11-05)
+
+- **SMZ3: Hutch fits.** With Hutch chosen, his item grid is scaled to the column (it ran off the side on phones) and his map is compact like Mudora's: the two-row top bar is gone (Layout and zoom are fitted for you), Settings is a small ⚙ in the map's corner, and the footer is one thin row, so the maps get the room. On a phone, Items shows the grid alone and Light / Dark one world.
+- **SMZ3 and Zelda 1 + Metroid: a Zelda / Metroid theme.** A ▲ Zelda / ◉ Metroid switch (beside SMZ3's Tracker menu, at the top of Zelda 1 + Metroid's tracker) colours the menus, header, buttons and tracker in Hyrule's greens and gold or Zebes' navy and Samus's orange. One choice for both games, kept in this browser; popped-out tracker windows follow it.
+
 ## 1.14.117 (2026-11-05)
 
 - **New game: SMZ3** (`smz3/`, in the Games menu and the Game row): Super Metroid and A Link to the Past in one game, items shuffled across both. Seeds come from the [SMZ3 Randomizer](https://github.com/tewtal/SMZ3Randomizer) itself (v11.3.2, the generator behind samus.link), ported to run in your browser from your own Super Metroid (Japan, USA) and Japanese Link to the Past 1.0 ROMs: the same seed and settings make the same game as samus.link, byte for byte. Every samus.link setting (Super Metroid logic, goal, Ganon's Tower and Ganon crystals, Tourian bosses, first sword, Morph Ball, keysanity, race), share codes, spoiler, Download ROM. A samus.link seed plays with Play ROM file.

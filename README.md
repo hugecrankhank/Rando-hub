@@ -520,6 +520,31 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   exit count out of 96, lives and coins. The overworld map (Dinosaur Land and the six
   submaps, drawn from the ROM as the game has them now: paths open as you play), a pin on
   every exit and Mario on it.
+- **SMZ3** (`smz3/`): Super Metroid and A Link to the Past in one game. Seeds made by the
+  [SMZ3 Randomizer](https://github.com/tewtal/SMZ3Randomizer) (samus.link's generator, v11.3.2)
+  ported to run in your browser, from your own Super Metroid and Japanese Link to the Past 1.0
+  ROMs: the same seed and settings make the same game as samus.link (checked byte for byte).
+  Every setting samus.link has, share codes, spoiler; played on the hub's Snes9x. The tracker
+  reads both games whichever is running: items (with their pictures), bosses with their prizes,
+  all 316 locations coloured by SMZ3's own logic, and a map (the Light and Dark World, Zebes'
+  six areas drawn from the ROM) with a pin on every location; the tracker and the map each pop
+  out into a window of their own. The Zelda side can be shown by the hub's Zelda 3 trackers
+  instead (Mudora 2.0 by default, Mudora, Hutch), reading the Zelda half of the combo as they
+  would a plain Zelda 3. A samus.link seed plays with Play ROM file.
+- **Zelda 1 + Metroid** (`zm/`): Rando Hub's own linked randomizer, nothing of anyone else's.
+  Both games run in the hub's NES emulator, one at a time: Hyrule's four "take any road"
+  caves are portals to Zebes, and Zebes' elevator rooms lead back (the ⇄ button). One item
+  pool across both worlds: Hyrule's 17 item spots and Zebes' 38 power-up spots, any of
+  which can hold either game's item, placed by one logic so every seed can be finished
+  (Ganon and Mother Brain both). A Metroid item in Hyrule looks like five rupees, a Hyrule
+  item on Zebes like a missile pack; the hub sees the pickup and hands the real item over
+  when you're next in the other world. The tracker follows both games (the one playing and
+  the one waiting), every spot coloured by the seed's logic, with item icons and a map of both
+  worlds (Hyrule drawn from your ROM, Zebes from Metroid's own map) that pops out on its own,
+  as the tracker does. From your own Zelda (USA) and
+  Metroid (USA) ROMs; both ROMs the generator writes carry the combined title (Zelda's with
+  "METROID" carved under the box, Metroid's with "THE LEGEND OF ZELDA" in gold above its
+  logo), and every portal plays a transition between the two worlds' frames.
 - **Final Fantasy Randomizer (FF1), FF4 Free Enterprise, FF5 Career Day** (`ffr/`):
   seeds are rolled on each randomizer's own site (FF1R and FE generate in your
   browser there), then played here on the hub's NES or SNES with a tracker that reads

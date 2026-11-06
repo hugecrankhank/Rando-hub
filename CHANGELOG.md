@@ -5,6 +5,18 @@ Every version is also kept as a download on the
 with the whole app, crowd control and instructions, so any version can be
 played again later.
 
+## 1.14.123 (2026-11-05)
+
+- **New game: Quad** (`quad/`, in the Games menu and the Game row): Zelda 1, Metroid, Super Metroid and A Link to the Past in one seed, Rando Hub's own. One item pool and one logic across all four (SMZ3's generator with the NES games' 55 item spots and rules in its single fill), so any game's item can be anywhere and every seed can reach all four final bosses.
+  - **Hyrule is the hub.** Two of ALttP's caves, picked at random each seed from the caves with a chest, are portals: walk in and Zelda 1 (or Metroid) takes over where you left it. Back through a "take any road" cave in Zelda 1, or ⇄ / P from anywhere. The seed dialog, spoiler and NES tracker name the portals.
+  - **Items cross systems** through SMZ3's own multiworld support: an NES item in the SNES game shows a look-alike "sent to ZELDA 1 / METROID" and the NES game gets it; an SNES item found on a NES spot arrives with "You received … from ZELDA 1".
+  - **A goal per seed:** all four final bosses, the SNES pair or the NES pair; the run timer stops there.
+  - **Tracking:** SMZ3's tracker (with Mudora 2.0, Mudora or Hutch) for the SNES games, the Zelda 1 + Metroid tracker and map for the NES ones, a SNES / NES switch that follows the game being played, pop-outs for every part. Saves, autosave and Continue cover both systems. Four ROMs from you (already here if you've used the SMZ3 and Zelda 1 + Metroid pages).
+- **Sprite & music in every game with Zelda 3 in it.** A 🎨 Sprite & music button on SMZ3, Quad and Patched games (while a Link to the Past hack or seed runs):
+  - **Link's sprite** from the Zelda 3 page's library, ★ favourites and your own files, 🎲 / 🎲★, "Same as Zelda 3" by default or the game's own Link; written into the ROM at every boot and into the running game at once.
+  - **MSU-1 music** from My packs (shared with the Zelda 3 page) or a new pack. SMZ3 packs play in both worlds (Zelda's songs 1–61 in Hyrule, Super Metroid's 101–140 on Zebes, boss songs included); a Zelda 3 pack plays in Hyrule; a randomizer seed on Patched games gets it too. A plain hack has no MSU-1 code to follow, so its music stays its own.
+- **Rewind, and fast-forward on a controller, in every game** (SNES and NES): hold ⏪ on the game bar, R on the keyboard or the controller's left stick (L3) and the game runs backwards; let go and it plays on. Fast-forward is ⏩, the ` key, and now the right stick (R3) held. Only what changes is kept (32 MB SNES, 16 MB NES); Rewind can be turned off in the ⋯ menu. A key you've mapped to a button stays that button.
+
 ## 1.14.119 (2026-11-05)
 
 - **SMZ3: Hutch fits.** With Hutch chosen, his item grid is scaled to the column (it ran off the side on phones) and his map is compact like Mudora's: the two-row top bar is gone (Layout and zoom are fitted for you), Settings is a small ⚙ in the map's corner, and the footer is one thin row, so the maps get the room. On a phone, Items shows the grid alone and Light / Dark one world.

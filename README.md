@@ -125,6 +125,10 @@ in the library there; nothing is uploaded and no games or patches come with the 
   library, and beside the game where the trackers usually are). **📸 Use this screen as
   cover** or **🖼 Choose a picture…** to change it.
 - In-game saves, save states (F5 / F8), controllers, filters: as in the rest of the app.
+- **Zelda 3 games get Sprite & music**: with a Link to the Past hack or seed running, 🎨 Sprite &
+  music (beside ◂ Library) changes Link's sprite (the Zelda 3 page's library, favourites and files,
+  "Same as Zelda 3" by default; Default Link is the hack's own) and, on randomizer seeds, plays an
+  MSU-1 pack from My packs. A plain hack has no MSU-1 support to follow, so its music stays its own.
 - **Zelda 3 hacks get a map** (on the Zelda 3 page too, see below). When the game running is a Link to the Past hack (Allhallows
   Eve, Parallel Worlds, anything made with ZScream), a map appears beside it: the hack's
   own world map (the one its pause screen shows), Light and Dark World, drawn from the ROM
@@ -530,7 +534,9 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   six areas drawn from the ROM) with a pin on every location; the tracker and the map each pop
   out into a window of their own. The Zelda side can be shown by the hub's Zelda 3 trackers
   instead (Mudora 2.0 by default, Mudora, Hutch), reading the Zelda half of the combo as they
-  would a plain Zelda 3. A samus.link seed plays with Play ROM file.
+  would a plain Zelda 3. A samus.link seed plays with Play ROM file. 🎨 Sprite & music picks
+  Link's sprite (the Zelda 3 page's library, favourites and files, or the same sprite as there) and an
+  MSU-1 pack (SMZ3 packs play in both worlds; Quad has the same button).
 - **Zelda 1 + Metroid** (`zm/`): Rando Hub's own linked randomizer, nothing of anyone else's.
   Both games run in the hub's NES emulator, one at a time: Hyrule's four "take any road"
   caves are portals to Zebes, and Zebes' elevator rooms lead back (the ⇄ button). One item
@@ -545,6 +551,22 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   Metroid (USA) ROMs; both ROMs the generator writes carry the combined title (Zelda's with
   "METROID" carved under the box, Metroid's with "THE LEGEND OF ZELDA" in gold above its
   logo), and every portal plays a transition between the two worlds' frames.
+- **Quad** (`quad/`): Zelda 1, Metroid, Super Metroid and A Link to the Past in one seed,
+  Rando Hub's own. One item pool and one logic across the four: SMZ3's generator (the port
+  above) with the NES games' 55 item spots and rules added to its single fill, so any game's
+  item can be anywhere and every seed can reach all four final bosses. Hyrule (ALttP) is the
+  hub: two of its caves, picked at random each seed from the caves with a chest, are portals,
+  one to Zelda 1 and one to Metroid (walk in and the NES game takes over, where you left it);
+  back from Zelda 1 by a "take any road" cave, or ⇄ / P anywhere. Super Metroid and ALttP stay
+  linked by SMZ3's own portals. Items cross between the systems through SMZ3's multiworld
+  support: an NES item in the SNES game shows as a look-alike "sent to ZELDA 1 / METROID" and
+  is handed to the NES game; an SNES item on a NES spot is written to the combo's receive
+  queue and the ROM gives it ("You received … from ZELDA 1"). The goal is picked per seed
+  (all four, the SNES pair, or the NES pair) and stops the run timer. Tracking: SMZ3's tracker
+  (with the Zelda 3 tracker choice) for the SNES games and the Zelda 1 + Metroid tracker and
+  map for the NES ones, a switch between them that follows the game being played, and every
+  part pops out on its own. Four ROMs from you: the two SMZ3 takes and the two Zelda 1 +
+  Metroid takes (already in the browser if you've used those pages).
 - **Final Fantasy Randomizer (FF1), FF4 Free Enterprise, FF5 Career Day** (`ffr/`):
   seeds are rolled on each randomizer's own site (FF1R and FE generate in your
   browser there), then played here on the hub's NES or SNES with a tracker that reads

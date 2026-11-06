@@ -71,9 +71,14 @@
     const label = entry.meta && entry.meta.seed ? 'Seed ' + entry.meta.seed : entry.name;
     SMZ3Tracker.setSession(id, label, entry.meta || {});
     document.title = describe(entry) + ' - SMZ3 Randomizer';
-    boot(new File([entry.rom], 'smz3-' + id + '.sfc'), id, !!(opts && opts.resume));
+    boot(new File([await withMedia(entry.rom)], 'smz3-' + id + '.sfc'), id, !!(opts && opts.resume));
   }
 
+  // Link's sprite and the MSU-1 pack (../z3-media.js) go into the ROM that boots
+  async function withMedia(rom) {
+    for (let i = 0; i < 60 && !window.RHZ3Media; i++) await new Promise((r) => setTimeout(r, 50));
+    try { return window.RHZ3Media ? await RHZ3Media.prepare(rom) : rom; } catch (e) { console.warn('[combo] media', e); return rom; }
+  }
   function boot(file, id, resume) {
     $('placeholder').remove();
     document.body.classList.add('playing');

@@ -588,6 +588,22 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   that follows the game being played, each in a window of its own on a desktop; sprite & MSU-1
   as on the Zelda 3 page. Two ROMs: the Japanese 1.0 A Link to the Past and The Legend of Zelda
   (USA) (already in the browser if you've used SMZ3, Rando Cross or Zelda 1 + Metroid).
+- **M1SM** (`m1sm/`): Metroid and Super Metroid in one seed, Rando Hub's own. Super Metroid is
+  rolled by the Super Metroid page's DASH randomizer (its presets), Metroid by Rando Hub's own
+  Metroid fill, and then items trade games: a Super Metroid item can sit on a Metroid spot and a
+  Metroid item in a Super Metroid room, every trade kept only if one logic across both games
+  still finishes the seed (some: about a dozen trades, lots: about twenty-five, most: as many as
+  the logic allows). Crateria's Map Station (the Parlor's top right door, then the Pre-Map
+  Flyway) leads into Metroid's Zebes, where you left it; back by ⇄ / P anywhere, or (a setting)
+  only in one of Metroid's elevator rooms. A Metroid item in Super Metroid is a missile pack
+  there; picked up, Samus in Metroid gets the real item. A Super Metroid item on a Metroid spot
+  is a missile pack there; picked up, it goes into Samus's Super Metroid save (counted in the
+  save, so a loaded state never gives it twice). Goal: both Mother Brains (the default), Super
+  Metroid's or Metroid's. Small "this way to Metroid" signs on the way to the Map Station (they
+  can be turned off). Tracking: the Super Metroid page's tracker, map and logic, and the Metroid
+  tracker and map, a switch that follows the game being played, each in a window of its own on
+  a desktop. Two ROMs: Super Metroid (JU) and Metroid (USA) (already in the browser if you've
+  used Super Metroid, SMZ3, Rando Cross or Zelda 1 + Metroid).
 - **Final Fantasy Randomizer (FF1), FF4 Free Enterprise, FF5 Career Day** (`ffr/`):
   seeds are rolled on each randomizer's own site (FF1R and FE generate in your
   browser there), then played here on the hub's NES or SNES with a tracker that reads

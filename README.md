@@ -573,6 +573,21 @@ inside the hub, with its own emulator, seed generator, tracker and saves.
   map for the NES ones, a switch between them that follows the game being played, and every
   part pops out on its own. Four ROMs from you: the two SMZ3 takes and the two Zelda 1 +
   Metroid takes (already in the browser if you've used those pages).
+- **Z1Z3** (`z1z3/`): A Link to the Past and Zelda 1 in one seed, Rando Hub's own. One item
+  pool and one logic across both Hyrules: the Zelda 3 page's randomizer (its port of
+  alttpr.com's) with Zelda 1's 17 item spots and rules added to its fill, so a Zelda 1 item
+  can be in an ALttP chest and an ALttP item on a Zelda 1 spot (dungeon keys, maps and
+  compasses stay in their ALttP dungeons). Kakariko is the hub: the Elder's House (either
+  door) leads into Zelda 1's Hyrule (where you left it); back by a "take any road" cave, or ⇄ /
+  P anywhere (a setting). A Zelda 1 item in ALttP is in a chest, as a few rupees, bombs or
+  arrows; when that chest is opened the page hands Link in Zelda 1 the real item. An ALttP item
+  on a Zelda 1 spot is a rupee there; picked up, it goes straight into Link's ALttP save, and the
+  save keeps count so a loaded state never gives one twice. Goal: both Ganons (the default),
+  ALttP's or Zelda 1's; settings for world state, crystals, swords and dungeon items. Tracking:
+  the Zelda 3 trackers (Mudora 2.0, Mudora or Hutch) and the Zelda 1 tracker and map, a switch
+  that follows the game being played, each in a window of its own on a desktop; sprite & MSU-1
+  as on the Zelda 3 page. Two ROMs: the Japanese 1.0 A Link to the Past and The Legend of Zelda
+  (USA) (already in the browser if you've used SMZ3, Rando Cross or Zelda 1 + Metroid).
 - **Final Fantasy Randomizer (FF1), FF4 Free Enterprise, FF5 Career Day** (`ffr/`):
   seeds are rolled on each randomizer's own site (FF1R and FE generate in your
   browser there), then played here on the hub's NES or SNES with a tracker that reads
